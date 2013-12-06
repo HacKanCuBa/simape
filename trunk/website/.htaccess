@@ -1,0 +1,30 @@
+# Apache configuration file (see httpd.apache.org/docs/2.2/mod/quickreference.html)
+
+# disable directory listing
+Options -Indexes
+AddDefaultCharset utf-8
+IndexIgnore .htaccess */.??* *~ *# */HEADER* */README* */_vti*
+
+<Limit PUT DELETE>
+order allow,deny
+deny from all
+</Limit>
+
+# deny all .htaccess, .DS_Store htaccess and ._* (resource fork) files
+<Files ~ "^\.([Hh][Tt]|[Dd][Ss]_[Ss]|[_])">
+ Order allow,deny
+ Deny from all
+ Satisfy All
+</Files>
+
+# deny access to all .log and .comment files
+<Files ~ "^.*\.([Ll][Oo][Gg]|[cC][oO][mM][mM][eE][nN][tT])">
+ Order allow,deny
+ Deny from all
+ Satisfy All
+</Files>
+
+<Files 403.shtml>
+order allow,deny
+allow from all
+</Files>
