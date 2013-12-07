@@ -3,7 +3,7 @@
 
 = LICENCIA =
 
-  *SiMaPe*
+  * SiMaPe *
   `Sistema Integrado de Manejo de Personal`
   `Copyright (C) <2013>  <Ivan Ariel Barrera Oro>`
 
