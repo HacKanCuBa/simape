@@ -19,3 +19,7 @@
 
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+= Licencia para el no-código =
+La documentación, imágenes y todo otro archivo no incluido en la licencia GNU 
+GPL v3, se encuentran protegidos por la licencia CC-BY-SA v3.0: https://creativecommons.org/licenses/by-sa/3.0/
