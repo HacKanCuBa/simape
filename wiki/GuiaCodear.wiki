@@ -1,0 +1,13 @@
+#summary Guía para escribir código
+#labels guia,codigo,codear
+
+= Codeando =
+
+Es menester seguir la siguiente guía a la hora de escribir código:
+http://framework.zend.com/manual/1.12/en/coding-standard.coding-style.html
+
+Cualquier otra guía de buenas prácticas para escribir código,
+mientras se mantenga de manera uniforme, será aceptada.
+
+Tener en cuenta los PHPDocumentor Tags: 
+http://manual.phpdoc.org/HTMLSmartyConverter/HandS/phpDocumentor/tutorial_tags.pkg.html
