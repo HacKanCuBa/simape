@@ -3,9 +3,9 @@
 
 = LICENCIA =
 
-  * SiMaPe *
-  `Sistema Integrado de Manejo de Personal`
-  `Copyright (C) <2013>  <Ivan Ariel Barrera Oro>`
+  == SiMaPe ==
+  _`Sistema Integrado de Manejo de Personal`_
+  _`Copyright (C) <2013>  <Ivan Ariel Barrera Oro>`_
 
   _SiMaPe_ is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
