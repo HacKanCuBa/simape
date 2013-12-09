@@ -9,6 +9,12 @@
  * SiMaPe_DBcreator_UsuariosDB.sql
  * _opcional_ SiMaPe_DBcreator_QueryLog.sql
 
+== Recomendaciones ==
+
+ * Crear tantos usuarios administradores como hagan falta, evitar usar solo uno (por defecto se crea solo uno).
+ * Evitar trabajar siendo _root_ luego de haber terminado de crear la DB.
+ * NUNCA usar un usuario administrador para la aplicación PHP.
+
 = Procedimiento =
 
  * Editar el archivo SiMaPe_DBcreator_UsuariosDB.sql y modificar las contraseñas.  Deben generarse usando el comando `SELECT PASSWORD('micontraseñanueva');`
