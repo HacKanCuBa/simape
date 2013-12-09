@@ -1,0 +1,20 @@
+#summary Requisitos de la aplicación PHP
+
+= Requisitos =
+
+Paquetes a instalar (nombres válidos para Debian y similar):
+
+ * apache2 V > 2.2
+ * php5 V > 5.5
+ * php-pear 
+ * php5-mysqlnd 
+ * php5-mcrypt 
+ * php5-curl 
+ * php5-mhash 
+ * libapache2-mod-php5 
+ * php5-cli 
+ * php5-common 
+ * apache2-mpm-prefork
+ * mysql-server V > 5.5 
+ * mysql-client
+
