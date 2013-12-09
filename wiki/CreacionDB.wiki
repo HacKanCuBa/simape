@@ -7,7 +7,7 @@
  * SiMaPe_DBcreator_NoFK_Inserts.sql
  * SiMaPe_DBcreator_ALTER_FK.sql
  * SiMaPe_DBcreator_UsuariosDB.sql
- * [opcional] SiMaPe_DBcreator_QueryLog.sql
+ * _opcional_ SiMaPe_DBcreator_QueryLog.sql
 
 = Procedimiento =
 
@@ -16,4 +16,4 @@
  * `source SiMaPe_DBcreator_NoFK_Inserts.sql`
  * `source SiMaPe_DBcreator_ALTER_FK.sql`
  * `source SiMaPe_DBcreator_UsuariosDB.sql`
- * [opcional]: `source SiMaPe_DBcreator_QueryLog.sql` para crear el query log
+ * _opcional_ `source SiMaPe_DBcreator_QueryLog.sql` para crear el query log
