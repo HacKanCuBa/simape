@@ -101,7 +101,7 @@ CREATE  TABLE IF NOT EXISTS `SiMaPe`.`Empleado` (
   `EmpleadoId` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `Nombre` VARCHAR(100) NOT NULL ,
   `Apellido` VARCHAR(100) NOT NULL ,
-  `Fotografia_FicheroId` INT UNSIGNED NULL DEFAULT NULL ,
+  `FicheroId` INT UNSIGNED NULL DEFAULT NULL COMMENT 'Fotografia' ,
   `Titulo` ENUM('Dr.','Dra.','Lic.') NULL DEFAULT NULL ,
   `Sexo` ENUM('M','F') NOT NULL ,
   `FechaNac` DATE NOT NULL ,
