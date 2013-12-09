@@ -1,8 +1,6 @@
 #summary Crear la DB por primera vez
 #labels mysql,database,db
 
-_Crear la DB por primera vez
-
 == Requisitos ==
 
  * MySQL v5.5 o superior
