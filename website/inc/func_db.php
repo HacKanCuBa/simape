@@ -192,27 +192,24 @@ function db_query_prepared_transaction(&$db,
                     if ($data) {
                         //$keys = array();
                         while ($row = $data->fetch_assoc()) {
-                            //var_dump($row);
+//                            var_dump($row);
                             if (count($row, COUNT_NORMAL) == 1) {
                                 $value = current($row);
                             } else {
                                 $value = $row;
                             }
-                            //var_dump($value);
-                            /*if (array_key_exists(key($row), $keys)) {
-                                $query_result[] = $value;
-                            } else {
-                                $query_result[key($row)] = $value;
-                            }*/
+//                            var_dump($value);
                             $query_result[] = $value;
-                            //var_dump($query_result);
+//                            var_dump($query_result);
                         }
                         $data->free();
-                        //die("query");
+                        
                         if (isset($query_result) 
                                 && count($query_result, COUNT_NORMAL) == 1) {
                             $query_result = $query_result[0];
                         }
+//                        var_dump($query_result);
+//                        die("query");
                     } elseif ($stmt->errno != 0) {
                         // Era select y hubo error
                         $result = FALSE;

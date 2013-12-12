@@ -58,7 +58,7 @@ else
     //
     session_terminate();
     session_do();
-    session_set_errt($err_t_authfail);
+    session_set_errt($err_authfail);
     $redirect = LOC_NAV;  
     $params = 'accion=logout';
 }
