@@ -95,6 +95,43 @@ function sanitizar_array(&$array)
 // --
 // 
 // -- Otras
+function diasSemana($formato_largo = FALSE, $comienza_domingo = FALSE) {
+    /**
+     * Devuelve un array con los días de la semana en el formato especificado
+     * (largo o corto y comienzo con lunes o domingo). 
+     * P.E.: lun, mar, mié...; domingo, lunes, martes...
+     * NOTA: es fundamental que setlocale y date_default_timezone_set estén
+     * correctamente configurados, o devolverá los días en un idioma inesperado.
+     * Basado en: http://stackoverflow.com/a/2536802
+     * 
+     * @param boolean $formato_largo TRUE para usar formato largo.  FALSE para
+     * corto (por defecto).
+     * @param boolean $comienza_domingo TRUE para que el array comienze en 
+     * domingo, FALSE para que lo haga en lunes (por defecto).
+     * @return array Dias de la semana en el formato requerido.
+     */
+    
+    if ($comienza_domingo) {
+        $timestamp = strtotime('next Sunday');
+    } else {
+        $timestamp = strtotime('next Monday');
+    }
+    
+    if ($formato_largo) {
+        $formato = '%A';
+    } else {
+        $formato = '%a';
+    }
+    
+    $days = array();
+    for ($i = 0; $i < 7; $i++) {
+        $days[] = strftime($formato, $timestamp);
+        $timestamp = strtotime('+1 day', $timestamp);
+    }
+    
+    return $days;
+}
+
 function msgbox($str) 
 {
     echo('<script type="text/javascript"> alert("' . $str . '"); </script>');

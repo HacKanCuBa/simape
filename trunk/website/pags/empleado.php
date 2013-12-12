@@ -29,6 +29,12 @@
  * Esta página muestra el perfil de empleado
  */
 
+/*
+ * OK, en este momento, esto es un verdadero desastre!
+ * urgente, hacer empleado class, y trabajar todo como objeto...
+ * NO PROSEGUIR HASTA NO HABER CONCLUIDO LO ANTERIOR
+ */
+
 if (!defined('CONFIG')) { require_once 'loadconfig.php'; }
 
 session_do();
@@ -160,16 +166,20 @@ if (page_token_validate(get_get_pagetkn()) &&
         session_unset_data();
     }
     else {
+        /*
+         * OCHOCIENTOS ifs anidados... por dios, hay que limpiar urgente
+         */
+        
         // No toca boton... cargar datos   
-        $empdata = session_get_data_dirty();
+        $empdata = session_get_data();
         if (empty($empdata)) {
             $db_conn_ok = FALSE;    // Se pondra a TRUE si esta todo ok
 
             $db = new mysqli;
             if ($db) {
                 if (db_connect_ro($db)) {
-                    $query = "SELECT Empleado.Nombre, Apellido, Fotografia, Titulo, "
-                            . "Sexo, FechaNac, FechaIngresoDependencia, "
+                    $query = "SELECT EmpleadoId, Empleado.Nombre, Apellido, FicheroId, "
+                            . "Titulo, Sexo, FechaNac, FechaIngresoDependencia, "
                             . "FechaIngresoJusticia, ResolIngreso_Nro, "
                             . "ResolIngreso_Año, DocumentoNro, CUIL, LegajoNro, "
                             . "TelNro, TelCodArea, CelNro, CelCodArea, Email, "
@@ -218,8 +228,56 @@ if (page_token_validate(get_get_pagetkn()) &&
                                     while($row = $result->fetch_assoc()) {
                                         $selects[$col_o_tbl][] = $row;
                                     }
-                                    $db_conn_ok = TRUE;
                                     $result->close();
+                                    $db_conn_ok = TRUE;
+                                    
+                                    // Fotografia
+                                    $query = "SELECT Ruta, Fichero FROM Fichero "
+                                             . "WHERE FicheroId = ?";
+                                    $result = db_query_prepared_transaction($db, 
+                                                    $query, 
+                                                    'i', 
+                                                    $empdata['FicheroId']);
+                                    if (isset($result) && is_array($result)) {                                        
+                                        // Determinar si usar ruta o blob.
+                                        // si existen ambos, usar ruta
+                                        if (!empty($result['Ruta']) 
+                                                && is_file($result['Ruta'])) {
+                                            // hay ruta, cargar foto
+                                            // atenti: la foto no estara en b64...
+                                            // TODO
+                                            // ¿verificamos peso/tipo de archivo y/o demas detalles?
+                                            // diria q no esta mal asumir que el resto del prog esta bien, cosa de en verdad haber cargado una foto....
+                                            $empdata['Fotografia'] = base64_encode(file_get_contents($result['Ruta']));
+                                            
+                                        } elseif (!empty ($result['Fichero'])) {
+                                            // hay un blob, cargar foto
+                                            // poner la foto en b64
+                                            if (isValid_b64(substr($result['Fichero'], 0, 100))) {
+                                                $empdata['Fotografia'] = $result['Fichero'];
+                                            } else {
+                                                $empdata['Fotografia'] = base64_encode($result['Fichero']);
+                                            }
+                                            
+                                        }
+    
+                                        // Horario laboral
+                                        $query = "SELECT DiaLaboralDesc.Descripcion AS 'Dia', HoraInicio, HoraFin, Timestamp FROM HorarioLaboral INNER JOIN DiaLaboralDesc USING (DiaLaboralDescId) WHERE HorarioLaboral.EmpleadoId = ?";
+                                        $result = db_query_prepared_transaction($db, $query, 'i', $empdata['EmpleadoId']);
+                                        
+                                        if (is_array($result)) {
+                                            $empdata['HorarioLaboral'] = $result;
+                                        }
+                                        
+                                        // Horario extra
+                                        $query = "SELECT DiaLaboralDesc.Descripcion AS 'Dia', HoraInicio, HoraFin, Timestamp FROM HorarioExtra INNER JOIN DiaLaboralDesc USING (DiaLaboralDescId) WHERE HorarioExtra.EmpleadoId = ?";
+                                        $result = db_query_prepared_transaction($db, $query, 'i', $empdata['EmpleadoId']);
+
+                                        if (is_array($result)) { 
+                                            $empdata['HorarioExtra'] = $result;
+                                        }
+                                    }
+                                    
                                 }
                             }
                             $key = key($buscados);
@@ -259,18 +317,10 @@ if (page_token_validate(get_get_pagetkn()) &&
                     // Guardar en $empdata
                     $empdata['Selects'] = $selects;
                     
-                    // TODO
-                    // Verificar tambien si se trata de una ruta a un archivo
-                    if (isset($empdata['Fotografia']) 
-                        && !isValid_b64(substr($empdata['Fotografia'], 0, 100))) {
-                        // Foto binaria, convertirla antes a b64
-                        // no hay otra forma de mostrarla... que yo sepa
-                        $empdata['Fotografia'] = base64_encode($empdata['Fotografia']);
-                    }
                     // Guardo los datos para comparar 
                     // cuando el usuario acepte cambios
                     // (y no buscar en la DB nuevamente)
-                    //die(var_dump($empdata));
+//                    die(var_dump($empdata));
                     session_set_data($empdata);
                     unset($selects);
                 }
@@ -292,7 +342,7 @@ if (page_token_validate(get_get_pagetkn()) &&
     //
     session_terminate();
     session_do();
-    session_set_errt($err_t_authfail);
+    session_set_errt($err_authfail);
     $redirect = LOC_NAV;  
     $params = 'accion=logout';
 }
@@ -376,23 +426,13 @@ if (isset($redirect)) {
                     <tr>
                         <td colspan="2" rowspan="7" style="text-align: center; vertical-align: middle;">
                             <?php
-                            // La foto debe ser b64 o una ruta si o si,
-                            // procesar todo antes de esta rutina
+                            // La foto debe ser b64
                             if(isset($empdata['Fotografia'])) {
-                                if (isValid_b64(substr($empdata['Fotografia'], 0, 100))) {
-                                    // Foto base64
-                                    echo "<img src='data:image/jpeg;base64," 
-                                    . $empdata['Fotografia'] 
-                                    . "' alt='No es posible mostrar la foto'"
-                                    . " title='Fotograf&iacute;a del perfil'"
-                                    . " style='max-height: 180px; max-width: 280px;' />";
-                                } else {
-                                    // Foto es una ruta a un archivo en el server
-                                    echo "<img src='" . $empdata['Fotografia'] 
-                                            . "' alt='No es posible mostrar la foto'"
-                                            . " title='Fotograf&iacute;a del perfil'"
-                                            . " style='max-height: 180px; max-width: 280px;' />";
-                                }
+                                echo "<img src='data:image/jpeg;base64," 
+                                . $empdata['Fotografia'] 
+                                . "' alt='No es posible mostrar la foto'"
+                                . " title='Fotograf&iacute;a del perfil'"
+                                . " style='max-height: 180px; max-width: 280px;' />";
                             } else {
                                 echo "No hay foto disponible";
                             }

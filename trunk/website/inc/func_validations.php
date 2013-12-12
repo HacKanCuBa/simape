@@ -159,6 +159,26 @@ function isValid_uploadedfile($file_id)
     
     return NULL;
 }
+
+function isValid_diaSemana($diaSemana) {
+    /**
+     * Determina si el string pasado corresponde a un día de la semana
+     * 
+     * @param string $diaSemana String a validar
+     * @return boolean TRUE si el string corresponde a un día de la semana, 
+     * FALSE si no.
+     */
+    
+    if (isset($diaSemana)) {
+        if (substr_count(diasSemana(), $diaSemana)) {
+            return TRUE;
+        } elseif (substr_count(diasSemana(TRUE), $diaSemana)) {
+            return TRUE;
+        }   
+    }
+    
+    return FALSE;
+}
 // --
 
 define('FUNC_VALIDATIONS', TRUE);
