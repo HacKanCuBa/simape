@@ -97,7 +97,6 @@ CREATE  TABLE IF NOT EXISTS `SiMaPe`.`Empleado` (
   `DocumentoNro` INT UNSIGNED NOT NULL ,
   `CUIL` BIGINT UNSIGNED NOT NULL ,
   `LegajoNro` INT UNSIGNED NOT NULL ,
-  `UID` VARCHAR(100) NOT NULL COMMENT 'UUIDv4' ,
   `TelNro` VARCHAR(20) NOT NULL ,
   `TelCodArea` VARCHAR(10) NOT NULL ,
   `CelNro` VARCHAR(20) NOT NULL ,
@@ -116,8 +115,6 @@ ENGINE = InnoDB;
 CREATE UNIQUE INDEX `LegajoNro_UNIQUE` ON `SiMaPe`.`Empleado` (`LegajoNro` ASC) ;
 
 CREATE INDEX `Empleado_NomApDoc` ON `SiMaPe`.`Empleado` (`Nombre` ASC, `Apellido` ASC, `DocumentoNro` ASC) ;
-
-CREATE UNIQUE INDEX `UID_UNIQUE` ON `SiMaPe`.`Empleado` (`UID` ASC) ;
 
 CREATE UNIQUE INDEX `Email_UNIQUE` ON `SiMaPe`.`Empleado` (`Email` ASC) ;
 
