@@ -1,0 +1,10 @@
+#summary Modelo de datos
+#labels database,model,modelo,db,basededatos
+
+= Base de datos =
+
+Se adjunta imagen del modelo de datos de la base de datos.
+
+<a href="http://www.imageno.com/cy5zvlzxc084pic.html" target="_blank"><img src="http://www.imageno.com/thumbs/20131213/cy5zvlzxc084.jpg" border="0" alt="SiMaPe DB" title="Modelo de datos" /></a>
+
+_CC BY-SA
