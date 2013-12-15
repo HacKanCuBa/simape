@@ -38,10 +38,10 @@ define('DB_HOST', 'localhost');
 define('DB_NOMBRE', 'SiMaPe');
 
 define('DB_USUARIO_RO', 'appro');
-define('DB_PASS_RO', 'cEae2;*p(eH-Cm39iX])yrY}$,g=0p');
+define('DB_PASS_RO', 'Contraseña para el usuario de la DB');
 
 define('DB_USUARIO_RW', 'apprw');
-define('DB_PASS_RW', '2/+W<W#Qety$fn!=O{^k*gP`TC!x`V');
+define('DB_PASS_RW', 'Contraseña para el usuario de la DB');
 
 // ATENCION
 // Verificar la configuracion de apache (y .htaccess) y la funcion
@@ -78,13 +78,13 @@ define('FILE_MAXIMGSIZE', 3145728);        // 3MB
 // Cambiar estos valores de tanto en tanto
 // Usar: https://www.grc.com/passwords.htm
 define('FINGERPRINT_TKN', 
-        'SGxtTKP"6c~^M>h^l<_KR80~]Y=?Ziwer[TPPW&/IT?!r^`%fgArI5oZ[:JP+O<');
+        'buscar un string nuevo!');
 define('SESSIONKEY_TKN', 
-        'TKt~bc!isdxP-sFA8V%2"Km!ihQvMPk#Y6;KC0[nOX8sczDK?FT6>ot43Ac<c-J');
+        'buscar un string nuevo!');
 define('PAGE_TKN', 
-        '},jw7s%d}o|Da+dKh|jEcn@XLq&SMç{wHyYE5g%tX:KG5n96`A{p_<796bS1gA/');
+        'buscar un string nuevo!');
 define('FORM_TKN', 
-        '=IMA"wPJh*C.C!GQZz%pCh!RdWIXsk_zIO`X?!#8%jH<XA?;ñFU3?(2rYO(#:I`');
+        'buscar un string nuevo!');
 // --
 // 
 // -- Sessionkey
