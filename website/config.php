@@ -19,8 +19,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
- * 
  *****************************************************************************/
 
 /**
@@ -28,6 +26,9 @@
  * Todas las opciones pueden modificarse acorde a la necesidad; prestar
  * especial atención a la categorizada como "Config interna".
  * 
+ * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
+ * @copyright (c) 2013, Iván A. Barrera Oro
+ * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  */
 
 // << Config
@@ -97,6 +98,14 @@ define('SESSIONKEY_LIFETIME', 21600); // 6hs
 // No se recomienda modificar los siguientes valores, salvo que se tengan
 // buenas razones para hacerlo.
 // 
+// -- Crypto
+// Este parámetro se emplea en la clase Password para generar nuevas 
+// contraseñas.  Es conveniente buscar un valor óptimo ejecutando en
+// una página de prueba: Password::getOptimalCost().
+// IMPORTANTE: ¡NUNCA emplear valores menores que 10!
+// NOTA: si vale menos que 10, no será tenido en cuenta.
+define('PASSWORD_COST', 13);
+// --
 // -- Directorio de páginas
 // Raiz para inclusion de archivos
 define( 'INC_ROOT', dirname(__FILE__) .'/');
@@ -152,4 +161,3 @@ define('__SMP_FS_BASE64', 2);
 // >>
 
 define('CONFIG', TRUE);
-?>
