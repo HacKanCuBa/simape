@@ -142,7 +142,7 @@ define('PWD_MINLEN', 10);
 // --
 // 
 // -- Mensajeria
-define('MGS_MAXLEN', 250);
+define('MGS_MAXLEN', 140);
 // --
 // 
 // -- Archivos (en bytes)
