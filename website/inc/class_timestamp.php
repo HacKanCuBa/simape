@@ -22,44 +22,60 @@
  *****************************************************************************/
 
 /**
- * Esta clase maneja todo lo referido a los perfiles de permisos:
- * - Crear nuevo
- * - Obtener informacion del actual
- * - Verificar si el usuario tiene o no un permiso determinado
- * - etc
+ * Clase que comprende funciones varias de manejo del tiempo.
  * 
+ * Ejemplo de uso:
+ * <pre><code>
+ * $today = Timestamp::getToday();
+ * ...
+ * if ($today != Timestamp::getToday()) {
+ *      echo "cambió el día!!"
+ * }
+ * </code></pre>
+ *
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.1 untested
+ * @version 0.2
  */
+class Timestamp
+{
+   /**
+    * Devuelve el dia actual en Unix Timestamp, esto es, a las 00:00:00hs.
+    * 
+    * @return int Unix Timestamp del día actual.
+    */
+    function getToday() 
+    {
+        //date_default_timezone_set('America/Argentina/Buenos_Aires');
 
-class UsuarioPerfil extends Empleado
-{    
-    protected $UsuarioPerfil = array('UsuarioPerfilId' => '',
-                                     'Nombre' => '',
-                                     'Timestamp' => ''
-                                    );
-    
-    // __ SPECIALS
-    
-    // __ PRIV
-    
-    // __ PROT
-    
-    // __ PUB
-    public function getUsuarioPerfilId() 
-    {
-        return (int) $this->UsuarioPerfil['UsuarioPerfilId'];
+        return strtotime(date('Y/m/d') . " 00:00:00");
     }
-    
-    public function getPerfilNombre() 
+
+    function getThisSeconds($seconds) 
     {
-        return (string) $this->UsuarioPerfil['Nombre'];
+        if (!empty($seconds) && is_int($seconds)) {
+            return(((int)(time() / ($seconds))) * ($seconds));
+        }
+        
+        return 0;
     }
-    
-    public function getPerfilTimestamp() 
-    {
-        return (int) $this->UsuarioPerfil['Timestamp'];
+
+    function getThisMinutes($minutes) 
+    {    
+        if (!empty($minutes) && is_int($minutes)) {
+            return self::getThisSeconds(60 * $minutes);
+        }
+        
+        return 0;
+    }
+
+    function getThisHours($hours) 
+    {    
+        if (!empty($hours) && is_int($hours)) {
+            return self::getThisMinutes(60 * $hours);
+        }
+        
+        return 0;
     }
 }
