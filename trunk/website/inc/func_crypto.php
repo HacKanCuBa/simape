@@ -19,8 +19,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
- * 
  *****************************************************************************/
 
 // -- Crypto
@@ -85,6 +83,25 @@ function get_random_token ($lenght = NULL)
     } else {
         return substr($token, 0, $lenght);
     }
+}
+
+function UIDGen() 
+{
+    /**
+     * Devuelve un UID, que es un UUIDv4.
+     * 
+     * @return string Devuelve un UUIDv4.
+     */
+    //  https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_4_.28random.29
+    //  Version 4 UUIDs have the form xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx 
+    //  where x is any hexadecimal digit and y is one of 8, 9, A, or B 
+    //  (e.g., f47ac10b-58cc-4372-a567-0e02b2c3d479).
+    return sprintf("%s-%s-4%s-%x%s-%s", get_random_token(8), 
+                                        get_random_token(4), 
+                                        get_random_token(3), 
+                                        mt_rand(8, 11), 
+                                        get_random_token(3), 
+                                        get_random_token(12));
 }
 // --
 

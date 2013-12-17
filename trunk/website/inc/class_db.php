@@ -137,23 +137,32 @@ class DB extends mysqli
     }
     
     /**
-     * Guarda los datos obtenidos de la query (cuando la misma se trató 
+     * <p>Guarda los datos obtenidos de la query (cuando la misma se trató 
      * de un SELECT) de la siguiente manera:
-     * Si la consulta devolvió datos, como array.
-     * Si no se obtuvieron datos, como TRUE.
-     * Si la consulta devolvió error, como FALSE.
-     * El array devuelto es:
-     *  - Asociativo cuando la consulta devuelve una fila con multiples 
-     * columnas;
-     *  - Numerado cuando la consulta devuelve una o varias filas c/u con 
-     * sólo una columna; 
-     *  - Mixto cuando la consulta devuelve multiples filas con multiples 
+     * <ul>
+     * <li>Si la consulta devolvió un único dato, como string.  Si devolvió más 
+     * de un dato, como array.</li>
+     * <li>Si no se obtuvieron datos, como TRUE.</li>
+     * <li>Si la consulta devolvió error, como FALSE.</li>
+     * </ul>
+     * </p>
+     * <p>El array almacenado es:
+     * <ul>
+     * <li>Asociativo cuando la consulta devuelve una fila con multiples 
+     * columnas;</li>
+     * <li>Numerado cuando la consulta devuelve una o varias filas c/u con 
+     * sólo una columna;</li>
+     * <li>Mixto cuando la consulta devuelve multiples filas con multiples 
      * columnas (las filas serán índice numerado, y dentro un array 
-     * asociativo con las columnas como indices).
+     * asociativo con las columnas como indices).</li>
+     * </ul>
+     * </p>
      * 
-     * IMPORTANTE: Requiere native driver (php5-mysqlnd)
-     * ATENCIÓN: el resultado debería evaluarse con is_array() para 
-     * determinar si se obtuvieron datos en la consulta.
+     * <p>IMPORTANTE: Requiere native driver (<i>php5-mysqlnd</i>)<br />
+     * ATENCIÓN: el resultado debería evaluarse con <i>is_array()</i> o 
+     * <i>is_string()</i> para determinar si se obtuvieron datos en la consulta,
+     * o <i>DB::getAffectedRows()</i> para determinar la cantidad de filas 
+     * obtenidas.</p>
      *  
      */
     protected function querySaveData() {        

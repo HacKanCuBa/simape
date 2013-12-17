@@ -19,8 +19,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
- * 
  *****************************************************************************/
 
 function sessionkey_key_make($uid, $timestamp, $token) 
@@ -84,7 +82,7 @@ function sessionkey_get_key($sessionkey)
 
 function sessionkey_get_timestamp($sessionkey)
 {
-    return sanitizar_str($sessionkey['timestamp']);
+    return (int) sanitizar_str($sessionkey['timestamp']);
 }
 
 function sessionkey_validate($usuario, $sessionkey) 

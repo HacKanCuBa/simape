@@ -19,12 +19,10 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
- * 
  *****************************************************************************/
 
 // -- Validaciones
-function isValid_username($username) 
+function isValid_username(string $username) 
 {
     /**
      * Valida un string y determina si cumple las restricciones impuestas en la
@@ -36,6 +34,7 @@ function isValid_username($username)
      */
     
     if (!empty($username) 
+        && is_string($username)
         && (strlen($username) <= constant('USRNAME_MAXLEN')) 
         && (strlen($username) >= constant('USRNAME_MINLEN'))
     ) {
@@ -45,7 +44,7 @@ function isValid_username($username)
     }
 }
 
-function isValid_password($password) 
+function isValid_password(string $password) 
 {
     /**
      * Valida un string y determina si cumple las restricciones impuestas sobre
@@ -58,6 +57,7 @@ function isValid_password($password)
      */
     
     if (!empty($password)
+        && is_string($password)
         && (strlen($password) <= constant('PWD_MAXLEN')) 
         && (strlen($password) >= constant('PWD_MINLEN'))
     ) {
@@ -67,7 +67,7 @@ function isValid_password($password)
     }
 }
 
-function isValid_msg($msg) 
+function isValid_msg(string $msg) 
 {
     /**
      * Valida un string y determina si cumple las restricciones de los mensajes.
@@ -78,6 +78,7 @@ function isValid_msg($msg)
      */
     
     if (!empty($msg) 
+        && is_string($msg)
         && (strlen($msg) <= constant('MGS_MAXLEN'))
     ) {
         return TRUE;
@@ -124,21 +125,22 @@ function isValid_email($email)
     return NULL;
 }
 
+/**
+* Valida un string y determina si se trata de un código UUID4.
+* 
+* @param string $uuid String a validar.
+* @return boolean TRUE si el string cumple los requisitos y es un código 
+* UUID4 válido, FALSE si no lo es..
+*/
 function isValid_uuid($uuid) 
 {
-    /**
-     * Valida un string y determina si se trata de un código UUID4.
-     * 
-     * @param string $uuid String a validar.
-     * @return boolean TRUE si el string cumple los requisitos y es un código 
-     * UUID4 válido, FALSE si no lo es.  Si el mismo es VACIO, devuelve NULL.
-     */
-    if (isset($uuid)) {
-        return (bool) preg_match('/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-'
-                                 . '[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i', $uuid);
-    }
-    
-    return NULL;
+   if (!empty($uuid) && is_string($uuid)) {
+       return (bool) preg_match('/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-'
+                                . '[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i', 
+                                $uuid);
+   }
+
+   return FALSE;
 }
 
 function isValid_uploadedfile($file_id) 

@@ -19,8 +19,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
- * 
  *****************************************************************************/
 
 /*
@@ -137,10 +135,13 @@ function msgbox($str)
     echo('<script type="text/javascript"> alert("' . $str . '"); </script>');
 }
 
+/**
+ * Devuelve el dia actual en Unix Timestamp, esto es, a las 00:00:00hs.
+ * 
+ * @return int Unix Timestamp del día actual.
+ */
 function timestamp_get_today() 
 {
-    // Devuelve el dia actual en unixtimestamp
-    // Esto es, a las 00hs
     //date_default_timezone_set('America/Argentina/Buenos_Aires');
     
     return strtotime(date('Y/m/d') . " 00:00:00");
@@ -211,7 +212,7 @@ function session_get_sessionkey()
 {
     $tkn = session_get('sessionkey_tkn');
     $key = session_get('sessionkey_key');
-    $timestamp = session_get('sessionkey_timestamp');
+    $timestamp = (int) session_get('sessionkey_timestamp');
     
     if(!empty($tkn) && !empty($key) && !empty($timestamp)) {
         return array('tkn' => $tkn, 
