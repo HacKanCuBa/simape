@@ -100,23 +100,4 @@ class Crypto
     {        
         return self::Hash(self::Hash(self::getRandomBytes(128)));
     }
-
-    /**
-     * Devuelve un UID.
-     * 
-     * @return string Devuelve un UID.
-     */
-    public static function getUID() 
-    {        
-        //  https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_4_.28random.29
-        //  Version 4 UUIDs have the form xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx 
-        //  where x is any hexadecimal digit and y is one of 8, 9, A, or B 
-        //  (e.g., f47ac10b-58cc-4372-a567-0e02b2c3d479).
-        return sprintf("%s-%s-4%s-%x%s-%s", self::getRandomStr(8), 
-                                            self::getRandomStr(4), 
-                                            self::getRandomStr(3), 
-                                            mt_rand(8, 11), 
-                                            self::getRandomStr(3), 
-                                            self::getRandomStr(12));
-    }
 }

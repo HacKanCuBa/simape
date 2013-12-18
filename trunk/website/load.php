@@ -41,7 +41,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.6
+ * @version 0.7
  */
 //
 const __SMP_LOAD_MAXLEN = 25;
@@ -69,10 +69,10 @@ function isValid_calificador($calificador)
     return FALSE;
 }
 
-require_once 'configload.php';
-require_once 'configverify.php';
+require 'configload.php';
+include 'configverify.php';
 
-require_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_sanitizar.php';
+require __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_sanitizar.php';
 
 // Carga los archivos requeridos, si los hay
 if (session_status() == PHP_SESSION_ACTIVE) {
@@ -141,6 +141,7 @@ if (session_status() == PHP_SESSION_ACTIVE) {
                 }
             }
         }
+        unset($_SESSION[$action]);
     }
 }
 // --
