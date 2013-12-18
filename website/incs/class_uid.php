@@ -124,13 +124,22 @@ class UID
     }
 
     /**
-     * Devuelve un string UID aleatorio.
+     * Devuelve un UID aleatorio.
      * 
-     * @return string UID aleatorio.
+     * @return string Devuelve un UID aleatorio.
      */
-    public static function getRandomUID()
-    {
-        return Crypto::getUID();
+    public static function getRandomUID() 
+    {        
+        //  https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_4_.28random.29
+        //  Version 4 UUIDs have the form xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx 
+        //  where x is any hexadecimal digit and y is one of 8, 9, A, or B 
+        //  (e.g., f47ac10b-58cc-4372-a567-0e02b2c3d479).
+        return sprintf("%s-%s-4%s-%x%s-%s", Crypto::getRandomStr(8), 
+                                            Crypto::getRandomStr(4), 
+                                            Crypto::getRandomStr(3), 
+                                            mt_rand(8, 11), 
+                                            Crypto::getRandomStr(3), 
+                                            Crypto::getRandomStr(12));
     }
 
     /**
