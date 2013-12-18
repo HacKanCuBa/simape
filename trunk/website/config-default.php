@@ -26,6 +26,9 @@
  * Todas las opciones pueden modificarse acorde a la necesidad; prestar
  * especial atención a la categorizada como "Config interna".
  * 
+ * !!! IMPORTANTE: Una vez definida la configuración, debe ser renombrado a 
+ * config.php
+ * 
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
