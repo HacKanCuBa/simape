@@ -21,9 +21,9 @@
  * 
  *****************************************************************************/
 
-require_once LOC_INC . 'class_crypto.php';
-require_once LOC_INC . 'class_uid.php';
-require_once LOC_INC . 'class_timestamp.php';
+require_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_crypto.php';
+require_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_uid.php';
+require_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_timestamp.php';
 
 /**
  * Maneja la creación y autenticación de la llave de sesión.
@@ -74,7 +74,7 @@ class Sessionkey
     // __ PRIV
     
     // __ PROT
-    protected function isValid_UID(UID $uid)
+    protected static function isValid_UID(UID $uid)
     {
         if (!empty($uid) && is_a($uid, 'UID')) {
             return TRUE;
@@ -83,7 +83,7 @@ class Sessionkey
         return FALSE;
     }
 
-    protected function isValid_token($token)
+    protected static function isValid_token($token)
     {
         if (!empty($token)
             && is_string($token)
@@ -94,7 +94,7 @@ class Sessionkey
         return FALSE;
     }
     
-    protected function isValid_key($key)
+    protected static function isValid_key($key)
     {
         if (!empty($key)
             && is_string($key)
@@ -105,7 +105,7 @@ class Sessionkey
         return FALSE;
     }
     
-    protected function isValid_timestamp($timestamp)
+    protected static function isValid_timestamp($timestamp)
     {
         if (!empty($timestamp)
             && is_int($timestamp)
@@ -135,9 +135,9 @@ class Sessionkey
             // Se utiliza Timestamp::getThisSeconds para fozar la vida útil máxima
             return Crypto::getHash(Crypto::getHash($time 
                     . $this->token 
-                    . Timestamp::getThisSeconds(constant('SESSIONKEY_LIFETIME')) 
+                    . Timestamp::getThisSeconds(constant('__SMP_SESSIONKEY_LIFETIME')) 
                     . $this->uid->getUID()
-                    . constant('SESSIONKEY_TKN')));
+                    . constant('__SMP_SESSIONKEY_TKN')));
         } else {
             return NULL;
         }
@@ -286,7 +286,7 @@ class Sessionkey
         if (!empty($this->token) 
             && !empty($this->uid)
             && ($now >= $this->timestamp) 
-            && ($now < ($this->timestamp + constant('SESSIONKEY_LIFETIME')))
+            && ($now < ($this->timestamp + constant('__SMP_SESSIONKEY_LIFETIME')))
             && ($this->key === $this->keyMake())
         ) {
             return TRUE;            

@@ -45,14 +45,14 @@ class Timestamp
     * 
     * @return int Unix Timestamp del día actual.
     */
-    function getToday() 
+   public static function getToday() 
     {
         //date_default_timezone_set('America/Argentina/Buenos_Aires');
 
         return strtotime(date('Y/m/d') . " 00:00:00");
     }
 
-    function getThisSeconds($seconds) 
+    public static function getThisSeconds($seconds) 
     {
         if (!empty($seconds) && is_int($seconds)) {
             return(((int)(time() / ($seconds))) * ($seconds));
@@ -61,7 +61,7 @@ class Timestamp
         return 0;
     }
 
-    function getThisMinutes($minutes) 
+    public static function getThisMinutes($minutes) 
     {    
         if (!empty($minutes) && is_int($minutes)) {
             return self::getThisSeconds(60 * $minutes);
@@ -70,7 +70,7 @@ class Timestamp
         return 0;
     }
 
-    function getThisHours($hours) 
+    public static function getThisHours($hours) 
     {    
         if (!empty($hours) && is_int($hours)) {
             return self::getThisMinutes(60 * $hours);

@@ -51,16 +51,16 @@ if (fingerprint_token_validate() &&
             break;
 
         case 'perfilusr':
-            $redirect = LOC_USUARIO;
+            $redirect = __SMP_LOC_USUARIO;
             break;
 
         case 'perfilemp':
-            $redirect = LOC_EMPLEADO;
+            $redirect = __SMP_LOC_EMPLEADO;
             break;
 
         case 'mensajes':
         default:
-            $redirect = LOC_MSGS;
+            $redirect = __SMP_LOC_MSGS;
             $params .= "#tabR";
             break;
     }
@@ -71,8 +71,8 @@ else
     //
     session_terminate();
     session_do();
-    session_set_errt($err_authfail);
-    $redirect = LOC_LOGIN;  
+    session_set_errt(__SMP__ERR_AUTHFAIL);
+    $redirect = __SMP_LOC_LOGIN;  
     $params = NULL;
 }
 

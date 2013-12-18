@@ -21,12 +21,12 @@
  * 
  *****************************************************************************/
 
-include_once LOC_INC . 'class_perfil.php';
-include_once LOC_INC . 'class_password.php';
-include_once LOC_INC . 'class_db.php';
-include_once LOC_INC . 'class_crypto.php';
-include_once LOC_INC . 'class_empleado.php';
-include_once LOC_INC . 'class_sessionkey.php';
+include_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_perfil.php';
+include_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_password.php';
+include_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_db.php';
+include_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_crypto.php';
+include_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_empleado.php';
+include_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_sessionkey.php';
 
 /**
  * Esta clase maneja todo lo referido al usuario:
@@ -73,9 +73,9 @@ class Usuario extends UsuarioPerfil
      * @param boolean $Activo TRUE para indicar que el nuevo usario estará 
      * activo, FALSE para desactivarlo.
      */
-    function __construct(string $Nombre = NULL, string $UID = NULL, 
+    function __construct($Nombre = NULL, $UID = NULL, 
                           Empleado $Empleado = NULL,
-                          string $PasswordPlain = NULL, boolean $Activo = TRUE
+                          $PasswordPlain = NULL, $Activo = TRUE
     ) {       
         $this->db = new DB;
         $this->crypto = new Crypto();
@@ -127,7 +127,7 @@ class Usuario extends UsuarioPerfil
     // __ PRIV
     
     // __ PROT    
-    protected function isValid_username(string $username) 
+    protected function isValid_username($username) 
     {
         /**
          * Valida un string y determina si cumple las restricciones impuestas 
@@ -140,8 +140,8 @@ class Usuario extends UsuarioPerfil
 
         if (!empty($username) 
             && is_string($username)
-            && (strlen($username) <= constant('USRNAME_MAXLEN')) 
-            && (strlen($username) >= constant('USRNAME_MINLEN'))
+            && (strlen($username) <= constant('__SMP_USRNAME_MAXLEN')) 
+            && (strlen($username) >= constant('__SMP_USRNAME_MINLEN'))
         ) {
             return TRUE;
         } else {
@@ -189,7 +189,7 @@ class Usuario extends UsuarioPerfil
         }
     }
 
-    protected function paswordGen(string $plaintext) 
+    protected function paswordGen($plaintext) 
     {
         /**
          * Devuelve un string que debe ser usado como contraseña para el sistema
@@ -220,7 +220,7 @@ class Usuario extends UsuarioPerfil
         return $this->db->getQueryData();
     }
     
-    protected function findUsuarioId_usingNombre(string $Nombre)
+    protected function findUsuarioId_usingNombre($Nombre)
     {
         $this->db->setQuery('SELECT UsuarioId FROM Usuario WHERE '
                              . 'Nombre = ?');
@@ -234,7 +234,7 @@ class Usuario extends UsuarioPerfil
         return FALSE;
     }
     
-    protected function findUsuarioId_usingUID(string $UID)
+    protected function findUsuarioId_usingUID($UID)
     {
         $this->db->setQuery('SELECT UsuarioId FROM Usuario WHERE '
                              . 'UID = ?');
@@ -248,7 +248,7 @@ class Usuario extends UsuarioPerfil
         return FALSE;
     }
     
-    protected function findUsuarioId_usingEmpleadoId(int $EmpleadoId)
+    protected function findUsuarioId_usingEmpleadoId($EmpleadoId)
     {
         $this->db->setQuery('SELECT UsuarioId FROM Usuario WHERE '
                              . 'EmpleadoId = ?');
@@ -315,7 +315,7 @@ class Usuario extends UsuarioPerfil
         return FALSE;
     }
   
-    public function setActivo(boolean $NuevoActivo) {
+    public function setActivo($NuevoActivo) {
         if (!empty($NuevoActivo) 
             && is_bool($NuevoActivo)) {
             $this->Usuario['Activo'] = $NuevoActivo;
@@ -324,7 +324,7 @@ class Usuario extends UsuarioPerfil
         return FALSE;
     }
     
-    public function setUID(string $NuevoUID) {
+    public function setUID($NuevoUID) {
         if (isValid_uuid($NuevoUID)) {
             $this->Usuario['UID'] = $NuevoUID;
             return TRUE;

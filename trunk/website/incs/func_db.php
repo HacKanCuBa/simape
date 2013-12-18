@@ -24,8 +24,8 @@
 // DB
 function db_set_charset(&$db) 
 {
-    if ($db->character_set_name() != constant('DB_CHARSET')) {
-        return mysqli_set_charset($db, constant('DB_CHARSET'));
+    if ($db->character_set_name() != constant('__SMP_DB_CHARSET')) {
+        return mysqli_set_charset($db, constant('__SMP_DB_CHARSET'));
     } else {
         return TRUE;
     }
@@ -58,12 +58,12 @@ function db_connect_ro(&$db)
      */
     
     if (mysqli_real_connect($db, 
-                            constant('DB_HOST'), 
-                            constant('DB_USUARIO_RO'), 
-                            constant('DB_PASS_RO'), 
-                            constant('DB_NOMBRE'))
+                            constant('__SMP_DB_HOST'), 
+                            constant('__SMP_DB_USER_RO'), 
+                            constant('__SMP_DB_PASS_RO'), 
+                            constant('__SMP_DB_NAME'))
     ) {
-        if (mysqli_real_query($db, 'SET NAMES ' . constant('DB_CHARSET'))) {
+        if (mysqli_real_query($db, 'SET NAMES ' . constant('__SMP_DB_CHARSET'))) {
             if (db_set_charset($db)) {
                 return TRUE;
             }
@@ -84,12 +84,12 @@ function db_connect_rw(&$db)
      */
     
     if (mysqli_real_connect($db, 
-                            constant('DB_HOST'), 
-                            constant('DB_USUARIO_RW'), 
-                            constant('DB_PASS_RW'), 
-                            constant('DB_NOMBRE'))
+                            constant('__SMP_DB_HOST'), 
+                            constant('__SMP_DB_USER_RW'), 
+                            constant('__SMP_DB_PASS_RW'), 
+                            constant('__SMP_DB_NAME'))
     ){
-        if(mysqli_real_query($db, 'SET NAMES ' . constant('DB_CHARSET'))) {
+        if(mysqli_real_query($db, 'SET NAMES ' . constant('__SMP_DB_CHARSET'))) {
             if (db_set_charset($db)) {
                 return TRUE;
             }

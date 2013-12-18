@@ -58,8 +58,8 @@ else
     //
     session_terminate();
     session_do();
-    session_set_errt($err_authfail);
-    $redirect = LOC_NAV;  
+    session_set_errt(__SMP__ERR_AUTHFAIL);
+    $redirect = __SMP_LOC_NAV;  
     $params = 'accion=logout';
 }
 
@@ -72,7 +72,7 @@ if (isset($redirect)) {
 <?php  echo page_get_head('SiMaPe - Mi perfil de usuario', 'main.css'); ?>
     <?php echo page_get_header(); ?>
     <!-- nav-bar -->
-    <?php echo page_get_navbar(LOC_USUARIO) ?>
+    <?php echo page_get_navbar(__SMP_LOC_USUARIO) ?>
     <!-- /nav-bar -->
     <br />
     <form style="text-align: center; margin: 0px auto; width: auto;" 
