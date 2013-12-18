@@ -29,60 +29,46 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.6
+ * @version 0.7
  */
 
 class Crypto
-{
-    protected $Value;
-    
+{  
     // __ SPECIALS
-    // Esta es una clase extensible, conviene no emplear constructores
-    
+        
     // __ PRIV
     
     // __ PROT
-    protected function Hash($string) 
+    
+    // __ PUB
+    /**
+     * Devuelve el hash de un string
+     * 
+     * @param string $string String
+     * @return string El hash del string indicado, o FALSE en caso de error.
+     */
+    public static function getHash($string) 
     {
         if (is_string($string)) {
             return hash('sha512', $string, FALSE);
+        } else {
+            return FALSE;
         }
-    }
-
-    // __ PUB
-    public function setValue($Value = NULL) 
-    {
-        if (is_string($Value)) {
-            $this->Value = $Value;
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
-
-    public function getHash($string = NULL) 
-    {
-        if (isset($this->Value)) {
-            return $this->Hash($this->Value);
-        } elseif (is_string($string)) {
-            return self::Hash($string);
-        }
-        
-        return NULL;
     }
 
     /**
      * Devuelve un string de bytes aleatorios de la longitud indicada.
      * 
      * @param int $lenght Longitud del string
-     * @return string String de bytes aleatorios de la longitud indicada.
+     * @return string String de bytes aleatorios de la longitud indicada, 
+     * o FALSE en caso de error.
      */
-    public function getRandomBytes($lenght) 
+    public static function getRandomBytes($lenght) 
     {
         if (!empty($lenght) && is_int($lenght)) {
             return openssl_random_pseudo_bytes($lenght);
         } else {
-            return NULL;
+            return FALSE;
         }
     }
     
@@ -91,37 +77,36 @@ class Crypto
      * longitud indicada.
      * 
      * @param int $lenght Longitud del string
-     * @return string String aleatorio de la longitud indicada.
+     * @return string String aleatorio de la longitud indicada,
+     * o FALSE en caso de error.
      */
-    public function getRandomStr($lenght)
+    public static function getRandomStr($lenght)
     {
         if (!empty($lenght) && is_int($lenght)) {
             return substr(bin2hex(self::getRandomBytes((int) ($lenght / 2) + 1)), 
                           0, $lenght);
         }
         
-        return NULL;
+        return FALSE;
     }
 
     /**
-     * Devuelve un token aleatorio de la longitud especificada, 
-     * o del largo completo si no se especifica nada.
-     * 
-     * @param integer $lenght Longitud del token
-     * @return string Token aleatorio como caracteres hexadecimales
+     * Devuelve un token aleatorio.
+     *
+     * @return string Token aleatorio como string de caracteres hexadecimales.
      * 
      */
-    public function getRandomTkn() 
+    public static function getRandomTkn() 
     {        
         return self::Hash(self::Hash(self::getRandomBytes(128)));
     }
 
     /**
-     * Devuelve un UID, que es un UUIDv4.
+     * Devuelve un UID.
      * 
-     * @return string Devuelve un UUIDv4.
+     * @return string Devuelve un UID.
      */
-    function getUID() 
+    public static function getUID() 
     {        
         //  https://en.wikipedia.org/wiki/Universally_unique_identifier#Version_4_.28random.29
         //  Version 4 UUIDs have the form xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx 

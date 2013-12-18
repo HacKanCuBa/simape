@@ -25,16 +25,16 @@
  * Este index.php debe estar siempre en la raiz del sitio
  */
 
-if (!defined('CONFIG')) { require_once 'loadconfig.php'; }
+$_SESSION['req_o'] = ['class_sanitizar', 'funciones'];
+require_once 'load.php';
 
 // Iniciar o continuar sesion
 session_do();
 
 
-if(!empty(post_get('do_login')))
+if(!empty(Sanitizar::glPOST('do_login')))
 {
-    //session_terminate();
-    page_goto(LOC_LOGIN);
+    page_goto(__SMP_LOC_LOGIN);
     exit();
 }
 ?>

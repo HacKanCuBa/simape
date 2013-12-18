@@ -53,7 +53,7 @@ if (page_token_validate(get_get_pagetkn()) &&
     
     if (!empty(post_get_frmBtn('Cancelar'))) {
         // Volver a main
-        $redirect = LOC_NAV;
+        $redirect = __SMP_LOC_NAV;
         $params = NULL;
     }
     elseif ((form_token_validate(post_get_frmtkn()) === TRUE) &&
@@ -153,11 +153,11 @@ if (page_token_validate(get_get_pagetkn()) &&
             // equivocado...
             // No leer ninguna otra entrada del usuario
             unset($_POST);
-            session_set_errt($err_wrongpass);
+            session_set_errt(__SMP_ERR_WRONGPASS);
         }
         
         // Recargar pagina 
-        $redirect = LOC_NAV;
+        $redirect = __SMP_LOC_NAV;
         $params = "accion=perfilemp";
         
         // Limpiar los datos para recargarlos
@@ -212,7 +212,7 @@ if (page_token_validate(get_get_pagetkn()) &&
                                 . "FROM TRIM(LEADING '(' FROM TRIM(LEADING "
                                 . "'enum' FROM column_type))) column_type "
                                 . "FROM information_schema.columns WHERE "
-                                . "table_schema = '" . constant('DB_NOMBRE') 
+                                . "table_schema = '" . constant('__SMP_DB_NAME') 
                                 . "' AND table_name = 'Empleado' AND "
                                 . "column_name = '" . $col_o_tbl . "'",
                                         'Tablas' => "SELECT Descripcion AS 'Valores' FROM "
@@ -330,7 +330,7 @@ if (page_token_validate(get_get_pagetkn()) &&
     // Manejo de errores...
     //
     if (!$db_conn_ok) {
-        session_set_errt($err_dbconn);
+        session_set_errt(__SMP_ERR_DBCONN);
     }
     
     // Guardar el form token para validar
@@ -340,8 +340,8 @@ if (page_token_validate(get_get_pagetkn()) &&
     //
     session_terminate();
     session_do();
-    session_set_errt($err_authfail);
-    $redirect = LOC_NAV;  
+    session_set_errt(__SMP__ERR_AUTHFAIL);
+    $redirect = __SMP_LOC_NAV;  
     $params = 'accion=logout';
 }
 
@@ -359,7 +359,7 @@ if (isset($redirect)) {
 <?php echo page_get_main(); ?>
 
     <form style="text-align: center; margin: 0px auto; width: auto;" 
-          method="POST" enctype="multipart/form-data" action="<?php echo page_get_url(LOC_EMPLEADO, 'pagetkn=' . get_get_pagetkn()); ?>" >
+          method="POST" enctype="multipart/form-data" action="<?php echo page_get_url(__SMP_LOC_EMPLEADO, 'pagetkn=' . get_get_pagetkn()); ?>" >
         <fieldset style="text-align: center; width: auto; margin:0 auto;">
             <table border="0" cellpadding="1" cellspacing="1" 
                     style="width: 500px; margin: auto; text-align: center;">
@@ -623,7 +623,7 @@ if (isset($redirect)) {
                         <td colspan="4" 
                             style="text-align: center; font-weight: normal;">Cambiar la foto del perfil: <input type="hidden" 
                                 name="MAX_FILE_SIZE" value="<?php 
-                            echo constant('FILE_MAXIMGSIZE'); ?>" /><input name="frm_file" 
+                            echo constant('__SMP_FILE_MAXIMGSIZE'); ?>" /><input name="frm_file" 
                                    type="file" title="Cargar nueva foto" 
                                    accept="image/*" />
                         </td>
@@ -647,7 +647,7 @@ if (isset($redirect)) {
                         <td colspan="4" style="text-align: center;"><br />
                           Contraseña actual: <input name="frm_pwdLogin" 
                                  title="Ingrese su contraseña actual para autenticarse"
-                                 maxlength="<?php echo constant('PWD_MAXLEN'); ?>" 
+                                 maxlength="<?php echo constant('__SMP_PWD_MAXLEN'); ?>" 
                                  type="password" 
                                  placeholder="(para aceptar los cambios)"
                                  size="20"/>

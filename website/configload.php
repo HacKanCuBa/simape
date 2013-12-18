@@ -22,44 +22,35 @@
  *****************************************************************************/
 
 /**
- * Esta clase maneja todo lo referido a los perfiles de permisos:
- * - Crear nuevo
- * - Obtener informacion del actual
- * - Verificar si el usuario tiene o no un permiso determinado
- * - etc
+ * configload.php
+ * Busca y carga config.php
+ * Sirve para poder rediseñar el sitio con facilidad, y mover config.php a 
+ * otro directorio (superior) fuera del alcance del usuario de apache, por 
+ * seguridad.  Si se desea poner config.php en un directorio determinado, 
+ * comentar las lineas indicadas y forzar la ruta como se especifica.
  * 
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.1 untested
+ * @version 0.4
  */
 
-class UsuarioPerfil extends Empleado
-{    
-    protected $UsuarioPerfil = array('UsuarioPerfilId' => '',
-                                     'Nombre' => '',
-                                     'Timestamp' => ''
-                                    );
-    
-    // __ SPECIALS
-    
-    // __ PRIV
-    
-    // __ PROT
-    
-    // __ PUB
-    public function getUsuarioPerfilId() 
-    {
-        return (int) $this->UsuarioPerfil['UsuarioPerfilId'];
+// Para forzar la ruta de config.php, borrar '//' de las siguientes 2 lineas:
+//require_once '/mi/ruta/a/config.php';
+///* Buscar config.php
+$location = dirname(__FILE__);
+do {
+    if (file_exists($location . '/config.php')) {
+        require_once $location . '/config.php';
+        $location = '/';
+    } else {
+        $location = dirname($location);
     }
-    
-    public function getPerfilNombre() 
-    {
-        return (string) $this->UsuarioPerfil['Nombre'];
-    }
-    
-    public function getPerfilTimestamp() 
-    {
-        return (int) $this->UsuarioPerfil['Timestamp'];
-    }
+} while ($location != '/');
+// -- */
+
+if (!defined('__SMP_CONFIG')) { 
+    die("No se puede encontrar el archivo config.php"); 
 }
+
+define('__SMP_CONFIGLOAD', TRUE);

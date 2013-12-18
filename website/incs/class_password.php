@@ -61,12 +61,12 @@ class Password
      */
     public function __construct($PlaintextPassword = NULL)
     {
-        if (((int) constant('PASSWORD_COST')) < 10) {
+        if (((int) constant('__SMP_PASSWORD_COST')) < 10) {
             $this->PasswordCost = 10;
-        } elseif (((int) constant('PASSWORD_COST')) > 31) {
+        } elseif (((int) constant('__SMP_PASSWORD_COST')) > 31) {
             $this->PasswordCost = 31;
         } else {
-            $this->PasswordCost = constant('PASSWORD_COST');
+            $this->PasswordCost = constant('__SMP_PASSWORD_COST');
         }
         
         $this->setPlaintextPassword($PlaintextPassword);
@@ -83,7 +83,7 @@ class Password
      * @return boolean TRUE si el string es una contraseña plana válida, 
      * FALSE si no lo es.
      */
-    protected function isValid_ptPassword($password) 
+    protected static function isValid_ptPassword($password) 
     {
         // Al menos una letra mayus y minus, y un nro, y puede contener letras, 
         // nros, y determinados simbolos.
@@ -92,8 +92,8 @@ class Password
             && is_string($password)
             && preg_match('/^(?=.*\d)(?=.*[A-Z])(?=.*[a-z])' 
                           . '[\x{20}-\x{af}\p{L}]'
-                          . '{' . constant('PWD_MINLEN') . ','
-                          . constant('PWD_MAXLEN') . '}$/u', $password)
+                          . '{' . constant('__SMP_PWD_MINLEN') . ','
+                          . constant('__SMP_PWD_MAXLEN') . '}$/u', $password)
         ) {
             return TRUE;
         } else {
@@ -110,7 +110,7 @@ class Password
      * @return boolean TRUE si el string es una contraseña encriptada válida, 
      * FALSE si no lo es.
      */
-    protected function isValid_encPassword($password) 
+    protected static function isValid_encPassword($password) 
     {
         if (!empty($password)
             && is_string($password)
@@ -185,7 +185,7 @@ class Password
      * @link http://www.php.net/manual/en/function.password-hash.php
      * @return int Optimal value for <i>cost</i> parameter.
      */
-    public function getOptimalCost()
+    public static function getOptimalCost()
     {   
         $timeTarget = 0.5; 
 

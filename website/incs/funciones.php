@@ -31,7 +31,7 @@
 // - Documentar c/ funcion...
 // - Crear archivos separados p/ categoria
 
-if (!defined('CONFIG')) { require_once 'loadconfig.php'; }
+//if (!defined('CONFIG')) { require_once 'loadconfig.php'; }
 if (!defined('FUNC_CRYPTO')) { require_once 'func_crypto.php'; }
 if (!defined('FUNC_FORM')) { require_once 'func_form.php'; }
 if (!defined('FUNC_SESSIONKEY')) { require_once 'func_sessionkey.php'; }
@@ -162,24 +162,6 @@ function timestamp_get_thisHours($hours)
     return timestamp_get_thisMinutes(60 * $hours);
 }
 
-function shorthand_to_bytes($val) 
-{
-    // http://us1.php.net/ini_get
-    $val = trim($val);
-    $last = strtolower($val[strlen($val)-1]);
-    switch($last) {
-        // The 'G' modifier is available since PHP 5.1.0
-        case 'g':
-            $val *= 1024;
-        case 'm':
-            $val *= 1024;
-        case 'k':
-            $val *= 1024;
-    }
-
-    return $val;
-}
-
 function username_format($username) 
 {
     /**
@@ -210,7 +192,7 @@ function session_get($key)
 }
 function session_get_sessionkey() 
 {
-    $tkn = session_get('sessionkey_tkn');
+    $tkn = session_get('__SMP_SESSIONKEY_TKN');
     $key = session_get('sessionkey_key');
     $timestamp = (int) session_get('sessionkey_timestamp');
     
@@ -275,7 +257,7 @@ function session_get_data_dirty()
 
 function session_unset_sessionkey()
 {
-    unset($_SESSION['sessionkey_tkn'], 
+    unset($_SESSION['__SMP_SESSIONKEY_TKN'], 
             $_SESSION['sessionkey_key'], 
             $_SESSION['sessionkey_timestamp']);
 }
@@ -313,7 +295,7 @@ function session_unset_data() {
 
 function session_set_sessionkey($sessionkey) 
 {
-    $_SESSION['sessionkey_tkn'] = sessionkey_get_token($sessionkey);
+    $_SESSION['__SMP_SESSIONKEY_TKN'] = sessionkey_get_token($sessionkey);
     $_SESSION['sessionkey_key'] = sessionkey_get_key($sessionkey);
     $_SESSION['sessionkey_timestamp'] = sessionkey_get_timestamp($sessionkey);
 }
@@ -601,6 +583,9 @@ function err_unset_errt()
 // --
 //
 // -- Guardar archivos
+const __SMP_FS_BINARY = 1;
+const __SMP_FS_BASE64 = 2;
+
 function file_store_db($db, $tabla, $campo, &$datos, $tipo = __SMP_FS_BASE64) 
 {
     /**
@@ -630,9 +615,9 @@ function file_store_db($db, $tabla, $campo, &$datos, $tipo = __SMP_FS_BASE64)
     $field = db_sanitizar($db, $campo);
     if (!empty($db) && !empty($table) && !empty($field) && !empty($tipo)) {
         $data_size = strlen($datos);
-        if ($data_size <= constant('FILE_MAXSTORESIZE')) {
+        if ($data_size <= constant('__SMP_FILE_MAXSTORESIZE')) {
             if ($tipo == constant('__SMP_FS_BASE64')) {
-                if ($data_size <= (constant('FILE_MAXSTORESIZE') * 0.6)) {
+                if ($data_size <= (constant('__SMP_FILE_MAXSTORESIZE') * 0.6)) {
                     // Esto puede demorar bastante!
                     $query = "INSERT INTO " . $table . " (" . $field 
                             . ") VALUES (" . base64_encode($datos) . ")";

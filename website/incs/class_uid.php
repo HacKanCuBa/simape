@@ -21,7 +21,7 @@
  * 
  *****************************************************************************/
 
-require_once LOC_INC . 'class_crypto.php';
+require_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_crypto.php';
 
 /**
  * Maneja la creación y validación de UIDs.
@@ -72,7 +72,7 @@ class UID
      * @return boolean TRUE si el string cumple los requisitos y es un código 
      * UUID4 válido, FALSE si no lo es.
      */
-    protected function isValid_uuid($uuid) 
+    protected static function isValid_uuid($uuid) 
     {
         if (!empty($uuid) && is_string($uuid)) {
             return (bool) preg_match('/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-'
@@ -128,7 +128,7 @@ class UID
      * 
      * @return string UID aleatorio.
      */
-    public function getRandomUID()
+    public static function getRandomUID()
     {
         return Crypto::getUID();
     }
@@ -139,7 +139,7 @@ class UID
      * @param string $uid UID a validar.
      * @return boolean TRUE si se trata de un UID válido, FALSE si no.
      */
-    public function isValid($uid)
+    public static function isValid($uid)
     {
         return self::isValid_uuid($uid);
     }

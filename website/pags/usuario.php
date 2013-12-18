@@ -19,8 +19,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
- * 
  *****************************************************************************/
 
 // ESTA PAGINA NO DEBE SER ACCEDIDA DIRECTAMENTE POR EL USUARIO
@@ -51,7 +49,7 @@ if (page_token_validate(get_get_pagetkn()) &&
     
     if (!empty(post_get_frmBtn('Cancelar'))) {
         // Volver
-        $redirect = LOC_NAV;
+        $redirect = __SMP_LOC_NAV;
         // Limpiar los datos
         session_unset_data();
     }
@@ -182,11 +180,11 @@ if (page_token_validate(get_get_pagetkn()) &&
             // equivocado...
             // No leer ninguna otra entrada del usuario
             unset($_POST);
-            session_set_errt($err_wrongpass);
+            session_set_errt(__SMP_ERR_WRONGPASS);
         }
         
         // Recargar pagina 
-        $redirect = LOC_NAV;
+        $redirect = __SMP_LOC_NAV;
         $params = "accion=perfilusr";
         // Limpiar los datos para recargarlos
         session_unset_data();
@@ -245,7 +243,7 @@ if (page_token_validate(get_get_pagetkn()) &&
     // Manejo de errores...
     //
     if (!$db_conn_ok) {
-        session_set_errt($err_dbconn);
+        session_set_errt(__SMP_ERR_DBCONN);
         unset($usrdata);
     }
     
@@ -257,8 +255,8 @@ else {
     //
     session_terminate();
     session_do();
-    session_set_errt($err_authfail);
-    $redirect = LOC_NAV;  
+    session_set_errt(__SMP__ERR_AUTHFAIL);
+    $redirect = __SMP_LOC_NAV;  
     $params = 'accion=logout';
 }
 
@@ -284,12 +282,12 @@ if (isset($redirect)) {
                                 <td style="text-align: right;">Nombre de usuario</td>
                                 <td style="text-align: left;"><input name="frm_txtUsuario" 
                                           title="M&iacute;nimo <?php 
-                                          echo constant('USRNAME_MINLEN'); 
+                                          echo constant('__SMP_USRNAME_MINLEN'); 
                                           ?> caracteres y m&aacute;ximo <?php 
-                                          echo constant('USRNAME_MAXLEN'); ?>"
+                                          echo constant('__SMP_USRNAME_MAXLEN'); ?>"
                                           pattern=".{<?php 
-                                          echo constant('USRNAME_MINLEN') . ',' 
-                                                  . constant('USRNAME_MAXLEN'); ?>}"
+                                          echo constant('__SMP_USRNAME_MINLEN') . ',' 
+                                                  . constant('__SMP_USRNAME_MAXLEN'); ?>}"
                                                   type="text" required value="<?php if (isset($usrdata['Usuario'])) { echo $usrdata['Usuario']; } ?>"
                                           placeholder="Nombre de usuario"/>
                                 </td>
@@ -298,12 +296,12 @@ if (isset($redirect)) {
                                 <td style="text-align: right;">Contraseña nueva</td>
                                 <td style="text-align: left;"><input name="frm_pwdNew" 
                                           title="M&iacute;nimo <?php 
-                                          echo constant('PWD_MINLEN'); 
+                                          echo constant('__SMP_PWD_MINLEN'); 
                                           ?> caracteres y m&aacute;ximo <?php 
-                                          echo constant('PWD_MAXLEN'); ?>"
+                                          echo constant('__SMP_PWD_MAXLEN'); ?>"
                                           pattern=".{<?php 
-                                          echo constant('PWD_MINLEN') . ',' 
-                                                  . constant('PWD_MAXLEN'); ?>}"
+                                          echo constant('__SMP_PWD_MINLEN') . ',' 
+                                                  . constant('__SMP_PWD_MAXLEN'); ?>}"
                                           type="password" 
                                           placeholder="(si desea cambiar la actual)"/>
                                 </td>
@@ -312,12 +310,12 @@ if (isset($redirect)) {
                                 <td style="text-align: right;">Verificar contraseña nueva</td>
                                 <td style="text-align: left;"><input name="frm_pwdNewV" 
                                           title="M&iacute;nimo <?php 
-                                          echo constant('PWD_MINLEN'); 
+                                          echo constant('__SMP_PWD_MINLEN'); 
                                           ?> caracteres y m&aacute;ximo <?php 
-                                          echo constant('PWD_MAXLEN'); ?>"
+                                          echo constant('__SMP_PWD_MAXLEN'); ?>"
                                           pattern=".{<?php 
-                                          echo constant('PWD_MINLEN') . ',' 
-                                                  . constant('PWD_MAXLEN'); ?>}"
+                                          echo constant('__SMP_PWD_MINLEN') . ',' 
+                                                  . constant('__SMP_PWD_MAXLEN'); ?>}"
                                           type="password" 
                                           />
                                 </td>
@@ -388,7 +386,7 @@ if (isset($redirect)) {
                             <td style="text-align: left;"><br />
                                 <input name="frm_pwdLogin" 
                                        title="Ingrese su contraseña actual para autenticarse"
-                                       maxlength="<?php echo constant('PWD_MAXLEN'); ?>" 
+                                       maxlength="<?php echo constant('__SMP_PWD_MAXLEN'); ?>" 
                                        type="password" 
                                        placeholder="(para aceptar los cambios)"/>
                             </td>
