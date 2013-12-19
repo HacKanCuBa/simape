@@ -74,7 +74,7 @@ if ((fingerprint_token_validate() === FALSE) ||
     session_terminate();
     // Crear una nueva
     session_do();
-    session_set_errt(SMP__ERR_AUTHFAIL);
+    session_set_errt(SMP_ERR_AUTHFAIL);
     //$redirect = LOC_AUTHFAILED;
 }
 elseif (!empty(post_get_frmBtn()) 
@@ -98,7 +98,7 @@ elseif (!empty(post_get_frmBtn())
     }
     else {
         // Enviar mensaje user pass incorrecto       
-        session_set_errt(SMP__ERR_AUTHFAIL);
+        session_set_errt(SMP_ERR_AUTHFAIL);
     }
 }
 

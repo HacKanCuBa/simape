@@ -340,7 +340,7 @@ if (page_token_validate(get_get_pagetkn()) &&
     //
     session_terminate();
     session_do();
-    session_set_errt(SMP__ERR_AUTHFAIL);
+    session_set_errt(SMP_ERR_AUTHFAIL);
     $redirect = SMP_LOC_NAV;  
     $params = 'accion=logout';
 }
