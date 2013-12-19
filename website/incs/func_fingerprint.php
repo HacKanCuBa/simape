@@ -31,7 +31,7 @@ function fingerprint_token_get()
      * @return string Fingerprint token
      */ 
     return hash_get($_SERVER['HTTP_USER_AGENT']
-                    . constant('__SMP_FINGERPRINT_TKN')
+                    . constant('SMP_FINGERPRINT_TKN')
                     . $_SERVER['REMOTE_ADDR']
                     . timestamp_get_today()
     );

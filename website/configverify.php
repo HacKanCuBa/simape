@@ -51,12 +51,12 @@ function shorthand_to_bytes($val)
 }
 
 // Verificar configuración
-if (!defined('__SMP_CONFIG')) { 
+if (!defined('SMP_CONFIG')) { 
     die("No se pudo cargar el archivo config.php"); 
 }
 
-setlocale(LC_TIME, __SMP_LOCALE);
-date_default_timezone_set(__SMP_TIMEZONE);
+setlocale(LC_TIME, SMP_LOCALE);
+date_default_timezone_set(SMP_TIMEZONE);
 
 $upload_max_filesize = shorthand_to_bytes(ini_get('upload_max_filesize'));
 $post_max_size = shorthand_to_bytes(ini_get('post_max_size'));
@@ -69,18 +69,18 @@ if (($upload_max_filesize > $post_max_size)
         . 'upload_max_filesize <= post_max_size <= memory_limit');
 }
 
-if ((constant('__SMP_FILE_MAXUPLOADSIZE') > $upload_max_filesize) 
-     || (constant('__SMP_FILE_MAXIMGSIZE') > $upload_max_filesize)
+if ((constant('SMP_FILE_MAXUPLOADSIZE') > $upload_max_filesize) 
+     || (constant('SMP_FILE_MAXIMGSIZE') > $upload_max_filesize)
 ) {
-    die('ERROR GRAVE: __SMP_FILE_MAXUPLOADSIZE y __SMP_FILE_MAXIMGSIZE no pueden ser mayores '
+    die('ERROR GRAVE: SMP_FILE_MAXUPLOADSIZE y SMP_FILE_MAXIMGSIZE no pueden ser mayores '
         . 'que upload_max_filesize');
 }
 
-if ((constant('__SMP_FILE_MAXUPLOADSIZE') > constant('__SMP_FILE_MAXSTORESIZE'))
-     || (constant('__SMP_FILE_MAXIMGSIZE') > constant('__SMP_FILE_MAXSTORESIZE'))
+if ((constant('SMP_FILE_MAXUPLOADSIZE') > constant('SMP_FILE_MAXSTORESIZE'))
+     || (constant('SMP_FILE_MAXIMGSIZE') > constant('SMP_FILE_MAXSTORESIZE'))
 ) {
-    die('ERROR GRAVE: __SMP_FILE_MAXUPLOADSIZE y __SMP_FILE_MAXIMGSIZE no pueden ser mayores'
-        . ' que __SMP_FILE_MAXSTORESIZE!!');
+    die('ERROR GRAVE: SMP_FILE_MAXUPLOADSIZE y SMP_FILE_MAXIMGSIZE no pueden ser mayores'
+        . ' que SMP_FILE_MAXSTORESIZE!!');
 }
 
-define('__SMP_CONFIGVERIFY', TRUE);
+define('SMP_CONFIGVERIFY', TRUE);

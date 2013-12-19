@@ -28,9 +28,9 @@
  * Todas las paginas deben llamar a ésta y ésta redireccionara adecuadamente.
  */
 
-if (!defined('CONFIG')) { require_once 'loadconfig.php'; }
-    
-session_do();
+session_start();
+
+include 'load.php';
 
 if (fingerprint_token_validate() &&
         sessionkey_validate(session_get_username(), session_get_sessionkey())) {
@@ -51,16 +51,16 @@ if (fingerprint_token_validate() &&
             break;
 
         case 'perfilusr':
-            $redirect = __SMP_LOC_USUARIO;
+            $redirect = SMP_LOC_USUARIO;
             break;
 
         case 'perfilemp':
-            $redirect = __SMP_LOC_EMPLEADO;
+            $redirect = SMP_LOC_EMPLEADO;
             break;
 
         case 'mensajes':
         default:
-            $redirect = __SMP_LOC_MSGS;
+            $redirect = SMP_LOC_MSGS;
             $params .= "#tabR";
             break;
     }
@@ -71,8 +71,8 @@ else
     //
     session_terminate();
     session_do();
-    session_set_errt(__SMP__ERR_AUTHFAIL);
-    $redirect = __SMP_LOC_LOGIN;  
+    session_set_errt(SMP__ERR_AUTHFAIL);
+    $redirect = SMP_LOC_LOGIN;  
     $params = NULL;
 }
 

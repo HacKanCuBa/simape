@@ -25,10 +25,10 @@
 function page_get_url($loc = NULL, $params = NULL) 
 {
     if (!empty($params)) {
-        return __SMP_WEB_ROOT . $loc . '?' . $params;
+        return SMP_WEB_ROOT . $loc . '?' . $params;
     }
     else {
-        return __SMP_WEB_ROOT . $loc;
+        return SMP_WEB_ROOT . $loc;
     }
 }
 
@@ -48,9 +48,9 @@ function page_get_head($title, $stylesheet = NULL)
             . "\n\t<title>$title</title>"
             . "\n\t<meta name='robots' content='noindex,nofollow' />"
             . "\n\t<link rel='stylesheet' type='text/css' href='" 
-            . __SMP_WEB_ROOT . __SMP_LOC_CSS . $stylesheet . "'>"
+            . SMP_WEB_ROOT . SMP_LOC_CSS . $stylesheet . "'>"
             . "\n\t<link rel='icon' type='image/ico'  href='" 
-            . __SMP_WEB_ROOT . "favicon.ico'>";
+            . SMP_WEB_ROOT . "favicon.ico'>";
 }
 
 function page_get_body() 
@@ -69,7 +69,7 @@ function page_get_header()
      * Debe continuarse con page_get_header_close
      */
     return "\n\t<div class='header'>"
-            . "\n\t\t<img src='". __SMP_WEB_ROOT . __SMP_LOC_IMGS . "header_small.png' " 
+            . "\n\t\t<img src='". SMP_WEB_ROOT . SMP_LOC_IMGS . "header_small.png' " 
             . "alt='CSJN - CMF - SIMAPE' title='Corte Suprema de Justicia de "
             . "la Naci&oacute;n - A&ntilde;o de su Sesquicentenario - Cuerpo "
             . "M&eacute;dico Forense - SiMaPe' id='img_header_small' />";
@@ -95,11 +95,11 @@ function page_get_navbarV()
             . "\n\t\t<ul class='nav_vert'>"
             . "\n\t\t\t<li class='category'><a>&iexcl;Bienvenido <i>" 
             . session_get_username() . "</i>!</a>"
-            . "\n\t\t\t<li><a href='" . page_get_url(__SMP_LOC_NAV, 'accion=mensajes') 
+            . "\n\t\t\t<li><a href='" . page_get_url(SMP_LOC_NAV, 'accion=mensajes') 
             . "'>Mensajes</a></li>"
-            . "\n\t\t\t<li><a href='" . page_get_url(__SMP_LOC_NAV, 'accion=perfilemp') 
+            . "\n\t\t\t<li><a href='" . page_get_url(SMP_LOC_NAV, 'accion=perfilemp') 
             . "'>Mi perfil de empleado</a></li>"
-            . "\n\t\t\t<li><a href='" . page_get_url(__SMP_LOC_NAV, 'accion=perfilusr') 
+            . "\n\t\t\t<li><a href='" . page_get_url(SMP_LOC_NAV, 'accion=perfilusr') 
             . "'>Mi perfil de usuario</a></li>"            
             . "\n\t\t\t<li class='category'><a>Administraci&oacute;n de usuarios</a></li>"
             . "\n\t\t\t<li><a href='#'>Listar todos los existentes</a></li>"
@@ -114,7 +114,7 @@ function page_get_navbarV()
             . "\n\t\t\t<li><a href='#'>Ver por fecha</a></li>"
             . "\n\t\t\t<li><a href='#'>Ver por empleado</a></li>"
             . "\n\t\t\t<li class='category'><a href='" 
-            . page_get_url(__SMP_LOC_NAV, 'accion=logout') 
+            . page_get_url(SMP_LOC_NAV, 'accion=logout') 
             . "'>Cerrar sesi&oacute;n</a></li>"
             . "\n\t\t</ul>"
             . "\n\t</div>";
@@ -127,15 +127,15 @@ function page_get_navbarV()
     $perfilemp = '';
     
     switch ($currentpage) {
-        case __SMP_LOC_MSGS:
+        case SMP_LOC_MSGS:
             $msgs = " class='current'";
             break;
         
-        case __SMP_LOC_EMPLEADO:
+        case SMP_LOC_EMPLEADO:
             $perfilemp = " class='current'";
             break;
         
-        case __SMP_LOC_USUARIO:
+        case SMP_LOC_USUARIO:
             $perfilusr = " class='current'";
             break;
         
@@ -144,10 +144,10 @@ function page_get_navbarV()
     
     return '<div style="text-align: center; margin-top: auto; top: auto; height: auto;">
         <ul id="nav">
-            <li' . $msgs . '><a href="' . page_get_url(__SMP_LOC_NAV, "accion=mensajes") . '">&iexcl;Bienvenido <i>' . session_get_username() . '</i>!</a></li>
-            <li' . $perfilusr . '><a href="' . page_get_url(__SMP_LOC_NAV, "accion=perfilusr") . '">Mi perfil de usuario</a>
-            <li' . $perfilemp . '><a href="' . page_get_url(__SMP_LOC_NAV, 'accion=perfilemp') . '">Mi perfil de empleado</a></li>
-            <li><a href="' . page_get_url(__SMP_LOC_NAV, 'accion=logout') . '">Cerrar sesi&oacute;n</a></li>
+            <li' . $msgs . '><a href="' . page_get_url(SMP_LOC_NAV, "accion=mensajes") . '">&iexcl;Bienvenido <i>' . session_get_username() . '</i>!</a></li>
+            <li' . $perfilusr . '><a href="' . page_get_url(SMP_LOC_NAV, "accion=perfilusr") . '">Mi perfil de usuario</a>
+            <li' . $perfilemp . '><a href="' . page_get_url(SMP_LOC_NAV, 'accion=perfilemp') . '">Mi perfil de empleado</a></li>
+            <li><a href="' . page_get_url(SMP_LOC_NAV, 'accion=logout') . '">Cerrar sesi&oacute;n</a></li>
         </ul>
     </div>';
 }*/
@@ -188,7 +188,7 @@ function page_token_make($randtkn)
 {
     return hash_get(timestamp_get_thisHours(1) 
                     . $randtkn 
-                    . constant('__SMP_PAGE_TKN')
+                    . constant('SMP_PAGE_TKN')
     );
 }
 

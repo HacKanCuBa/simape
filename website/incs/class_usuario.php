@@ -21,12 +21,12 @@
  * 
  *****************************************************************************/
 
-include_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_perfil.php';
-include_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_password.php';
-include_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_db.php';
-include_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_crypto.php';
-include_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_empleado.php';
-include_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_sessionkey.php';
+include_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_perfil.php';
+include_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_password.php';
+include_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_db.php';
+include_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_crypto.php';
+include_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_empleado.php';
+include_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_sessionkey.php';
 
 /**
  * Esta clase maneja todo lo referido al usuario:
@@ -140,8 +140,8 @@ class Usuario extends UsuarioPerfil
 
         if (!empty($username) 
             && is_string($username)
-            && (strlen($username) <= constant('__SMP_USRNAME_MAXLEN')) 
-            && (strlen($username) >= constant('__SMP_USRNAME_MINLEN'))
+            && (strlen($username) <= constant('SMP_USRNAME_MAXLEN')) 
+            && (strlen($username) >= constant('SMP_USRNAME_MINLEN'))
         ) {
             return TRUE;
         } else {

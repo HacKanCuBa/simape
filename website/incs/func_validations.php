@@ -35,8 +35,8 @@ function isValid_username(string $username)
     
     if (!empty($username) 
         && is_string($username)
-        && (strlen($username) <= constant('__SMP_USRNAME_MAXLEN')) 
-        && (strlen($username) >= constant('__SMP_USRNAME_MINLEN'))
+        && (strlen($username) <= constant('SMP_USRNAME_MAXLEN')) 
+        && (strlen($username) >= constant('SMP_USRNAME_MINLEN'))
     ) {
         return TRUE;
     } else {
@@ -58,8 +58,8 @@ function isValid_password(string $password)
     
     if (!empty($password)
         && is_string($password)
-        && (strlen($password) <= constant('__SMP_PWD_MAXLEN')) 
-        && (strlen($password) >= constant('__SMP_PWD_MINLEN'))
+        && (strlen($password) <= constant('SMP_PWD_MAXLEN')) 
+        && (strlen($password) >= constant('SMP_PWD_MINLEN'))
     ) {
         return TRUE;
     } else {
@@ -79,7 +79,7 @@ function isValid_msg(string $msg)
     
     if (!empty($msg) 
         && is_string($msg)
-        && (strlen($msg) <= constant('__SMP_MGS_MAXLEN'))
+        && (strlen($msg) <= constant('SMP_MGS_MAXLEN'))
     ) {
         return TRUE;
     } else {

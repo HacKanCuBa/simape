@@ -32,11 +32,11 @@
  * - - req=arch1,arch2,...
  * - - req_o=arch1,arch2,...
  * Reconoce todos los parámetros, y cargará el archivo pedido desde:
- * __SMP_INC_ROOT . __SMP_LOC_INCS . [calificador] . php
+ * SMP_INC_ROOT . SMP_LOC_INCS . [calificador] . php
  * Los calificadores solo pueden tener letras, nros, - y _, ningún otro símbolo 
  * está admitido.  
- * Longitud máxima: __SMP_LOAD_MAXLEN caracteres.
- * Cantidad máxima de inclusiones: __SMP_LOAD_MAXCANT.
+ * Longitud máxima: SMP_LOAD_MAXLEN caracteres.
+ * Cantidad máxima de inclusiones: SMP_LOAD_MAXCANT.
  * 
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
@@ -44,8 +44,8 @@
  * @version 0.7
  */
 //
-const __SMP_LOAD_MAXLEN = 25;
-const __SMP_LOAD_MAXCANT = 20;
+const SMP_LOAD_MAXLEN = 25;
+const SMP_LOAD_MAXCANT = 20;
 $actionArray = array('inc', 'inc_o', 'req', 'req_o');
 //
 
@@ -60,7 +60,7 @@ function isValid_calificador($calificador)
     if (!empty($calificador)
         && is_string($calificador)
         && preg_match('/^[a-z0-9A-Z_-]{1,' 
-                      . constant('__SMP_LOAD_MAXLEN') 
+                      . constant('SMP_LOAD_MAXLEN') 
                       . '}$/', $calificador)
     ) {
         return TRUE;
@@ -72,7 +72,7 @@ function isValid_calificador($calificador)
 require 'configload.php';
 include 'configverify.php';
 
-require __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_sanitizar.php';
+require SMP_INC_ROOT . SMP_LOC_INCS . 'class_sanitizar.php';
 
 // Carga los archivos requeridos, si los hay
 if (session_status() == PHP_SESSION_ACTIVE) {
@@ -93,12 +93,12 @@ if (session_status() == PHP_SESSION_ACTIVE) {
                 $calificadorCant = 0;
                 foreach ($calificadorArray as $calificador) {
                     $calificadorCant++;
-                    if ($calificadorCant <= __SMP_LOAD_MAXCANT) {
+                    if ($calificadorCant <= SMP_LOAD_MAXCANT) {
                         if (isValid_calificador($calificador)) {
                             // ATENCION: Debe representarse al archivo con la ruta 
                             // completa!!
                             // De otra manera, se habilita un LFI
-                            $file = __SMP_INC_ROOT . __SMP_LOC_INCS 
+                            $file = SMP_INC_ROOT . SMP_LOC_INCS 
                                     . $calificador . '.php'; 
 
                             switch ($action) {
@@ -134,7 +134,7 @@ if (session_status() == PHP_SESSION_ACTIVE) {
                             $errT = E_USER_NOTICE;
                         }
                         trigger_error('Se ha alcanzado la cantidad limite de '
-                                      . 'calificadores (' . __SMP_LOAD_MAXCANT 
+                                      . 'calificadores (' . SMP_LOAD_MAXCANT 
                                       . ').  Se detiene la carga' , $errT);
                         break;
                     }
@@ -145,4 +145,4 @@ if (session_status() == PHP_SESSION_ACTIVE) {
     }
 }
 // --
-define('__SMP_LOAD', TRUE);
+define('SMP_LOAD', TRUE);

@@ -192,7 +192,7 @@ function session_get($key)
 }
 function session_get_sessionkey() 
 {
-    $tkn = session_get('__SMP_SESSIONKEY_TKN');
+    $tkn = session_get('SMP_SESSIONKEY_TKN');
     $key = session_get('sessionkey_key');
     $timestamp = (int) session_get('sessionkey_timestamp');
     
@@ -257,7 +257,7 @@ function session_get_data_dirty()
 
 function session_unset_sessionkey()
 {
-    unset($_SESSION['__SMP_SESSIONKEY_TKN'], 
+    unset($_SESSION['SMP_SESSIONKEY_TKN'], 
             $_SESSION['sessionkey_key'], 
             $_SESSION['sessionkey_timestamp']);
 }
@@ -295,7 +295,7 @@ function session_unset_data() {
 
 function session_set_sessionkey($sessionkey) 
 {
-    $_SESSION['__SMP_SESSIONKEY_TKN'] = sessionkey_get_token($sessionkey);
+    $_SESSION['SMP_SESSIONKEY_TKN'] = sessionkey_get_token($sessionkey);
     $_SESSION['sessionkey_key'] = sessionkey_get_key($sessionkey);
     $_SESSION['sessionkey_timestamp'] = sessionkey_get_timestamp($sessionkey);
 }
@@ -583,10 +583,10 @@ function err_unset_errt()
 // --
 //
 // -- Guardar archivos
-const __SMP_FS_BINARY = 1;
-const __SMP_FS_BASE64 = 2;
+const SMP_FS_BINARY = 1;
+const SMP_FS_BASE64 = 2;
 
-function file_store_db($db, $tabla, $campo, &$datos, $tipo = __SMP_FS_BASE64) 
+function file_store_db($db, $tabla, $campo, &$datos, $tipo = SMP_FS_BASE64) 
 {
     /**
      * Guarda un archivo en la base de datos.
@@ -601,8 +601,8 @@ function file_store_db($db, $tabla, $campo, &$datos, $tipo = __SMP_FS_BASE64)
      * @param mixed &$datos Datos que serán almacenados (por referencia para
      * evitar replica)
      * @param int $$tipo Constante que define la forma en que se 
-     * guardará el archivo.  Puede ser __SMP_FS_BASE64 (por defecto)
-     * o __SMP_FS_BINARY.  El primero implica guardar convertido en un
+     * guardará el archivo.  Puede ser SMP_FS_BASE64 (por defecto)
+     * o SMP_FS_BINARY.  El primero implica guardar convertido en un
      * string BASE64.  El segundo, lo guarda como binario.
      * @return bool Devuelve TRUE si se guardó exitosamente, 
      * FALSE en caso contrario.
@@ -615,15 +615,15 @@ function file_store_db($db, $tabla, $campo, &$datos, $tipo = __SMP_FS_BASE64)
     $field = db_sanitizar($db, $campo);
     if (!empty($db) && !empty($table) && !empty($field) && !empty($tipo)) {
         $data_size = strlen($datos);
-        if ($data_size <= constant('__SMP_FILE_MAXSTORESIZE')) {
-            if ($tipo == constant('__SMP_FS_BASE64')) {
-                if ($data_size <= (constant('__SMP_FILE_MAXSTORESIZE') * 0.6)) {
+        if ($data_size <= constant('SMP_FILE_MAXSTORESIZE')) {
+            if ($tipo == constant('SMP_FS_BASE64')) {
+                if ($data_size <= (constant('SMP_FILE_MAXSTORESIZE') * 0.6)) {
                     // Esto puede demorar bastante!
                     $query = "INSERT INTO " . $table . " (" . $field 
                             . ") VALUES (" . base64_encode($datos) . ")";
                     $do_query = TRUE;
                 }
-            } elseif ($tipo == constant('__SMP_FS_BINARY')) {
+            } elseif ($tipo == constant('SMP_FS_BINARY')) {
                 $query = "INSERT INTO " . $table . " (" . $field 
                         . ") VALUES (" . $datos . ")";
                 $do_query = TRUE;

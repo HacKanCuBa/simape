@@ -21,7 +21,7 @@
  * 
  *****************************************************************************/
 
-require_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_crypto.php';
+require_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_crypto.php';
 
 /**
  * Maneja la creación y validación de UIDs.
