@@ -61,12 +61,12 @@ class Password
      */
     public function __construct($PlaintextPassword = NULL)
     {
-        if (((int) constant('__SMP_PASSWORD_COST')) < 10) {
+        if (((int) constant('SMP_PASSWORD_COST')) < 10) {
             $this->PasswordCost = 10;
-        } elseif (((int) constant('__SMP_PASSWORD_COST')) > 31) {
+        } elseif (((int) constant('SMP_PASSWORD_COST')) > 31) {
             $this->PasswordCost = 31;
         } else {
-            $this->PasswordCost = constant('__SMP_PASSWORD_COST');
+            $this->PasswordCost = constant('SMP_PASSWORD_COST');
         }
         
         $this->setPlaintextPassword($PlaintextPassword);
@@ -92,8 +92,8 @@ class Password
             && is_string($password)
             && preg_match('/^(?=.*\d)(?=.*[A-Z])(?=.*[a-z])' 
                           . '[\x{20}-\x{af}\p{L}]'
-                          . '{' . constant('__SMP_PWD_MINLEN') . ','
-                          . constant('__SMP_PWD_MAXLEN') . '}$/u', $password)
+                          . '{' . constant('SMP_PWD_MINLEN') . ','
+                          . constant('SMP_PWD_MAXLEN') . '}$/u', $password)
         ) {
             return TRUE;
         } else {

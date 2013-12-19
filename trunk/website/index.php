@@ -34,7 +34,7 @@ session_do();
 
 if(!empty(Sanitizar::glPOST('do_login')))
 {
-    page_goto(__SMP_LOC_LOGIN);
+    page_goto(SMP_LOC_LOGIN);
     exit();
 }
 ?>

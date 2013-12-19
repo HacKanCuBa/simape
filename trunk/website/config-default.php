@@ -38,58 +38,58 @@
 // << Config
 // 
 // -- Base de datos
-const __SMP_DB_HOST = 'localhost';
-const __SMP_DB_NAME = 'SiMaPe';
+const SMP_DB_HOST = 'localhost';
+const SMP_DB_NAME = 'SiMaPe';
 
-const __SMP_DB_USER_RO = 'appro';
-const __SMP_DB_PASS_RO = 'SECURE_PASS';
+const SMP_DB_USER_RO = 'appro';
+const SMP_DB_PASS_RO = 'SECURE_PASS';
 
-const __SMP_DB_USER_RW = 'apprw';
-const __SMP_DB_PASS_RW = 'SECURE_PASS';
+const SMP_DB_USER_RW = 'apprw';
+const SMP_DB_PASS_RW = 'SECURE_PASS';
 
 // ATENCION
 // Verificar la configuracion de apache (y .htaccess) y la funcion
 // page_get_head()
 // al cambiar el charset!
 // (NO RECOMENDADO)
-const __SMP_DB_CHARSET = 'utf8';
+const SMP_DB_CHARSET = 'utf8';
 // --
 // 
 // -- Idioma, localización
 // Los disponibles: cat /usr/share/i18n/SUPPORTED
-const __SMP_LOCALE = 'es_AR.UTF-8';
-const __SMP_TIMEZONE = 'America/Argentina/Buenos_Aires';
+const SMP_LOCALE = 'es_AR.UTF-8';
+const SMP_TIMEZONE = 'America/Argentina/Buenos_Aires';
 //--
 // 
 // -- Archivos (en bytes)
-// NOTA: debe ser menor que __SMP_FILE_MAXSTORESIZE!!
+// NOTA: debe ser menor que SMP_FILE_MAXSTORESIZE!!
 // IMPORTANTE: los parametros upload_max_filesize, post_max_size y memory_limit
 //  del archivo /etc/php5/mods-available/security.ini determinan, en ese orden,
 //  el limite de subida de archivos.  
 //  Debe ser mayor al valor de estas constantes.
 //  De no ser así, no se podrá subir archivos.
 // Se emplea para archivos adjuntos
-const __SMP_FILE_MAXUPLOADSIZE = 5242880;    // 5MB
+const SMP_FILE_MAXUPLOADSIZE = 5242880;    // 5MB
 // Se emplea para imagenes, como las de perfil
-const __SMP_FILE_MAXIMGSIZE = 3145728;        // 3MB
+const SMP_FILE_MAXIMGSIZE = 3145728;        // 3MB
 // --
 // 
 // -- Crypto config
 // Cambiar estos valores de tanto en tanto
 // Usar: https://www.grc.com/passwords.htm
-const __SMP_FINGERPRINT_TKN = 
+const SMP_FINGERPRINT_TKN = 
         'RANDOM_STRING';
-const __SMP_SESSIONKEY_TKN = 
+const SMP_SESSIONKEY_TKN = 
         'RANDOM_STRING';
-const __SMP_PAGE_TKN = 
+const SMP_PAGE_TKN = 
         'RANDOM_STRING';
-const __SMP_FORM_TKN = 
+const SMP_FORM_TKN = 
         'RANDOM_STRING';
 // --
 // 
 // -- Sessionkey
 // Tiempo de vida, en segundos
-const __SMP_SESSIONKEY_LIFETIME = 21600; // 6hs
+const SMP_SESSIONKEY_LIFETIME = 21600; // 6hs
 // --
 // 
 // >>
@@ -101,7 +101,7 @@ const __SMP_SESSIONKEY_LIFETIME = 21600; // 6hs
 // -- Directorio de páginas
 // Raiz del sitio (default '/')
 // Debe corresponder a la configuración de apache, y siempre comenzar con '/'.
-const __SMP_WEB_ROOT = '/';
+const SMP_WEB_ROOT = '/';
 
 // Raiz para inclusion de archivos
 // Si se mueve este archivo a otro directorio, modificar esta definición 
@@ -109,30 +109,30 @@ const __SMP_WEB_ROOT = '/';
 // NOTA: Solo puede moverse este archivo a otro directorio superior al del 
 // sitio.  Si se lo mueve a otro directorio no superior, loadconfig.php no 
 // podrá encontrar este archivo.  Ver loadconfig.php para más información.
-define('__SMP_INC_ROOT', dirname(__FILE__) .'/');
+define('SMP_INC_ROOT', dirname(__FILE__) .'/');
 
 // Definir las siguientes rutas en forma relativa, tal de poder emplear luego
-// __SMP_INC_ROOT o __SMP_WEB_ROOT según sea necesario.
-const __SMP_LOC_CSS = 'css/';
-const __SMP_LOC_IMGS = 'imgs/';
-const __SMP_LOC_PAGS = 'pags/';
-const __SMP_LOC_INCS = 'incs/';
-const __SMP_LOC_UPLOAD = 'upload/';
-const __SMP_LOC_UPLOAD_FOTOS = 'fotos/';
+// SMP_INC_ROOT o SMP_WEB_ROOT según sea necesario.
+const SMP_LOC_CSS = 'css/';
+const SMP_LOC_IMGS = 'imgs/';
+const SMP_LOC_PAGS = 'pags/';
+const SMP_LOC_INCS = 'incs/';
+const SMP_LOC_UPLOAD = 'upload/';
+const SMP_LOC_UPLOAD_FOTOS = 'fotos/';
 
-const __SMP_LOC_LOGIN = 'login.php';
-const __SMP_LOC_NAV = 'nav.php';
+const SMP_LOC_LOGIN = 'login.php';
+const SMP_LOC_NAV = 'nav.php';
 
-define('__SMP_LOC_MSGS', __SMP_LOC_PAGS . 'mensajes.php');
-define('__SMP_LOC_USUARIO', __SMP_LOC_PAGS . 'usuario.php');
-define('__SMP_LOC_EMPLEADO', __SMP_LOC_PAGS . 'empleado.php');
-define('__SMP_LOC_FICHAJE', __SMP_LOC_PAGS . 'fichaje.php');
+define('SMP_LOC_MSGS', SMP_LOC_PAGS . 'mensajes.php');
+define('SMP_LOC_USUARIO', SMP_LOC_PAGS . 'usuario.php');
+define('SMP_LOC_EMPLEADO', SMP_LOC_PAGS . 'empleado.php');
+define('SMP_LOC_FICHAJE', SMP_LOC_PAGS . 'fichaje.php');
 // --
 //
 // -- Errores
-const __SMP__ERR_AUTHFAIL = 'Acceso incorrecto';
-const __SMP_ERR_DBCONN = 'Error de conexi&oacute;n con la base de datos';
-const __SMP_ERR_WRONGPASS = 'Contrase&ntilde;a incorrecta';
+const SMP__ERR_AUTHFAIL = 'Acceso incorrecto';
+const SMP_ERR_DBCONN = 'Error de conexi&oacute;n con la base de datos';
+const SMP_ERR_WRONGPASS = 'Contrase&ntilde;a incorrecta';
 // --
 // 
 // -- Crypto
@@ -141,18 +141,18 @@ const __SMP_ERR_WRONGPASS = 'Contrase&ntilde;a incorrecta';
 // una página de prueba: Password::getOptimalCost().
 // IMPORTANTE: ¡NUNCA emplear valores menores que 10!
 // NOTA: si vale menos que 10, no será tenido en cuenta.
-const __SMP_PASSWORD_COST = 13;
+const SMP_PASSWORD_COST = 13;
 // --
 //
 // -- Nombre de usuario y contraseña
-const __SMP_USRNAME_MAXLEN = 15;
-const __SMP_USRNAME_MINLEN = 5;
-const __SMP_PWD_MAXLEN = 150;
-const __SMP_PWD_MINLEN = 10;
+const SMP_USRNAME_MAXLEN = 15;
+const SMP_USRNAME_MINLEN = 5;
+const SMP_PWD_MAXLEN = 150;
+const SMP_PWD_MINLEN = 10;
 // --
 // 
 // -- Mensajeria
-const __SMP_MGS_MAXLEN = 140;
+const SMP_MGS_MAXLEN = 140;
 // --
 // 
 // -- Archivos (en bytes)
@@ -160,8 +160,8 @@ const __SMP_MGS_MAXLEN = 140;
 // que su tamaño aumenta aprox en un 40% (esto es, totalizaría 140% respecto
 // de no usar base64).
 // MEDIUMBLOB 15,9MB! Limite de la DB!!
-const __SMP_FILE_MAXSTORESIZE = 15728640;    // 15MB
+const SMP_FILE_MAXSTORESIZE = 15728640;    // 15MB
 // --
 // 
 // >>
-const __SMP_CONFIG = TRUE;
+const SMP_CONFIG = TRUE;

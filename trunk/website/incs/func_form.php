@@ -61,7 +61,7 @@ function form_token_make($randtkn)
 {
     return hash_get(timestamp_get_thisHours(1) 
                     . $randtkn 
-                    . constant('__SMP_FORM_TKN')
+                    . constant('SMP_FORM_TKN')
     );
 }
 

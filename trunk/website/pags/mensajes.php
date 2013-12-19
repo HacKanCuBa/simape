@@ -70,7 +70,7 @@ if (page_token_validate(get_get_pagetkn()) &&
                     if ($db->real_query($query)) {
                         session_set_msg('&iexcl;Mensaje enviado exitosamente!');
                         // recargar para mostrar mensaje
-                        $redirect = __SMP_LOC_MSGS;
+                        $redirect = SMP_LOC_MSGS;
                         $params = "#tabR&pagetkn=" . page_token_get_new();
                     }
                     else {
@@ -135,14 +135,14 @@ if (page_token_validate(get_get_pagetkn()) &&
     }
 
     if (!$db_conn_ok) {
-        session_set_errt(__SMP_ERR_DBCONN);
+        session_set_errt(SMP_ERR_DBCONN);
     }
 } else {
     // Error de autenticacion
     session_terminate();
     session_do();
-    session_set_errt(__SMP__ERR_AUTHFAIL);
-    $redirect = __SMP_LOC_LOGIN;  
+    session_set_errt(SMP__ERR_AUTHFAIL);
+    $redirect = SMP_LOC_LOGIN;  
     $params = NULL;
 }
 
@@ -219,17 +219,17 @@ if (isset($redirect)) {
                                            name="frm_txtReceptor" 
                                            placeholder="Usuario receptor"
                                            pattern=".{<?php 
-                                           echo constant('__SMP_USRNAME_MINLEN') . ',' 
-                                                   . constant('__SMP_USRNAME_MAXLEN'); ?>}"
+                                           echo constant('SMP_USRNAME_MINLEN') . ',' 
+                                                   . constant('SMP_USRNAME_MAXLEN'); ?>}"
                                                    type="text" /></td>
                  </tr>
                  <tr><td colspan="2">
                  <textarea name="frm_txtMensaje" placeholder="Escribir nuevo mensaje"
                            style="overflow-y:scroll; width:100%; resize: none;"
-                           maxlength="<?php echo constant('__SMP_MGS_MAXLEN'); ?>"
+                           maxlength="<?php echo constant('SMP_MGS_MAXLEN'); ?>"
                            wrap="soft" form="frm_msgs" 
                            title="<?php echo "M&aacute;ximo " 
-                                             . constant('__SMP_MGS_MAXLEN') 
+                                             . constant('SMP_MGS_MAXLEN') 
                                              . " caracteres"; 
                                   ?>"></textarea>
                  </td></tr>

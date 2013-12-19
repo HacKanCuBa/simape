@@ -49,7 +49,7 @@ if (page_token_validate(get_get_pagetkn()) &&
     
     if (!empty(post_get_frmBtn('Cancelar'))) {
         // Volver
-        $redirect = __SMP_LOC_NAV;
+        $redirect = SMP_LOC_NAV;
         // Limpiar los datos
         session_unset_data();
     }
@@ -180,11 +180,11 @@ if (page_token_validate(get_get_pagetkn()) &&
             // equivocado...
             // No leer ninguna otra entrada del usuario
             unset($_POST);
-            session_set_errt(__SMP_ERR_WRONGPASS);
+            session_set_errt(SMP_ERR_WRONGPASS);
         }
         
         // Recargar pagina 
-        $redirect = __SMP_LOC_NAV;
+        $redirect = SMP_LOC_NAV;
         $params = "accion=perfilusr";
         // Limpiar los datos para recargarlos
         session_unset_data();
@@ -243,7 +243,7 @@ if (page_token_validate(get_get_pagetkn()) &&
     // Manejo de errores...
     //
     if (!$db_conn_ok) {
-        session_set_errt(__SMP_ERR_DBCONN);
+        session_set_errt(SMP_ERR_DBCONN);
         unset($usrdata);
     }
     
@@ -255,8 +255,8 @@ else {
     //
     session_terminate();
     session_do();
-    session_set_errt(__SMP__ERR_AUTHFAIL);
-    $redirect = __SMP_LOC_NAV;  
+    session_set_errt(SMP__ERR_AUTHFAIL);
+    $redirect = SMP_LOC_NAV;  
     $params = 'accion=logout';
 }
 
@@ -282,12 +282,12 @@ if (isset($redirect)) {
                                 <td style="text-align: right;">Nombre de usuario</td>
                                 <td style="text-align: left;"><input name="frm_txtUsuario" 
                                           title="M&iacute;nimo <?php 
-                                          echo constant('__SMP_USRNAME_MINLEN'); 
+                                          echo constant('SMP_USRNAME_MINLEN'); 
                                           ?> caracteres y m&aacute;ximo <?php 
-                                          echo constant('__SMP_USRNAME_MAXLEN'); ?>"
+                                          echo constant('SMP_USRNAME_MAXLEN'); ?>"
                                           pattern=".{<?php 
-                                          echo constant('__SMP_USRNAME_MINLEN') . ',' 
-                                                  . constant('__SMP_USRNAME_MAXLEN'); ?>}"
+                                          echo constant('SMP_USRNAME_MINLEN') . ',' 
+                                                  . constant('SMP_USRNAME_MAXLEN'); ?>}"
                                                   type="text" required value="<?php if (isset($usrdata['Usuario'])) { echo $usrdata['Usuario']; } ?>"
                                           placeholder="Nombre de usuario"/>
                                 </td>
@@ -296,12 +296,12 @@ if (isset($redirect)) {
                                 <td style="text-align: right;">Contraseña nueva</td>
                                 <td style="text-align: left;"><input name="frm_pwdNew" 
                                           title="M&iacute;nimo <?php 
-                                          echo constant('__SMP_PWD_MINLEN'); 
+                                          echo constant('SMP_PWD_MINLEN'); 
                                           ?> caracteres y m&aacute;ximo <?php 
-                                          echo constant('__SMP_PWD_MAXLEN'); ?>"
+                                          echo constant('SMP_PWD_MAXLEN'); ?>"
                                           pattern=".{<?php 
-                                          echo constant('__SMP_PWD_MINLEN') . ',' 
-                                                  . constant('__SMP_PWD_MAXLEN'); ?>}"
+                                          echo constant('SMP_PWD_MINLEN') . ',' 
+                                                  . constant('SMP_PWD_MAXLEN'); ?>}"
                                           type="password" 
                                           placeholder="(si desea cambiar la actual)"/>
                                 </td>
@@ -310,12 +310,12 @@ if (isset($redirect)) {
                                 <td style="text-align: right;">Verificar contraseña nueva</td>
                                 <td style="text-align: left;"><input name="frm_pwdNewV" 
                                           title="M&iacute;nimo <?php 
-                                          echo constant('__SMP_PWD_MINLEN'); 
+                                          echo constant('SMP_PWD_MINLEN'); 
                                           ?> caracteres y m&aacute;ximo <?php 
-                                          echo constant('__SMP_PWD_MAXLEN'); ?>"
+                                          echo constant('SMP_PWD_MAXLEN'); ?>"
                                           pattern=".{<?php 
-                                          echo constant('__SMP_PWD_MINLEN') . ',' 
-                                                  . constant('__SMP_PWD_MAXLEN'); ?>}"
+                                          echo constant('SMP_PWD_MINLEN') . ',' 
+                                                  . constant('SMP_PWD_MAXLEN'); ?>}"
                                           type="password" 
                                           />
                                 </td>
@@ -386,7 +386,7 @@ if (isset($redirect)) {
                             <td style="text-align: left;"><br />
                                 <input name="frm_pwdLogin" 
                                        title="Ingrese su contraseña actual para autenticarse"
-                                       maxlength="<?php echo constant('__SMP_PWD_MAXLEN'); ?>" 
+                                       maxlength="<?php echo constant('SMP_PWD_MAXLEN'); ?>" 
                                        type="password" 
                                        placeholder="(para aceptar los cambios)"/>
                             </td>

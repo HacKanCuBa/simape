@@ -49,8 +49,8 @@ do {
 } while ($location != '/');
 // -- */
 
-if (!defined('__SMP_CONFIG')) { 
+if (!defined('SMP_CONFIG')) { 
     die("No se puede encontrar el archivo config.php"); 
 }
 
-define('__SMP_CONFIGLOAD', TRUE);
+define('SMP_CONFIGLOAD', TRUE);

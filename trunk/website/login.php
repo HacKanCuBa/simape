@@ -74,7 +74,7 @@ if ((fingerprint_token_validate() === FALSE) ||
     session_terminate();
     // Crear una nueva
     session_do();
-    session_set_errt(__SMP__ERR_AUTHFAIL);
+    session_set_errt(SMP__ERR_AUTHFAIL);
     //$redirect = LOC_AUTHFAILED;
 }
 elseif (!empty(post_get_frmBtn()) 
@@ -93,12 +93,12 @@ elseif (!empty(post_get_frmBtn())
         $sessionkey = sessionkey_get_new($login_user);
         session_set_sessionkey($sessionkey);
         session_set_username($login_user);;
-        $redirect = __SMP_LOC_NAV;
+        $redirect = SMP_LOC_NAV;
         $params = "pagetkn=" . page_token_get_new();
     }
     else {
         // Enviar mensaje user pass incorrecto       
-        session_set_errt(__SMP__ERR_AUTHFAIL);
+        session_set_errt(SMP__ERR_AUTHFAIL);
     }
 }
 
@@ -167,7 +167,7 @@ echo "<br /><br /><br /><br /><br /><br /><br /> "
                   <td style="text-align: left;"><br />
                     <input name="frm_txt" 
                            title="Ingrese el nombre de usuario"
-                           maxlength="<?php echo constant('__SMP_USRNAME_MAXLEN'); ?>" 
+                           maxlength="<?php echo constant('SMP_USRNAME_MAXLEN'); ?>" 
                            type="text" autofocus required /> 
                   </td>
                 </tr>
@@ -179,7 +179,7 @@ echo "<br /><br /><br /><br /><br /><br /><br /> "
                     <input name="frm_pwdLogin" 
                            title="Ingrese la constrase&ntilde;a"
                            type="password" 
-                           maxlength="<?php echo constant('__SMP_PWD_MAXLEN'); ?>" 
+                           maxlength="<?php echo constant('SMP_PWD_MAXLEN'); ?>" 
                            required />
                   </td>
                 </tr>
@@ -190,7 +190,7 @@ echo "<br /><br /><br /><br /><br /><br /><br /> "
                       <input value="Cancelar"
                              title="Volver a la p&aacute;gina inicial" 
                              type="button" 
-                             onClick="window.location = '<?php echo constant('__SMP_WEB_ROOT'); ?>'" />
+                             onClick="window.location = '<?php echo constant('SMP_WEB_ROOT'); ?>'" />
                   </td>
                 </tr>
               </tbody>

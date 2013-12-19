@@ -21,9 +21,9 @@
  * 
  *****************************************************************************/
 
-require_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_crypto.php';
-require_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_uid.php';
-require_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_timestamp.php';
+require_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_crypto.php';
+require_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_uid.php';
+require_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_timestamp.php';
 
 /**
  * Maneja la creación y autenticación de la llave de sesión.
@@ -135,9 +135,9 @@ class Sessionkey
             // Se utiliza Timestamp::getThisSeconds para fozar la vida útil máxima
             return Crypto::getHash(Crypto::getHash($time 
                     . $this->token 
-                    . Timestamp::getThisSeconds(constant('__SMP_SESSIONKEY_LIFETIME')) 
+                    . Timestamp::getThisSeconds(constant('SMP_SESSIONKEY_LIFETIME')) 
                     . $this->uid->getUID()
-                    . constant('__SMP_SESSIONKEY_TKN')));
+                    . constant('SMP_SESSIONKEY_TKN')));
         } else {
             return NULL;
         }
@@ -286,7 +286,7 @@ class Sessionkey
         if (!empty($this->token) 
             && !empty($this->uid)
             && ($now >= $this->timestamp) 
-            && ($now < ($this->timestamp + constant('__SMP_SESSIONKEY_LIFETIME')))
+            && ($now < ($this->timestamp + constant('SMP_SESSIONKEY_LIFETIME')))
             && ($this->key === $this->keyMake())
         ) {
             return TRUE;            

@@ -21,7 +21,7 @@
  * 
  *****************************************************************************/
 
-require_once __SMP_INC_ROOT . __SMP_LOC_INCS . 'class_empleado.php';
+require_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_empleado.php';
 
 /**
  * Esta clase maneja todo lo referido a los perfiles de permisos:

@@ -39,9 +39,9 @@ function sessionkey_key_make($uid, $timestamp, $token)
     // Se utiliza timestamp_get_thisSeconds para fozar la vida útil máxima
     return hash_get(hash_get($time 
                             . $token 
-                            . timestamp_get_thisSeconds(constant('__SMP_SESSIONKEY_LIFETIME')) 
+                            . timestamp_get_thisSeconds(constant('SMP_SESSIONKEY_LIFETIME')) 
                             . $uid 
-                            . constant('__SMP_SESSIONKEY_TKN')
+                            . constant('SMP_SESSIONKEY_TKN')
     ));
 }
 
@@ -102,7 +102,7 @@ function sessionkey_validate($usuario, $sessionkey)
     if (!empty($sessionkey) 
         && !empty($usuario) 
         && ($now >= $timestamp) 
-        && ($now < ($timestamp + constant('__SMP_SESSIONKEY_LIFETIME')))
+        && ($now < ($timestamp + constant('SMP_SESSIONKEY_LIFETIME')))
     ) { 
         $uid = db_auto_get_user_uid($usuario);
 

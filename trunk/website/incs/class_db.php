@@ -96,9 +96,9 @@ class DB extends mysqli
     protected function conexionEstablecer($ModoRW = FALSE)
     {  
         if ($ModoRW) {
-            parent::__construct(__SMP_DB_HOST, __SMP_DB_USER_RW, __SMP_DB_PASS_RW, __SMP_DB_NAME);
+            parent::__construct(SMP_DB_HOST, SMP_DB_USER_RW, SMP_DB_PASS_RW, SMP_DB_NAME);
         } else {
-            parent::__construct(__SMP_DB_HOST, __SMP_DB_USER_RO, __SMP_DB_PASS_RO, __SMP_DB_NAME);
+            parent::__construct(SMP_DB_HOST, SMP_DB_USER_RO, SMP_DB_PASS_RO, SMP_DB_NAME);
         }
         
         if ($this->connect_error) {
@@ -116,9 +116,9 @@ class DB extends mysqli
      */
     protected function setCharset() 
     {
-        if ($this->character_set_name() != constant('__SMP_DB_CHARSET')) {
-            if ($this->set_charset(constant('__SMP_DB_CHARSET'))) {
-                return $this->real_query('SET NAMES ' . constant('__SMP_DB_CHARSET'));
+        if ($this->character_set_name() != constant('SMP_DB_CHARSET')) {
+            if ($this->set_charset(constant('SMP_DB_CHARSET'))) {
+                return $this->real_query('SET NAMES ' . constant('SMP_DB_CHARSET'));
             } else {
                 return FALSE;
             }
@@ -218,9 +218,9 @@ class DB extends mysqli
     public function cambiarModo($ModoRW = FALSE) 
     {
         if ($ModoRW) {
-            $this->change_user(__SMP_DB_USER_RW, __SMP_DB_PASS_RW, __SMP_DB_NAME);
+            $this->change_user(SMP_DB_USER_RW, SMP_DB_PASS_RW, SMP_DB_NAME);
         } else {
-            $this->change_user(__SMP_DB_USER_RO, __SMP_DB_PASS_RO, __SMP_DB_NAME);
+            $this->change_user(SMP_DB_USER_RO, SMP_DB_PASS_RO, SMP_DB_NAME);
         }
         
         return $this->conexionInicializar();
