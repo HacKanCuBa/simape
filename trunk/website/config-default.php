@@ -32,7 +32,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.8
+ * @version 0.81
  */
 
 // << Config
@@ -59,6 +59,7 @@ const SMP_DB_CHARSET = 'utf8';
 // Los disponibles: cat /usr/share/i18n/SUPPORTED
 const SMP_LOCALE = 'es_AR.UTF-8';
 const SMP_TIMEZONE = 'America/Argentina/Buenos_Aires';
+const SMP_PAGE_CHARSET = 'UTF-8';
 //--
 // 
 // -- Archivos (en bytes)
@@ -130,7 +131,7 @@ define('SMP_LOC_FICHAJE', SMP_LOC_PAGS . 'fichaje.php');
 // --
 //
 // -- Errores
-const SMP__ERR_AUTHFAIL = 'Acceso incorrecto';
+const SMP_ERR_AUTHFAIL = 'Acceso incorrecto';
 const SMP_ERR_DBCONN = 'Error de conexi&oacute;n con la base de datos';
 const SMP_ERR_WRONGPASS = 'Contrase&ntilde;a incorrecta';
 // --

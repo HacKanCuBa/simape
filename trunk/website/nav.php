@@ -71,7 +71,7 @@ else
     //
     session_terminate();
     session_do();
-    session_set_errt(SMP__ERR_AUTHFAIL);
+    session_set_errt(SMP_ERR_AUTHFAIL);
     $redirect = SMP_LOC_LOGIN;  
     $params = NULL;
 }

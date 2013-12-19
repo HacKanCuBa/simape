@@ -28,27 +28,109 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.1 untested
+ * @version 0.4 untested
  */
 
 class Page
-{
+{  
+    /**
+     * Nombre del archivo de imágen que se carga en el encabezado <br />
+     * (debe incluir extensión y residir en SMP_LOC_IMGS).
+     */
+    const SMP_PAGE_HEADER_IMG = 'header_small.png';
+    
+    /**
+     * Nombre del archivo Favicon predeterminado
+     * (debe residir en la raíz del sitio).
+     */
+    const SMP_PAGE_FAVICON = 'favicon';
+    
+    /**
+     * Nombre de la hoja de estilos predeterminada 
+     * (debe residir en el subdirectorio SMP_LOC_CSS).
+     */
+    const SMP_PAGE_STYLESHEET_DEFAULT = 'main';
     /**
      * Determina la logitud máxima que puede tener una ruta relativa desde '/' 
      * a una página.
      */
     const SMP_PAGE_LOC_MAXLEN = 100;
+    
+    /**
+     * Determina la longitud máxima que puede tener el nombre de una página 
+     * (sin extensión, y sin ruta).
+     */
+    const SMP_PAGE_NAME_MAXLEN = 25;
+
+    /**
+     * Tiempo de vida de un token de página, en segundos.
+     */
+    const SMP_PAGE_TOKEN_LIFETIME = 3600;
+
+    /**
+     * Nombre de la hoja de estilos que será cargada 
+     * (sin la extensión).  Debe encontrarse en el subdirectorio SMP_LOC_CSS.
+     * @var string 
+     */
+    protected $stylesheet;
+    
+    /**
+     * Título de la página que está siendo cargada. 
+     * @var string
+     */
+    protected $title;
+    
+    protected $timestamp, $token;
 
     // __ SPECIALS
     
     // __ PRIV
     
     // __ PROT
-    protected function isValid_loc($loc)
+    /**
+     * Determina si una ruta es válida.<br />
+     * Solo puede contener letras mayúsculas y minúsculas del alfabeto inglés,
+     * números y los símbolos '/', '-' y '_'.<br />
+     * El primer caracter debe ser una letra o un número.<br />
+     * La longitud máxima la determina SMP_PAGE_LOC_MAXLEN.
+     * 
+     * @param string $loc Ruta a validar
+     * @return boolean TRUE si la ruta es válida, FALSE si no.
+     */
+    protected static function isValid_loc($loc)
     {
         if (!empty($loc)
             && is_string($loc)
-            && preg_match('/^[a-zA-Z0-9]{1}[a-zA-Z0-9_-\/]{0,'. self::SMP_PAGE_LOC_MAXLEN . '}$/', $loc)
+            && preg_match('/^[a-zA-Z0-9]{1}[a-zA-Z0-9\_\-\/\.]{0,'
+                          . (self::SMP_PAGE_LOC_MAXLEN - 1) . '}$/', $loc)
+        ) {
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Valida un string y determina si es un título de página válido.
+     * @param string $title Título a validar.
+     * @return boolean TRUE si es válido, FALSE si no.
+     */
+    protected static function isValid_title($title)
+    {
+        if (isset($title) && is_string($title)) {
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    protected static function isValid_cssFName($stylesheet)
+    {
+        if (!empty($stylesheet)
+            && is_string($stylesheet)
+            && preg_match('/^[a-zA-Z0-9]{1}[a-z0-9A-Z\_\-]{0,' 
+                      . (self::SMP_PAGE_NAME_MAXLEN - 1)
+                      . '}$/', $stylesheet)
         ) {
             return TRUE;
         }
@@ -58,9 +140,10 @@ class Page
 
     /**
      * Recibe la ruta relativa a una página y los parámetros que le serán
-     * pasados, y devuelve un string armado con la ruta completa.<br />
+     * pasados, y devuelve un string armado con la ruta y los parámetros.<br />
      * Si $loc es NULL (por defecto), dará como resultado la raíz del sitio.<br />
-     * Si $params es NULL (por defecto), no enviará ningún parámetro. 
+     * Si $params es NULL (por defecto), no enviará ningún parámetro.<br />
+     * NOTA: NO determina si la página existe!
      * 
      * @param string $loc Ruta relativa desde '/' a la página deseada.<br />
      * Solo puede contener letras mayúsculas y minúsculas del alfabeto inglés,
@@ -71,7 +154,7 @@ class Page
      * <li>Como string: <i>nombre=valor&nombre2=valor2,...</i></li>
      * <li>Como array: <i>['nombre'=>'valor', 'nombre2'=>'valor2',...]</li>
      * </ul>
-     * @return string Ruta completa a la página con los parámetros incluidos.
+     * @return string Ruta relativa a la página con los parámetros incluidos.
      */
     protected static function makeUrl($loc = NULL, $params = NULL) 
     {
@@ -86,71 +169,159 @@ class Page
             $strParams = '?' . $params;
         }
         
-       
-        return SMP_WEB_ROOT . $addressWparams;
-    }
-    // __ PUB
-    
-
-    function page_get_head($title, $stylesheet = NULL) 
-    {
-        /**
-         * Devuelve el head del documento.
-         * Debe continuarse con page_get_body, que cierra head y abre body
-         */
-        if (empty($stylesheet)) { 
-            $stylesheet = 'main.css'; 
+        $pathPage = '';
+        if (self::isValid_loc($loc)) {
+            $pathPage = $loc; 
         }
-
-        return "<!DOCTYPE html>\n<html lang='es-AR'>\n<head>" 
-                . "\n\t<meta content='text/html; charset=UTF-8' "
-                . "http-equiv='Content-Type' />"
-                . "\n\t<title>$title</title>"
-                . "\n\t<meta name='robots' content='noindex,nofollow' />"
-                . "\n\t<link rel='stylesheet' type='text/css' href='" 
-                . SMP_WEB_ROOT . SMP_LOC_CSS . $stylesheet . "'>"
-                . "\n\t<link rel='icon' type='image/ico'  href='" 
-                . SMP_WEB_ROOT . "favicon.ico'>";
+        
+        return $pathPage . $strParams;
+    }
+    
+    /**
+     * Devuelve un token de página armado.
+     * @return mixed Token de página o FALSE en caso de error.
+     */
+    protected function makeToken() 
+    {
+        if (!empty($this->token)) {
+            return Crypto::getHash(Timestamp::getThisSeconds(
+                                    self::SMP_PAGE_TOKEN_LIFETIME) 
+                                    . $this->token
+                                    . SMP_PAGE_TKN);
+        }
+        
+        return FALSE;
     }
 
-    function page_get_body() 
+    // __ PUB
+    /**
+     * Devuelve un Token aleatorio, que es el mismo que se emplea para armar
+     * el token de página.
+     * 
+     * @see getToken()
+     * @return string Token aleatorio.
+     */
+    public function getRandomToken()
     {
-        /**
-         * Devuelve el cierre de head y apertura de body.
-         * Debe continuarse con page_get_header, que carga el encabezado.
-         */
+        $this->token = Crypto::getRandomTkn();
+        return $this->token;
+    }
+    
+    /**
+     * Devuelve un Token de página.  Debe llamarse primero a getRandomToken()
+     * o dará error.
+     * 
+     * @see getRandomToken()
+     * @return mixed Token de página o FALSE en caso de error.
+     */
+    public function getToken()
+    {
+        return $this->makeToken();
+    }
+
+    /**
+    * Devuelve el head del documento HTML.
+    * Debe continuarse con getBody, que cierra head y abre body.
+    * 
+    * @see getBody()
+    * @param string $title Título de la página.
+    * @param array $stylesheet Array de nombres de hojas de estilos que serán 
+    * cargadas, con la forma: ['miCss1', 'miCss2',...].<br />
+    * De no indicar ninguna, se cargará SMP_PAGE_STYLESHEET_DEFAULT.<br />
+    * @return string Encabezado del documento HTML debidamente formateado para
+    * ser usado con echo().
+    */
+    public static function getHead($title, array $stylesheet = NULL) 
+    {
+        if (isset($title) && self::isValid_title($title)) {
+            $titulo = $title;
+        } else {
+            $titulo = 'SiMaPe';
+        }
+        
+        $code = "<!DOCTYPE html>\n<html lang='es-AR'>\n<head>" 
+                . "\n\t<meta content='text/html; charset=". SMP_PAGE_CHARSET 
+                . "' http-equiv='Content-Type' />"
+                . "\n\t<title>$titulo</title>"
+                . "\n\t<meta name='robots' content='noindex,nofollow' />"
+                . "\n\t<link rel='icon' type='image/ico' href='" 
+                . SMP_WEB_ROOT . self::SMP_PAGE_FAVICON . ".ico' />";
+          
+        if (empty($stylesheet)) {
+            $code .= "\n\t<link rel='stylesheet' type='text/css' ";
+            $code .= "href='" . SMP_WEB_ROOT . SMP_LOC_CSS;
+            $code .= self::SMP_PAGE_STYLESHEET_DEFAULT . ".css' />";
+        } elseif (is_array($stylesheet)) {
+            foreach ($stylesheet as $css) {
+                if (self::isValid_cssFName($css)) {
+                    $cssFullName = SMP_WEB_ROOT . SMP_LOC_CSS . $css . '.css';
+                    if (file_exists($cssFullName)) {
+                        $code .= "\n\t<link rel='stylesheet' type='text/css' ";
+                        $code .= "href='" . $cssFullName . "' />";
+                    }
+                }
+            }
+        }
+        
+        return $code;
+    }
+
+   /**
+    * Devuelve el cierre de head y apertura de body.
+    * Debe continuarse con getHeader, que carga el encabezado.
+    * 
+    * @see getHeader()
+    * @return string Código HTML de cierre del Head y apertura de Body.
+    */
+    public static function getBody() 
+    {   
         return "\n</head>\n<body>";
     }
 
-    function page_get_header() 
+    /**
+     * Muestra el encabezado.
+     * Debe continuarse con getHeaderClose().
+     * 
+     * @see getHeaderClose()
+     * @return string Código HTML del encabezado del sitio.
+     */
+    public static function getHeader() 
     {
-        /**
-         * Muestra el encabezado.
-         * Debe continuarse con page_get_header_close
-         */
         return "\n\t<div class='header'>"
-                . "\n\t\t<img src='". SMP_WEB_ROOT . SMP_LOC_IMGS . "header_small.png' " 
-                . "alt='CSJN - CMF - SIMAPE' title='Corte Suprema de Justicia de "
-                . "la Naci&oacute;n - A&ntilde;o de su Sesquicentenario - Cuerpo "
-                . "M&eacute;dico Forense - SiMaPe' id='img_header_small' />";
+                . "\n\t\t<img src='". SMP_WEB_ROOT . SMP_LOC_IMGS 
+                . self::SMP_PAGE_HEADER_IMG . "' alt='CSJN - CMF - SIMAPE' "
+                . "title='Corte Suprema de Justicia de la Naci&oacute;n - "
+                . "A&ntilde;o de su Sesquicentenario - Cuerpo "
+                . "M&eacute;dico Forense - SiMaPe' id='img_header' />";
     }
 
-    function page_get_header_close() 
+    /**
+     * Cierra el encabezado.  Permite incluir código personalizado en el
+     * encabezado (entre getHeader() y getHeaderClose()).
+     * 
+     * @return string Código HTML de cierre del encabezado.
+     */
+    public static function getHeaderClose() 
     {
-        /**
-         * Cierra el encabezado
-         */
         return "\n\t</div>";
     }
 
-    /* vertical nav bar*/
-    function page_get_navbarV() 
-    {
-        /**
-         * Devuelve la barra de navegacion.
-         * Debe ir antes de page_get_main y despues de page_get_header_close.
-         */
 
+    /**
+     * Devuelve el código HTML de la barra de navegacion vertical.
+     * Debe ir antes de getMain() y después de getHeaderClose().
+     * 
+     * @see getMain()
+     * @see getHeaderClose()
+     * @return string Código HTML de la barra de navegación vertical
+     */
+    public static function get_navbarV() 
+    {
+        // TODO
+        // Aceptar un array ['nombre_boton' => 'nombre_pag', ...]
+        // y armar dinámicamente la barra de navegación
+        //
+        
         return "\n\t<div class='nav_vertbox'>"
                 . "\n\t\t<ul class='nav_vert'>"
                 . "\n\t\t\t<li class='category'><a>&iexcl;Bienvenido <i>" 
@@ -212,82 +383,108 @@ class Page
         </div>';
     }*/
 
-    function page_get_main() 
+    /**
+     * Abre el cuerpo de la página.<br />
+     * Debe ir despues de la barra de navegacion.
+     * 
+     * @return string Código HTML de apertura del cuerpo de la página.
+     */
+    public static function getMain() 
     {
-        /**
-         * Abre el cuerpo del documento.
-         * Debe ir despues de la barra de navegacion.
-         */
         return "\n\t<div class='data'>";
     }
 
-    function page_get_main_close() 
+    /**
+     * Cierra el cuerpo de la página.<br />
+     * Debe ir antes de getFooter() y después de getMain().
+     * 
+     * @return string Código HTML de cierre de la página.
+     */
+    public static function getMainClose() 
     {
-        /**
-         * Cierra el cuerpo del documento.
-         * Debe ir antes de page_get_footer.
-         */
         return "\n\t</div>";
     }
 
-    function page_get_footer() 
+    /**
+     * Cierra por completo la página, no debe haber nada despues de éste.
+     * 
+     * @return string Código HTML de cierre completo de la página.
+     */
+    public static function getFooter() 
     {
-        /**
-         *  Cierra por completo el documento, no debe haber nada despues de éste.
-         */
         return "\n\t<p id='pi'>"
-                . "\n\t\t<span class='pi_hidden'>SiMaPe - GPL v3.0 (C) "
-                . "2013 Iv&aacute;n Ariel Barrera Oro</span><span "
-                . "class='pi_visible'>π</span>"
+                . "\n\t\t<span class='pi_hidden'>"
+                . "SiMaPe: GNU GPL v3.0 (C) 2013 Iv&aacute;n Ariel Barrera Oro"
+                . "</span><span class='pi_visible'>π</span>"
                 . "\n\t</p>"
                 . "\n</body>"
                 . "\n</html>";
     }
-
-    function page_token_make($randtkn) 
+    
+    /**
+     * Fija un token aleatorio.  Se emplea en la función de verificación.<br />
+     * <b>IMPORTANTE</b>: NO emplearlo para generar uno nuevo! 
+     * usar los métodos getRandomToken() y getToken() a este fin.
+     * 
+     * @see getRandomToken()
+     * @see getToken()
+     * @param string $randToken Token aleatorio.
+     * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
+     */
+    public function setRandomToken($randToken)
     {
-        return hash_get(timestamp_get_thisHours(1) 
-                        . $randtkn 
-                        . constant('SMP_PAGE_TKN')
-        );
+        if (!empty($randToken) && is_string($randToken)) {
+            $this->token = $randToken;
+            return TRUE;
+        }
+        
+        return FALSE;
     }
-
-    function page_token_validate($token) 
+            
+    /**
+     * Autentica un Token de página.  Debe fijarse primero el Token aleatorio
+     * con el que se creó, mediante setRandomToken().
+     * 
+     * @param string $pageToken Token de página a autenticar.
+     * @return bool TRUE si es auténtico, FALSE si no.
+     */
+    public function authenticateToken($pageToken) 
     {
-        /**
-         * Valida un token con el almacenado en sesión.
-         * Devuelve TRUE si son IDENTICOS, FALSE si no lo son.
-         * 
-         * @param string $token Token a validar.
-         * @return bool TRUE si son IDENTICOS, FALSE si no lo son
-         */
-
-        if (page_token_make($token) === session_get_pagetkn()) {
+        if ($pageToken === $this->makeToken()) {
             return TRUE;
         } else {
             return FALSE;
         }
     }
-
-    function page_token_get_new() 
+    
+    /**
+     * Envía los headers necesarios para ir a la página indicada, envíando
+     * también los parámetros requeridos.
+     * Si $loc es NULL (por defecto), dará como resultado la raíz del sitio.<br />
+     * Si $params es NULL (por defecto), no enviará ningún parámetro.<br />
+     * NOTA: Primero verifica que la página solicitada exista.<br />
+     * <b>IMPORTANTE</b>: Es conveniente llamar a exit() 
+     * <i>inmediatamente después</i> de este método.
+     * 
+     * @param string $loc Ruta relativa desde '/' a la página deseada.<br />
+     * Solo puede contener letras mayúsculas y minúsculas del alfabeto inglés,
+     * números y los símbolos '/', '-' y '_'.
+     * El primer caracter debe ser una letra o un número.
+     * @param mixed $params Parámetros en la forma:
+     * <ul>
+     * <li>Como string: <i>nombre=valor&nombre2=valor2,...</i></li>
+     * <li>Como array: <i>['nombre'=>'valor', 'nombre2'=>'valor2',...]</li>
+     * </ul>
+     * @return boolean TRUE si se enviaron correctamente los headers, 
+     * FALSE si no.
+     */
+    public static function go_to ($loc = NULL, $params = NULL) 
     {
-        /**
-         * Devuelve un token para validar una página.
-         * Al mismo tiempo, lo almacena en la sesion.
-         * 
-         * @param void
-         * @return string Token
-         */
-
-        $randtoken = hash_get(get_random_token());
-        $pagetoken = page_token_make($randtoken);
-        session_set_pagetkn($pagetoken);
-
-        return $randtoken;
-    }
-
-    function page_goto ($loc = NULL, $params = NULL) 
-    {
-        header("Location: " . page_get_url($loc, $params));
+        if (file_exists(SMP_INC_ROOT . self::makeUrl($loc))) {
+            header("Location: " . SMP_WEB_ROOT . self::makeUrl($loc, $params));
+            return TRUE;
+        }
+        
+        return FALSE;
     }
 }

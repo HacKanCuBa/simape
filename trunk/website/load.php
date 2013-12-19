@@ -41,7 +41,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.7
+ * @version 0.72
  */
 //
 const SMP_LOAD_MAXLEN = 25;
@@ -59,8 +59,8 @@ function isValid_calificador($calificador)
 {
     if (!empty($calificador)
         && is_string($calificador)
-        && preg_match('/^[a-z0-9A-Z_-]{1,' 
-                      . constant('SMP_LOAD_MAXLEN') 
+        && preg_match('/^[a-zA-Z0-9]{1}[a-z0-9A-Z\_\-]{0,' 
+                      . (SMP_LOAD_MAXLEN - 1)
                       . '}$/', $calificador)
     ) {
         return TRUE;
