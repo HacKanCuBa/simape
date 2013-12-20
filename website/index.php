@@ -29,7 +29,7 @@ $_SESSION['req_o'] = ['class_sanitizar', 'funciones'];
 require_once 'load.php';
 
 // Iniciar o continuar sesion
-session_do();
+session_start();
 
 
 if(!empty(Sanitizar::glPOST('do_login')))
