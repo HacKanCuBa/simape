@@ -21,13 +21,6 @@
  * 
  *****************************************************************************/
 
-include_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_perfil.php';
-include_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_password.php';
-include_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_db.php';
-include_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_crypto.php';
-include_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_empleado.php';
-include_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_sessionkey.php';
-
 /**
  * Esta clase maneja todo lo referido al usuario:
  * - Autenticacion

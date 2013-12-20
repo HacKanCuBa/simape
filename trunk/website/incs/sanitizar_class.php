@@ -214,7 +214,9 @@ class Sanitizar
     public static function glSESSION($SESSIONkey) 
     {
         try {
-            if (isset($_SESSION[$SESSIONkey])) {
+            if (session_status() == PHP_SESSION_ACTIVE 
+                && isset($_SESSION[$SESSIONkey])
+            ) {
                 return self::value($_SESSION[$SESSIONkey]);
             }
             
