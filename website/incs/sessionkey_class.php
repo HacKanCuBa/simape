@@ -21,10 +21,6 @@
  * 
  *****************************************************************************/
 
-require_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_crypto.php';
-require_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_uid.php';
-require_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_timestamp.php';
-
 /**
  * Maneja la creación y autenticación de la llave de sesión.
  * 
@@ -45,7 +41,7 @@ require_once SMP_INC_ROOT . SMP_LOC_INCS . 'class_timestamp.php';
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.4
+ * @version 0.45
  */
 class Sessionkey
 {
@@ -105,10 +101,15 @@ class Sessionkey
         return FALSE;
     }
     
+    /**
+     * Determina si el valor indicado es un timestamp válido.
+     * @param float $timestamp Timestamp a validar.
+     * @return boolean TRUE si es válido, FALSE si no.
+     */
     protected static function isValid_timestamp($timestamp)
     {
         if (!empty($timestamp)
-            && is_int($timestamp)
+            && (is_float($timestamp))
         ) {
             return TRUE;
         }
@@ -130,7 +131,7 @@ class Sessionkey
             && !empty($this->uid->getUID())) {        
             // Para forzar una vida util durante sólo el mismo dia.
             // Si cambia el dia, el valor de la operacion cambiara.
-            $time = $this->timestamp - Timestamp::getToday();
+            $time = $this->timestamp - (float) Timestamp::getToday();
 
             // Se utiliza Timestamp::getThisSeconds para fozar la vida útil máxima
             return Crypto::getHash(Crypto::getHash($time 
@@ -229,7 +230,7 @@ class Sessionkey
     public function makeNew()
     {    
         if (!empty($this->uid)) {
-            $this->timestamp = time();
+            $this->timestamp = microtime(TRUE); //usarlo como float
             $this->token = Crypto::getRandomTkn();
             $this->key = $this->keyMake();
             if (!empty($this->key)) {
@@ -281,7 +282,7 @@ class Sessionkey
      */
     public function authenticateSessionkey() 
     {
-        $now = time();
+        $now = microtime(TRUE);
 
         if (!empty($this->token) 
             && !empty($this->uid)

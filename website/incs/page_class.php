@@ -23,14 +23,41 @@
 
 /**
  * classpage.php
- * Clase para crear y modelizar las páginas
+ * Clase para crear y modelizar las páginas, y manejar el token de página
+ * 
+ * Ejemplo de uso:
+ * <pre><code>
+ * // Una página estandard:
+ * echo Page::getHead('Título');
+ * echo Page::getBody();
+ * echo Page::getHeader();
+ * // Contenido adicional en el header...
+ * echo Page::getHeaderClose();
+ * echo Page::getNavbarVertical();
+ * echo Page::getMain();
+ * // Contenido del cuerpo principal de la página...
+ * echo Page::getMainClose();
+ * echo Page::getFooter();
+ * 
+ * // Token:
+ * $page = new Page;
+ * $randToken = $page->getRandomToken();
+ * $timestamp = $page->getTimestamp();
+ * $pageToken = $page->getToken();
+ * ...
+ * $otherpage = new Page($randToken, $timestamp, $pageToken);
+ * if ($otherpage->authenticateToken()) {
+ *      echo "Token de página auténtico!";
+ * } else {
+ *      echo "Token de página NO es auténtico";
+ * }
+ * </code></pre>
  * 
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.4 untested
+ * @version 0.62
  */
-
 class Page
 {  
     /**
@@ -80,10 +107,18 @@ class Page
      */
     protected $title;
     
-    protected $timestamp, $token;
+    protected $timestamp, $randToken, $pageToken;
+    protected $ownTimestamp = FALSE, $ownrandToken = FALSE;
 
     // __ SPECIALS
-    
+    public function __construct($randToken = NULL, 
+                                 $timestamp = NULL, 
+                                 $pageToken = NULL) 
+    {
+        $this->setRandomToken($randToken);
+        $this->setTimestamp($timestamp);
+        $this->setPageToken($pageToken);
+    }
     // __ PRIV
     
     // __ PROT
@@ -137,6 +172,55 @@ class Page
         
         return FALSE;
     }
+    
+    /**
+     * Determina si el valor indicado es un timestamp válido.
+     * @param float $timestamp Timestamp a validar.
+     * @return boolean TRUE si es válido, FALSE si no.
+     */
+    protected static function isValid_timestamp($timestamp)
+    {
+        if (!empty($timestamp)
+            && (is_float($timestamp))
+        ) {
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Determina si el Token indicado es válido.
+     * 
+     * @param string $token Token a validar.
+     * @return boolean TRUE si es un Token válido, FALSE si no.
+     */
+    protected static function isValid_token($token)
+    {
+        if (!empty($token) 
+            && is_string($token)
+        ) {
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Determina si el Token de página indicado es válido.
+     * @param string $pageToken Token de página a validar.
+     * @return boolean TRUE si es un Token de página válido, FALSE si no.
+     */
+    protected static function isValid_pageToken($pageToken)
+    {
+        if (!empty($pageToken)
+            && is_string($pageToken)
+        ) {
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
 
     /**
      * Recibe la ruta relativa a una página y los parámetros que le serán
@@ -181,12 +265,17 @@ class Page
      * Devuelve un token de página armado.
      * @return mixed Token de página o FALSE en caso de error.
      */
-    protected function makeToken() 
+    protected function tokenMake() 
     {
-        if (!empty($this->token)) {
+        if (!empty($this->randToken) && !empty($this->timestamp)) {
+            // Para forzar una vida util durante sólo el mismo dia.
+            // Si cambia el dia, el valor de la operacion cambiara.
+            $time = $this->timestamp - (float) Timestamp::getToday();
+            
             return Crypto::getHash(Timestamp::getThisSeconds(
                                     self::SMP_PAGE_TOKEN_LIFETIME) 
-                                    . $this->token
+                                    . $this->randToken
+                                    . $time
                                     . SMP_PAGE_TKN);
         }
         
@@ -194,31 +283,6 @@ class Page
     }
 
     // __ PUB
-    /**
-     * Devuelve un Token aleatorio, que es el mismo que se emplea para armar
-     * el token de página.
-     * 
-     * @see getToken()
-     * @return string Token aleatorio.
-     */
-    public function getRandomToken()
-    {
-        $this->token = Crypto::getRandomTkn();
-        return $this->token;
-    }
-    
-    /**
-     * Devuelve un Token de página.  Debe llamarse primero a getRandomToken()
-     * o dará error.
-     * 
-     * @see getRandomToken()
-     * @return mixed Token de página o FALSE en caso de error.
-     */
-    public function getToken()
-    {
-        return $this->makeToken();
-    }
-
     /**
     * Devuelve el head del documento HTML.
     * Debe continuarse con getBody, que cierra head y abre body.
@@ -315,7 +379,7 @@ class Page
      * @see getHeaderClose()
      * @return string Código HTML de la barra de navegación vertical
      */
-    public static function get_navbarV() 
+    public static function getNavbarVertical() 
     {
         // TODO
         // Aceptar un array ['nombre_boton' => 'nombre_pag', ...]
@@ -422,35 +486,134 @@ class Page
     }
     
     /**
-     * Fija un token aleatorio.  Se emplea en la función de verificación.<br />
-     * <b>IMPORTANTE</b>: NO emplearlo para generar uno nuevo! 
-     * usar los métodos getRandomToken() y getToken() a este fin.
+     * Devuelve un Token aleatorio, que es el mismo que se emplea para armar
+     * el token de página.
+     * 
+     * @see getToken()
+     * @return string Token aleatorio.
+     */
+    public function getRandomToken()
+    {
+        $this->randToken = Crypto::getRandomTkn();
+        $this->ownrandToken = TRUE;
+        return $this->randToken;
+    }
+    
+    /**
+     * Devuelve el timestamp empleado para crear el Token de página.
+     * 
+     * @return float Timestamp.
+     */
+    public function getTimestamp()
+    {
+        $this->timestamp = microtime(TRUE);
+        $this->ownTimestamp = TRUE;
+        return $this->timestamp;
+    }
+
+    /**
+     * Devuelve un Token de página.  Debe llamarse primero a getRandomToken()<br />
+     * y getTimestamp().  NO emplearse con parámetros externos vía <br />
+     * setRandomToken() y setTimestamp() dado que esto es inseguro.<br />
+     * Por defecto, dará error en esta situación, a menos que $notStrict = TRUE.
      * 
      * @see getRandomToken()
-     * @see getToken()
+     * @see getTimestamp()
+     * @param boolean $notStrict Si es TRUE, permite usar valores externos vía<br />
+     * getRandomToken() y getTimestamp() para generar el Token de página.<br />
+     * FALSE por defecto.
+     * @return mixed Token de página o FALSE en caso de error.
+     */
+    public function getToken($notStrict = FALSE)
+    {
+        if ($notStrict) {
+            return $this->tokenMake();
+        } else {
+            if ($this->ownrandToken && $this->ownTimestamp) {
+                return $this->tokenMake();
+            } 
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Fija un Token aleatorio.  Se emplea en la función de autenticación.<br />
+     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de página nuevo!<br /> 
+     * Usar el método getRandomToken() a este fin.
+     * 
+     * @see getRandomToken()
      * @param string $randToken Token aleatorio.
      * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
      */
     public function setRandomToken($randToken)
     {
-        if (!empty($randToken) && is_string($randToken)) {
-            $this->token = $randToken;
+        if (self::isValid_token($randToken)) {
+            $this->randToken = $randToken;
             return TRUE;
         }
         
         return FALSE;
     }
-            
+    
     /**
-     * Autentica un Token de página.  Debe fijarse primero el Token aleatorio
-     * con el que se creó, mediante setRandomToken().
+     * Fija el valor de Timestamp para la función de autenticación.<br />
+     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de página nuevo!<br />
+     * Usar el método getTimestamp() a este fin.
      * 
-     * @param string $pageToken Token de página a autenticar.
-     * @return bool TRUE si es auténtico, FALSE si no.
+     * @see getTimestamp()
+     * @param float $timestamp Timestamp.
+     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
      */
-    public function authenticateToken($pageToken) 
+    public function setTimestamp($timestamp)
     {
-        if ($pageToken === $this->makeToken()) {
+        if (self::isValid_timestamp($timestamp)) {
+            $this->timestamp = $timestamp;
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Fija el valor del Token de página que será autenticado.
+     * 
+     * @param string $pageToken Token de página.
+     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
+     */
+    public function setPageToken($pageToken)
+    {
+        if (self::isValid_pageToken($pageToken)) {
+            $this->pageToken = $pageToken;
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+
+    /**
+     * Autentica un Token de página.  Deben fijarse primero los valores:
+     * <ul>
+     * <li> Token aleatorio con el que se creó, mediante setRandomToken().</li>
+     * <li> Timestamp en el que fue creado, mediante setTimestamp().</li>
+     * <li> Token de página que será autenticado, mediante setPageToken().</li>
+     * </ul> 
+     * 
+     * @see setRandomToken()
+     * @see setTimestamp()
+     * @see setPageToken()
+     * @return bool TRUE si el Token de página auténtico, FALSE si no.
+     */
+    public function authenticateToken() 
+    {
+        $now = microtime(TRUE);
+        
+        if (!empty($this->pageToken) 
+            && !empty($this->timestamp)
+            && !empty($this->randToken)
+            && ($now >= $this->timestamp) 
+            && ($now < ($this->timestamp + self::SMP_PAGE_TOKEN_LIFETIME))
+            && ($this->pageToken === $this->tokenMake())) {
             return TRUE;
         } else {
             return FALSE;
