@@ -39,10 +39,18 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.75
+ * @version 0.8 untested
  */
 class Session
 {
+    use Token;
+
+    /**
+     * Determina el tiempo de vida de la cookie.  0 implica 'hasta el
+     * cierre del navegador'.
+     */
+    const SMP_SESSION_COOKIE_LIFETIME = 0;
+    
     // __ SPECIALS
     /**
      * Guarda el valor en la sesión: $_SESSION[$key] = $value.
@@ -62,6 +70,29 @@ class Session
     // __ PRIV
     
     // __ PROT
+	/**
+     * Verifica si el Token de Sesión es válido.
+     * 
+     * @param type $sessionToken Token a validar.
+     * @return boolean TRUE si es válido, FALSE si no.
+     */
+	protected static function isValid_sessionToken($sessionToken)
+    {
+        // No difiere de un token estandard
+        self::isValid_token($fingerprintToken);
+    }
+	
+	/**
+     * Devuelve un Token de Sesión armado.
+     * 
+     * @param string $randToken Token aleatorio.
+     * @param float $timestamp Timestamp.
+     * @return mixed Token de Sesión o FALSE en caso de error.
+     */
+    protected static function tokenMake($randToken, $timestamp)
+	{
+	}
+	
     /**
      * Crea una nueva sesion y devuelve el nombre de la misma.
      * 
@@ -73,8 +104,8 @@ class Session
      * @return string Devuelve el nombre de la sesion creada.
      * 
      */
-    protected static function begin($lifetime = 0, $path = NULL, 
-                                     $domain = NULL, $https = NULL)
+    protected static function begin($lifetime = SMP_SESSION_COOKIE_LIFETIME, $path = NULL, 
+                                    $domain = NULL, $https = NULL)
     {
         // Ideas:
         // http://security.stackexchange.com/questions/24177/starting-a-secure-php-session
@@ -136,6 +167,30 @@ class Session
                 }
                 return TRUE;
             }
+        }
+        
+        return FALSE;
+    }
+	
+	/**
+     * Fija un Token aleatorio.  Se emplea en la función de autenticación.<br />
+     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de Sesión nuevo!<br /> 
+     * Usar el método getRandomToken() a este fin.
+     * 
+     * @see getRandomToken()
+     * @param string $randToken Token aleatorio.
+     * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
+     */
+	public function setRandomToken($randToken)
+    {
+        return $this->t_setRandomToken($randToken);
+    }
+	
+	public function setToken($sessionToken)
+    {
+        if ($this->isValid_sessionToken($sessionToken)) {
+            $this->key = $sessionToken;
+            return TRUE;
         }
         
         return FALSE;

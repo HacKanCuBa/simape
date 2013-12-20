@@ -22,7 +22,6 @@
  *****************************************************************************/
 
 /**
- * classpage.php
  * Clase para crear y modelizar las páginas, y manejar el token de página
  * 
  * Ejemplo de uso:
@@ -56,10 +55,12 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.62
+ * @version 0.95 untested
  */
 class Page
 {  
+    use Token;
+    
     /**
      * Nombre del archivo de imágen que se carga en el encabezado <br />
      * (debe incluir extensión y residir en SMP_LOC_IMGS).
@@ -107,17 +108,22 @@ class Page
      */
     protected $title;
     
-    protected $timestamp, $randToken, $pageToken;
-    protected $ownTimestamp = FALSE, $ownrandToken = FALSE;
+    protected $pageToken;
 
     // __ SPECIALS
+    /**
+     * Fija los valores de el Token aleatorio y el Token de Página.
+     * @param string $randToken Token aleatorio.
+     * @param float $timestamp Timestamp.
+     * @param string $pageToken Token de Página.
+     */
     public function __construct($randToken = NULL, 
                                  $timestamp = NULL, 
                                  $pageToken = NULL) 
     {
         $this->setRandomToken($randToken);
         $this->setTimestamp($timestamp);
-        $this->setPageToken($pageToken);
+        $this->setToken($pageToken);
     }
     // __ PRIV
     
@@ -174,52 +180,14 @@ class Page
     }
     
     /**
-     * Determina si el valor indicado es un timestamp válido.
-     * @param float $timestamp Timestamp a validar.
-     * @return boolean TRUE si es válido, FALSE si no.
-     */
-    protected static function isValid_timestamp($timestamp)
-    {
-        if (!empty($timestamp)
-            && (is_float($timestamp))
-        ) {
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
-    
-    /**
-     * Determina si el Token indicado es válido.
-     * 
-     * @param string $token Token a validar.
-     * @return boolean TRUE si es un Token válido, FALSE si no.
-     */
-    protected static function isValid_token($token)
-    {
-        if (!empty($token) 
-            && is_string($token)
-        ) {
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
-    
-    /**
      * Determina si el Token de página indicado es válido.
      * @param string $pageToken Token de página a validar.
      * @return boolean TRUE si es un Token de página válido, FALSE si no.
      */
     protected static function isValid_pageToken($pageToken)
     {
-        if (!empty($pageToken)
-            && is_string($pageToken)
-        ) {
-            return TRUE;
-        }
-        
-        return FALSE;
+		// No difiere de un token estandard
+        self::isValid_token($pageToken);
     }
 
     /**
@@ -240,7 +208,7 @@ class Page
      * </ul>
      * @return string Ruta relativa a la página con los parámetros incluidos.
      */
-    protected static function makeUrl($loc = NULL, $params = NULL) 
+    protected static function urlMake($loc = NULL, $params = NULL) 
     {
         $strParams = '';
         if (is_array($params)) {
@@ -262,19 +230,24 @@ class Page
     }
     
     /**
-     * Devuelve un token de página armado.
+     * Devuelve un Token de Página armado.
+     * 
+     * @param string $randToken Token aleatorio.
+     * @param float $timestamp Timestamp.
      * @return mixed Token de página o FALSE en caso de error.
      */
-    protected function tokenMake() 
+    protected static function tokenMake($randToken, $timestamp) 
     {
-        if (!empty($this->randToken) && !empty($this->timestamp)) {
+        if ($this->isValid_token($randToken) 
+            && $this->isValid_timestamp($timestamp)
+        ) {
             // Para forzar una vida util durante sólo el mismo dia.
             // Si cambia el dia, el valor de la operacion cambiara.
-            $time = $this->timestamp - (float) Timestamp::getToday();
+            $time = $timestamp - (float) Timestamp::getToday();
             
             return Crypto::getHash(Timestamp::getThisSeconds(
                                     self::SMP_PAGE_TOKEN_LIFETIME) 
-                                    . $this->randToken
+                                    . $randToken
                                     . $time
                                     . SMP_PAGE_TKN);
         }
@@ -494,9 +467,7 @@ class Page
      */
     public function getRandomToken()
     {
-        $this->randToken = Crypto::getRandomTkn();
-        $this->ownrandToken = TRUE;
-        return $this->randToken;
+        return $this->t_getRandomToken();
     }
     
     /**
@@ -506,9 +477,7 @@ class Page
      */
     public function getTimestamp()
     {
-        $this->timestamp = microtime(TRUE);
-        $this->ownTimestamp = TRUE;
-        return $this->timestamp;
+        return $this->t_getTimestamp();
     }
 
     /**
@@ -526,12 +495,16 @@ class Page
      */
     public function getToken($notStrict = FALSE)
     {
-        if ($notStrict) {
-            return $this->tokenMake();
-        } else {
-            if ($this->ownrandToken && $this->ownTimestamp) {
-                return $this->tokenMake();
-            } 
+        if ($this->isValid_token($this->randToken) 
+            && $this->isValid_timestamp($this->timestamp)
+        ) {
+            if ($notStrict) {
+                return $this->tokenMake($this->randToken, $this->timestamp);
+            } else {
+                if ($this->ownrandToken && $this->ownTimestamp) {
+                    return $this->tokenMake($this->randToken, $this->timestamp);
+                } 
+            }
         }
         
         return FALSE;
@@ -548,12 +521,7 @@ class Page
      */
     public function setRandomToken($randToken)
     {
-        if (self::isValid_token($randToken)) {
-            $this->randToken = $randToken;
-            return TRUE;
-        }
-        
-        return FALSE;
+        return $this->t_setRandomToken($randToken);
     }
     
     /**
@@ -567,12 +535,7 @@ class Page
      */
     public function setTimestamp($timestamp)
     {
-        if (self::isValid_timestamp($timestamp)) {
-            $this->timestamp = $timestamp;
-            return TRUE;
-        }
-        
-        return FALSE;
+        return $this->t_setTimestamp($timestamp);
     }
     
     /**
@@ -581,7 +544,7 @@ class Page
      * @param string $pageToken Token de página.
      * @return boolean TRUE si se almacenó correctamente, FALSE si no.
      */
-    public function setPageToken($pageToken)
+    public function setToken($pageToken)
     {
         if (self::isValid_pageToken($pageToken)) {
             $this->pageToken = $pageToken;
@@ -613,7 +576,7 @@ class Page
             && !empty($this->randToken)
             && ($now >= $this->timestamp) 
             && ($now < ($this->timestamp + self::SMP_PAGE_TOKEN_LIFETIME))
-            && ($this->pageToken === $this->tokenMake())) {
+            && ($this->pageToken === $this->getToken(TRUE))) {
             return TRUE;
         } else {
             return FALSE;
@@ -643,8 +606,8 @@ class Page
      */
     public static function go_to ($loc = NULL, $params = NULL) 
     {
-        if (file_exists(SMP_INC_ROOT . self::makeUrl($loc))) {
-            header("Location: " . SMP_WEB_ROOT . self::makeUrl($loc, $params));
+        if (file_exists(SMP_INC_ROOT . self::urlMake($loc))) {
+            header("Location: " . SMP_WEB_ROOT . self::urlMake($loc, $params));
             return TRUE;
         }
         

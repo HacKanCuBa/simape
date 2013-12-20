@@ -31,7 +31,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.2
+ * @version 1.3
  */
 
 require 'configload.php';
@@ -40,7 +40,7 @@ include 'configverify.php';
 // Autocarga de dependencias
 set_include_path(get_include_path() 
                  . PATH_SEPARATOR . SMP_INC_ROOT . SMP_LOC_INCS);
-spl_autoload_extensions('.php,_class.php');
+spl_autoload_extensions('_class.php,_trait.php,_interface.php');
 spl_autoload_register();
 // --
 
