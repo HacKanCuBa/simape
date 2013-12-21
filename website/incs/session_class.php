@@ -28,8 +28,8 @@
  * <pre><code>
  * // Inicia o continua una sesión, debe usarse como session_start()
  * Session::initiate();
- * Session::set('indice', $valor);
- * var_dump(Session::get('indice'));
+ * Session::store('indice', $valor);
+ * var_dump(Session::retrieve('indice'));
  * // Finalizar la sesión
  * Session::terminate();
  * // Para volver a usar la sesión, deberá llamarse nuevamente a 
@@ -39,12 +39,12 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.8 untested
+ * @version 0.8
  */
 class Session
 {
-    use Token;
-
+    use SessionToken;
+    
     /**
      * Determina el tiempo de vida de la cookie.  0 implica 'hasta el
      * cierre del navegador'.
@@ -64,35 +64,12 @@ class Session
     public function __construct($key, $value = NULL, $sanitize = FALSE) 
     {
         if (isset($key)) {
-            self::set($key, $value, $sanitize);
+            self::store($key, $value, $sanitize);
         }
     }
     // __ PRIV
     
-    // __ PROT
-	/**
-     * Verifica si el Token de Sesión es válido.
-     * 
-     * @param type $sessionToken Token a validar.
-     * @return boolean TRUE si es válido, FALSE si no.
-     */
-	protected static function isValid_sessionToken($sessionToken)
-    {
-        // No difiere de un token estandard
-        self::isValid_token($fingerprintToken);
-    }
-	
-	/**
-     * Devuelve un Token de Sesión armado.
-     * 
-     * @param string $randToken Token aleatorio.
-     * @param float $timestamp Timestamp.
-     * @return mixed Token de Sesión o FALSE en caso de error.
-     */
-    protected static function tokenMake($randToken, $timestamp)
-	{
-	}
-	
+    // __ PROT	
     /**
      * Crea una nueva sesion y devuelve el nombre de la misma.
      * 
@@ -104,8 +81,9 @@ class Session
      * @return string Devuelve el nombre de la sesion creada.
      * 
      */
-    protected static function begin($lifetime = SMP_SESSION_COOKIE_LIFETIME, $path = NULL, 
-                                    $domain = NULL, $https = NULL)
+    protected static function begin($lifetime = NULL, 
+                                     $path = NULL, 
+                                     $domain = NULL, $https = NULL)
     {
         // Ideas:
         // http://security.stackexchange.com/questions/24177/starting-a-secure-php-session
@@ -115,7 +93,8 @@ class Session
         // Crear una cookie con nombre unico
         // El nombre debe empezar obligatoriamente con una letra minúscula
         $length = 9;
-        $name = substr(shuffle(range('a', 'z')), 0, 1);
+        $letters = range('a', 'z');
+        $name = $letters[mt_rand(0, count($letters))];
         $name .= substr(str_shuffle(md5(mt_rand()) . md5(mt_rand())), 0, $length);
         //session_name($name);
 
@@ -127,6 +106,9 @@ class Session
         
         // Configurar path
         $path = empty($path) ? SMP_WEB_ROOT : $path;
+        
+        // Configurar cookie lifetime
+        $lifetime = empty($lifetime) ? self::SMP_SESSION_COOKIE_LIFETIME : $lifetime;
 
         // Setear cookie e iniciar sesion
         session_set_cookie_params($lifetime, $path, $domain, $secure, true);
@@ -154,7 +136,7 @@ class Session
      * @return boolean TRUE si se almacenó el valor satisfactoriamente, 
      * FALSE si no.
      */
-    public static function set($key, $value = NULL, $sanitize = FALSE)
+    public static function store($key, $value = NULL, $sanitize = FALSE)
     {
         if (self::status() == PHP_SESSION_ACTIVE) {
             if (isset($key) 
@@ -167,30 +149,6 @@ class Session
                 }
                 return TRUE;
             }
-        }
-        
-        return FALSE;
-    }
-	
-	/**
-     * Fija un Token aleatorio.  Se emplea en la función de autenticación.<br />
-     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de Sesión nuevo!<br /> 
-     * Usar el método getRandomToken() a este fin.
-     * 
-     * @see getRandomToken()
-     * @param string $randToken Token aleatorio.
-     * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
-     */
-	public function setRandomToken($randToken)
-    {
-        return $this->t_setRandomToken($randToken);
-    }
-	
-	public function setToken($sessionToken)
-    {
-        if ($this->isValid_sessionToken($sessionToken)) {
-            $this->key = $sessionToken;
-            return TRUE;
         }
         
         return FALSE;
@@ -213,7 +171,7 @@ class Session
      * no existe.  En caso de error, realiza una llamada del sistema para 
      * notificarlo.  Usar error_get_last() u otra para determinarlo.
      */
-    public static function get($key, $sanitize = FALSE)
+    public static function retrieve($key, $sanitize = FALSE)
     {
         if (self::status() == PHP_SESSION_ACTIVE) {
             if (isset($key) 
@@ -307,16 +265,16 @@ class Session
      */
     public static function initiate($donChangeID = FALSE)
     {
-        if (session_status() == PHP_SESSION_ACTIVE) {
-            if (!$donChangeID) {
-                session_regenerate_id(TRUE);
+        if (session_status() == PHP_SESSION_NONE) {
+            if(self::begin()) {
+                if (!$donChangeID) {
+                    session_regenerate_id(TRUE);
+                }
+                return TRUE;
             }
-            return TRUE;
-        } elseif (session_status() == PHP_SESSION_NONE) {
-            return self::begin();
-        } else {
-            return FALSE;
         }
+        
+        return FALSE;
     }
 }
 // --

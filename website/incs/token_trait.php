@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.3 untested
+ * @version 0.31 untested
  */
 
 trait Token
@@ -133,11 +133,8 @@ trait Token
     /**
      * Fuerza la implementación de un método para obtener el Token
      * especial armado.
-     * 
-     * @param string $randToken Token aleatorio.
-     * @param float $timestamp Timestamp.
      */
-    abstract protected static function tokenMake($randToken, $timestamp);
+    abstract protected function tokenMake();
 	
     // __ PUB
     /**
