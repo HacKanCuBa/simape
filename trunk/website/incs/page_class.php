@@ -55,7 +55,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.95 untested
+ * @version 0.96
  */
 class Page
 {  
@@ -186,8 +186,8 @@ class Page
      */
     protected static function isValid_pageToken($pageToken)
     {
-		// No difiere de un token estandard
-        self::isValid_token($pageToken);
+        // No difiere de un token estandard
+        return self::isValid_token($pageToken);
     }
 
     /**
@@ -238,8 +238,8 @@ class Page
      */
     protected static function tokenMake($randToken, $timestamp) 
     {
-        if ($this->isValid_token($randToken) 
-            && $this->isValid_timestamp($timestamp)
+        if (self::isValid_token($randToken) 
+            && self::isValid_timestamp($timestamp)
         ) {
             // Para forzar una vida util durante sólo el mismo dia.
             // Si cambia el dia, el valor de la operacion cambiara.
@@ -359,10 +359,10 @@ class Page
         // y armar dinámicamente la barra de navegación
         //
         
-        return "\n\t<div class='nav_vertbox'>"
+        /*return "\n\t<div class='nav_vertbox'>"
                 . "\n\t\t<ul class='nav_vert'>"
                 . "\n\t\t\t<li class='category'><a>&iexcl;Bienvenido <i>" 
-                . session_get_username() . "</i>!</a>"
+                . Session::get('username') . "</i>!</a>"
                 . "\n\t\t\t<li><a href='" . page_get_url(SMP_LOC_NAV, 'accion=mensajes') 
                 . "'>Mensajes</a></li>"
                 . "\n\t\t\t<li><a href='" . page_get_url(SMP_LOC_NAV, 'accion=perfilemp') 
@@ -385,7 +385,7 @@ class Page
                 . page_get_url(SMP_LOC_NAV, 'accion=logout') 
                 . "'>Cerrar sesi&oacute;n</a></li>"
                 . "\n\t\t</ul>"
-                . "\n\t</div>";
+                . "\n\t</div>";*/
     }
 
     /* horiz nav bar

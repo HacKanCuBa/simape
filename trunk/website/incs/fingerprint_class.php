@@ -41,7 +41,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.4 untested
+ * @version 0.41
  */
 class Fingerprint
 {
@@ -70,10 +70,10 @@ class Fingerprint
      * @param type $fingerprintToken Token a validar.
      * @return boolean TRUE si es válido, FALSE si no.
      */
-    protected function isValid_fingerprintToken($fingerprintToken)
+    protected static function isValid_fingerprintToken($fingerprintToken)
     {
 		// No difiere de un token estandard
-        self::isValid_token($fingerprintToken);
+        return self::isValid_token($fingerprintToken);
     }
     
     /**
@@ -84,7 +84,7 @@ class Fingerprint
      */
     protected static function tokenMake($randToken)
     {
-        if ($this->isValid_token($randToken)) {
+        if (self::isValid_token($randToken)) {
             return Crypto::getHash(Sanitizar::glSERVER('HTTP_USER_AGENT')
                                     . Sanitizar::glSERVER('REMOTE_ADDR')
                                     . SMP_FINGERPRINT_TKN
@@ -114,7 +114,7 @@ class Fingerprint
      * 
      * @see getRandomToken()
      * @param boolean $notStrict Si es TRUE, permite usar valores externos vía<br />
-     * getRandomToken() para generar el Token de Fingerprint.<br />
+     * setRandomToken() para generar el Token de Fingerprint.<br />
      * FALSE por defecto.
      * @return mixed Fingerprint Token, o FALSE en caso de error.
      */ 
