@@ -11,3 +11,6 @@ mientras se mantenga de manera uniforme, será aceptada.
 
 Tener en cuenta los PHPDocumentor Tags: 
 http://manual.phpdoc.org/HTMLSmartyConverter/HandS/phpDocumentor/tutorial_tags.pkg.html
+----
+=== Es importante seguir el Principio de Kerchoof: ===
+<p align="center">_A cryptosystem should be secure even if everything about the system, except the key, is public knowledge.</p>
