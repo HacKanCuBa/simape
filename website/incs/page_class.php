@@ -109,6 +109,8 @@ class Page
     protected $title;
     
     protected $pageToken;
+    
+    protected $indentLevel = 0;
 
     // __ SPECIALS
     /**
@@ -352,7 +354,7 @@ class Page
      * @see getHeaderClose()
      * @return string Código HTML de la barra de navegación vertical
      */
-    public static function getNavbarVertical() 
+    public static function getNavbarVertical(array $buttons) 
     {
         // TODO
         // Aceptar un array ['nombre_boton' => 'nombre_pag', ...]
@@ -459,6 +461,16 @@ class Page
     }
     
     /**
+     * Devuelve el nivel actual de indentado.
+     * 
+     * @return int Nivel actual de indentado.
+     */
+    public function getIndentLevel()
+    {
+        return $this->indentLevel;
+    }
+
+        /**
      * Devuelve un Token aleatorio, que es el mismo que se emplea para armar
      * el token de página.
      * 
@@ -495,13 +507,17 @@ class Page
      */
     public function getToken($notStrict = FALSE)
     {
-        if ($this->isValid_token($this->randToken) 
-            && $this->isValid_timestamp($this->timestamp)
+        if (isset($this->randToken) 
+            && isset($this->timestamp)
         ) {
             if ($notStrict) {
                 return $this->tokenMake($this->randToken, $this->timestamp);
             } else {
-                if ($this->ownrandToken && $this->ownTimestamp) {
+                if (isset($this->ownrandToken) 
+                    && $this->ownrandToken
+                    && isset($this->ownTimestamp)
+                    && $this->ownTimestamp
+                ) {
                     return $this->tokenMake($this->randToken, $this->timestamp);
                 } 
             }
@@ -576,6 +592,7 @@ class Page
             && !empty($this->randToken)
             && ($now >= $this->timestamp) 
             && ($now < ($this->timestamp + self::SMP_PAGE_TOKEN_LIFETIME))
+            && isset($this->pageToken)
             && ($this->pageToken === $this->getToken(TRUE))) {
             return TRUE;
         } else {
@@ -612,5 +629,20 @@ class Page
         }
         
         return FALSE;
+    }
+    
+    /**
+     * Devuelve indentado para el nivel requerido.
+     * 
+     * @param int $level Nivel de indentado.
+     * @return string Indentado.
+     */
+    public static function indent($level = 1)
+    {
+        if (is_int($level)) {
+            return str_repeat('\t', $level);
+        }
+        
+        return NULL;
     }
 }

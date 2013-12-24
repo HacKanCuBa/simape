@@ -27,12 +27,12 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.31 untested
+ * @version 0.32 untested
  */
 
 trait Token
 {
-    protected $randToken, $timestamp;
+    protected $randToken, $timestamp, $uid;
     protected $ownrandToken = FALSE, $ownTimestamp = FALSE;
     
     // __ PRIV
@@ -66,6 +66,21 @@ trait Token
         if (!empty($timestamp)
             && (is_float($timestamp))
         ) {
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Determina si un valor es un tipo UID válido.
+     * 
+     * @param UID $uid UID a validar.
+     * @return boolean TRUE si es un UID válido, FALSE si no.
+     */
+    protected static function isValid_UID(UID $uid)
+    {
+        if (!empty($uid) && is_a($uid, 'UID') && !empty($uid->getUID())) {
             return TRUE;
         }
         
@@ -129,7 +144,23 @@ trait Token
         
         return FALSE;
     }
-	
+    
+    /**
+     * Almacena el UID del usuario, pasado como objeto UID.<br />
+     * 
+     * @param UID $uid UID del usuario
+     * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
+     */
+    protected function t_setUID($uid)
+    {
+        if (self::isValid_UID($uid)) {
+            $this->uid = $uid;
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+
     /**
      * Fuerza la implementación de un método para obtener el Token
      * especial armado.
@@ -147,7 +178,7 @@ trait Token
      * Fuerza la implementación de un método para obtener el Timestamp
      * donde esté documentado el procedimiento.
      */
-    abstract public function getTimestamp();
+    //abstract public function getTimestamp();
     
     /**
      * Fuerza la implementación de un método para obtener el Token
@@ -173,7 +204,7 @@ trait Token
      * 
      * @param float $timestamp Timestamp.
      */
-    abstract public function setTimestamp($timestamp);
+    //abstract public function setTimestamp($timestamp);
 	
     /**
     * Fuerza la implementación de un método para fijar el Token

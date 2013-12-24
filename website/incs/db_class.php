@@ -133,6 +133,8 @@ class DB extends mysqli
      */
     protected function conexionInicializar()
     {        
+        unset($this->queryStmt, $this->bindParam, $this->queryParams, 
+              $this->queryData, $this->affectedRows);
         return $this->setCharset();
     }
     
@@ -229,7 +231,9 @@ class DB extends mysqli
     // Set
     /**
      * Prepara el objeto para ejecutar la query indicada.  Devuelve TRUE
-     * si se preparó exitosamente, FALSE en caso contrario.
+     * si se preparó exitosamente, FALSE en caso contrario.<br />
+     * Debe llamarse a setBindParam() y setQueryParams() <i>después</i> de 
+     * éste método, y nunca antes.
      * 
      * @param string $queryPrepared Query a ser ejecutada.  Debe ser  
      * Prepared Statement, a menos que no contenga parámetros.  NOTA: los
@@ -241,6 +245,8 @@ class DB extends mysqli
         $stmt = $this->prepare($queryPrepared);
         if($stmt) {
             $this->queryStmt = $stmt;
+            unset($this->bindParam);
+            unset($this->queryParams);
             return TRUE;
         }
         

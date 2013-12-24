@@ -34,17 +34,25 @@
  * Session::terminate();
  * // Para volver a usar la sesión, deberá llamarse nuevamente a 
  * // Session::initiate()
+ * // Al instanciar la clase, la sesión se inicia.
+ * $sess = new Session;
+ * $sess->setPassword('1234');
+ * // Almacena el valor sanitizado y encriptado.
+ * $sess->storeEnc('indice', $valor, TRUE, TRUE);
+ * $sess->retrieveEnc('indice');
  * </code></pre>
  *
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.8
+ * @version 1.00
  */
 class Session
 {
     use SessionToken;
     
+    private $password;
+
     /**
      * Determina el tiempo de vida de la cookie.  0 implica 'hasta el
      * cierre del navegador'.
@@ -53,19 +61,11 @@ class Session
     
     // __ SPECIALS
     /**
-     * Guarda el valor en la sesión: $_SESSION[$key] = $value.
-     * 
-     * @param mixed $key Índice, puede ser un string o un entero.
-     * @param mixed $value Valor, puede ser cualquier elemento serializable
-     * (se recomienta emplear valores escalares o arrays, y evitar objetos).
-     * @param boolean $sanitize Si es TRUE, sanitiza el valor antes de 
-     * almacenarlo. (FALSE por defecto)
+     * Inicia una sesión si no estaba iniciada.
      */
-    public function __construct($key, $value = NULL, $sanitize = FALSE) 
+    public function __construct() 
     {
-        if (isset($key)) {
-            self::store($key, $value, $sanitize);
-        }
+        $this->initiate();
     }
     // __ PRIV
     
@@ -117,35 +117,26 @@ class Session
 
         return $name;
     }
-
-    protected static function encrypt($key, $password)
-    {
-        
-    }
-
+    
     // __ PUB
     /**
-     * Guarda un valor en la sesión: $_SESSION[$key] = $value.<br />
-     * Si la sesión no está iniciada, devuelve FALSE.
+     * Inicia o continúa una sesión.  Ante cada inicio, regenera el ID 
+     * de la misma salvo que se especifique lo contrario.
      * 
-     * @param mixed $key Índice, puede ser un string o un entero.
-     * @param mixed $value Valor, puede ser cualquier elemento serializable
-     * (se recomienta emplear valores escalares o arrays, y evitar objetos).
-     * @param boolean $sanitize Si es TRUE, sanitiza el valor antes de 
-     * almacenarlo. (FALSE por defecto)
-     * @return boolean TRUE si se almacenó el valor satisfactoriamente, 
-     * FALSE si no.
+     * @param boolean $dontChangeID Si es TRUE, el ID de la sesión no será 
+     * regenerado.<br />
+     * FALSE por defecto.
+     * @return mixed TRUE si no ocurrió ningún error, FALSE si ocurrió.<br />
+     * Si se inició una nueva sesión, se devuelve el nombre de ésta.<br />
+     * <i>NOTA: el nombre de sesión no está aún implementado, se usa el nombre 
+     * por defecto.</i>
      */
-    public static function store($key, $value = NULL, $sanitize = FALSE)
+    public static function initiate($donChangeID = FALSE)
     {
-        if (self::status() == PHP_SESSION_ACTIVE) {
-            if (isset($key) 
-                && (is_string($key) || is_integer($key))
-            ) {
-                if ($sanitize) {
-                    $_SESSION[$key] = Sanitizar::value($value);
-                } else {
-                    $_SESSION[$key] = $value;
+        if (session_status() == PHP_SESSION_NONE) {
+            if(self::begin()) {
+                if (!$donChangeID) {
+                    session_regenerate_id(TRUE);
                 }
                 return TRUE;
             }
@@ -155,46 +146,150 @@ class Session
     }
     
     /**
+     * Guarda un valor en la sesión: $_SESSION[$key] = $value.<br />
+     * Si $password es asignado, encripta el valor.<br />
+     * Si la sesión no está iniciada, devuelve FALSE.
+     * 
+     * @param mixed $key Índice, puede ser un string o un entero.
+     * @param mixed $value Valor, puede ser cualquier elemento serializable
+     * (se recomienta emplear valores escalares o arrays, y evitar objetos).
+     * @param boolean $sanitize Si es TRUE, sanitiza el valor antes de 
+     * almacenarlo (FALSE por defecto).
+     * @param string $password Contraseña.
+     * @return boolean TRUE si se almacenó el valor satisfactoriamente, 
+     * FALSE si no.
+     * @see setPassword().
+     */
+    public static function store($key, $value = NULL, 
+                                    $sanitize = FALSE, $password = NULL)
+    {
+        if (self::status() == PHP_SESSION_ACTIVE) {
+            if (isset($key) 
+                && (is_string($key) || is_integer($key))
+            ) {
+                if ($sanitize) {
+                    $value = Sanitizar::value($value);
+                }
+                
+                if (!empty($password)) {
+                    $value = Crypto::encrypt($value, $password);
+                    if (empty($value)) {
+                        return FALSE;
+                    }
+                }
+                
+                $_SESSION[$key] = $value;
+                return TRUE;     
+            }
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Idem store(), pero siempre guardael valor encriptado usando la contraseña 
+     * proveída por setPassword().
+     * 
+     * @param mixed $key Índice, puede ser un string o un entero.
+     * @param mixed $value Valor, puede ser cualquier elemento serializable
+     * (se recomienta emplear valores escalares o arrays, y evitar objetos).
+     * @param boolean $sanitize Si es TRUE, sanitiza el valor antes de 
+     * almacenarlo (FALSE por defecto).
+     * @return boolean TRUE si se almacenó el valor satisfactoriamente, 
+     * FALSE si no.
+     * @see setPassword()
+     */
+    public function storeEnc($key, $value = NULL, $sanitize = FALSE)
+    {
+        if (isset($this->password)) {
+            return self::store($key, $value, $sanitize, $this->password);
+        }
+        
+        return FALSE;
+    }
+
+    /**
      * Devuelve un valor almacenado en la sesión: $_SESSION[$key].<br />
      * Si el valor no existe, devuelve NULL.<br />
      * El parámetro $sanitize determina si se sanitizará el valor previamente 
      * (TRUE) o no (FALSE, por defecto).<br />
+     * Si se encuentra un valor encriptado y $password tiene un valor asignado, 
+     * se desencriptará.<br />
      * En caso de error, se empleara una llamada del sistema para 
      * notificarlo.<br />
      * Si la sesión aún no está iniciada, se empleara una llamada del sistema 
-     * para notificarlo.
+     * para notificarlo.<br />
      * 
      * @param mixed $key Índice, string o int.
      * @param boolean $sanitize TRUE para sanitizar el valor antes de 
      * devolverlo, FALSE para devolverlo sin sanitizar (por defecto).
+     * @param string $password Contraseña.
      * @return mixed Valor almacenado en $_SESSION[$key] o NULL si dicho valor
-     * no existe.  En caso de error, realiza una llamada del sistema para 
+     * no existe.<br />
+     * En caso de error, realiza una llamada del sistema para 
      * notificarlo.  Usar error_get_last() u otra para determinarlo.
      */
-    public static function retrieve($key, $sanitize = FALSE)
+    public static function retrieve($key, $sanitize = FALSE, $password = NULL)
     {
         if (self::status() == PHP_SESSION_ACTIVE) {
             if (isset($key) 
                 && (is_int($key) || is_string($key))
             ) {
                 if (isset($_SESSION[$key])) {
-                    if ($sanitize) {
-                        return Sanitizar::glSESSION($key);
-                    } else {
-                        return $_SESSION[$key];
+                    $retVal = $_SESSION[$key];
+                    if (Crypto::isEncrypted($retVal)) {
+                        if (!empty($password)) {
+                            $retVal = Crypto::decrypt($retVal, $password);
+                            if (empty($retVal)) {
+                                trigger_error(__METHOD__ . '(): Ha ocurrido un '
+                                    . 'error al tratar de desencriptar el '
+                                    . 'valor solicitado.  Clave incorrecta?',
+                                    E_USER_WARNING);
+                                
+                                return NULL;
+                            }
+                        }
                     }
+                    
+                    if ($sanitize) {
+                        $retVal = Sanitizar::value($retVal);
+                    }
+                    
+                    return $retVal;
                 } else {
                     return NULL;
                 }
             } else {
                 trigger_error(__METHOD__ . '(): El indice $key indicado '
-                              . '($_SESSION["$key"]) no es valido');
+                              . '($_SESSION["$key"]) no es valido', 
+                              E_USER_WARNING);
             }
         } else {
             trigger_error(__METHOD__ . '(): La sesión aún no se ha inciado');
         }
     }
     
+    /**
+     * Idem retrieve(), pero siempre devuelve desencriptado 
+     * (si estaba encriptado) usando la contraseña proveída por setPassword().
+     * 
+     * @param mixed $key Índice, string o int.
+     * @param boolean $sanitize TRUE para sanitizar el valor antes de 
+     * devolverlo, FALSE para devolverlo sin sanitizar (por defecto).
+     * @return mixed Valor almacenado en $_SESSION[$key] o NULL si dicho valor
+     * no existe.<br />
+     * En caso de error, realiza una llamada del sistema para 
+     * notificarlo.  Usar error_get_last() u otra para determinarlo.
+     */
+    public function retrieveEnc($key, $sanitize = FALSE)
+    {
+        if (isset($this->password)) {
+            return self::retrieve($key, $sanitize, $this->password);
+        }
+        
+        return FALSE;
+    }
+
     /**
      * Devuelve el ID de la sesión actual.  Tener en cuenta que cada llamada<br />
      * a initiate() podría cambiar este ID.
@@ -252,26 +347,17 @@ class Session
     }
     
     /**
-     * Inicia o continúa una sesión.  Ante cada inicio, regenera el ID 
-     * de la misma salvo que se especifique lo contrario.
+     * Almacena una contraseña que se emplea para encriptar los valores 
+     * solicitados (solo hasta que el objeto se destruya).
      * 
-     * @param boolean $dontChangeID Si es TRUE, el ID de la sesión no será 
-     * regenerado.<br />
-     * FALSE por defecto.
-     * @return mixed TRUE si no ocurrió ningún error, FALSE si ocurrió.<br />
-     * Si se inició una nueva sesión, se devuelve el nombre de ésta.<br />
-     * <i>NOTA: el nombre de sesión no está aún implementado, se usa el nombre 
-     * por defecto.</i>
+     * @param string $password Contraseña.
+     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
      */
-    public static function initiate($donChangeID = FALSE)
+    public function setPassword($password)
     {
-        if (session_status() == PHP_SESSION_NONE) {
-            if(self::begin()) {
-                if (!$donChangeID) {
-                    session_regenerate_id(TRUE);
-                }
-                return TRUE;
-            }
+        if (!empty($password) && is_string($password)) {
+            $this->password = $password;
+            return TRUE;
         }
         
         return FALSE;

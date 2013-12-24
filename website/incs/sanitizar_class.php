@@ -37,7 +37,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.7
+ * @version 0.71
  */
 class Sanitizar
 {
@@ -88,11 +88,7 @@ class Sanitizar
         if (isset($array) && is_array($array)) {
             $sanitized = array();
             foreach ($array as $key => $value) {
-                if (is_array($value)) {
-                    $sanitized[$key] = self::arreglo($value);
-                } else {
-                    $sanitized[$key] = self::string($value);
-                }
+                $sanitized[$key] = self::value($value);
             }
 
             return $sanitized;

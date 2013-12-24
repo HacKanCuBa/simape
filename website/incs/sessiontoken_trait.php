@@ -27,34 +27,19 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.3 untested
+ * @version 0.41
  */
 trait SessionToken 
 {
     use Token;
     
-    protected $uid, $sessionToken;
+    protected $sessionToken;
 
     // __ SPECIALS
     
     // __ PRIV
     
-    // __ PROT
-    /**
-     * Determina si un valor es un tipo UID válido.
-     * 
-     * @param UID $uid UID a validar.
-     * @return boolean TRUE si es un UID válido, FALSE si no.
-     */
-    protected static function isValid_UID(UID $uid)
-    {
-        if (!empty($uid) && is_a($uid, 'UID')) {
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
-    
+    // __ PROT 
     /**
      * Determina si el Token de Sesión indicado es válido.
      * @param string $sessionToken Token de Sesión a validar.
@@ -77,7 +62,7 @@ trait SessionToken
     {
         if (self::isValid_token($randToken) 
             && self::isValid_timestamp($timestamp)
-            && (self::isValid_UID($uid))
+            && self::isValid_UID($uid)
         ) {        
             // Para forzar una vida util durante sólo el mismo dia.
             // Si cambia el dia, el valor de la operacion cambiara.
@@ -87,7 +72,7 @@ trait SessionToken
             return Crypto::getHash(Crypto::getHash($time 
                         . $randToken 
                         . Timestamp::getThisSeconds(SMP_SESSIONKEY_LIFETIME) 
-                        . $uid->getUID()
+                        . $uid->getUIDHash()
                         . constant('SMP_SESSIONKEY_TKN')));
         } else {
             return FALSE;
@@ -103,12 +88,7 @@ trait SessionToken
      */
     public function setUID(UID $newUID) 
     {
-        if (self::isValid_UID($newUID)) {
-            $this->uid = $newUID;
-            return TRUE;
-        }
-        
-        return FALSE;
+        return $this->t_setUID($newUID);
     }
     
     /**
@@ -192,14 +172,17 @@ trait SessionToken
     public function getToken($notStrict = FALSE)
     {
         if (isset($this->randToken) 
-            && isset($this->timestamp) 
+            && isset($this->timestamp)
+            && isset($this->uid)
         ) {
             if ($notStrict) {
                 return self::tokenMake($this->randToken, 
                                         $this->timestamp, 
                                         $this->uid);
             } else {
-                if ($this->ownrandToken 
+                if (isset($this->ownrandToken) 
+                    && $this->ownrandToken
+                    && isset($this->ownTimestamp)
                     && $this->ownTimestamp 
                 ) {
                     return self::tokenMake($this->randToken, 
@@ -222,12 +205,11 @@ trait SessionToken
     {
         $now = microtime(TRUE);
 
-        if (isset($this->randToken) 
-            && isset($this->uid)
-            && isset($this->timestamp)
+        if (isset($this->timestamp)
             && ($now >= $this->timestamp) 
             && ($now < ($this->timestamp + SMP_SESSIONKEY_LIFETIME))
-            && ($this->sessionToken === self::getToken(TRUE))
+            && isset($this->sessionToken)
+            && ($this->sessionToken === $this->getToken(TRUE))
         ) {
             return TRUE;            
         }
