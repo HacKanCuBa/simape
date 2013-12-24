@@ -118,6 +118,7 @@ const SMP_LOC_CSS = 'css/';
 const SMP_LOC_IMGS = 'imgs/';
 const SMP_LOC_PAGS = 'pags/';
 const SMP_LOC_INCS = 'incs/';
+const SMP_LOC_TMPS = 'tmps/';
 const SMP_LOC_UPLOAD = 'upload/';
 const SMP_LOC_UPLOAD_FOTOS = 'fotos/';
 
@@ -136,20 +137,32 @@ const SMP_ERR_DBCONN = 'Error de conexi&oacute;n con la base de datos';
 const SMP_ERR_WRONGPASS = 'Contrase&ntilde;a incorrecta';
 // --
 // 
-// -- Crypto
-// Este parámetro se emplea en la clase Password para generar nuevas 
-// contraseñas.  Es conveniente buscar un valor óptimo ejecutando en
-// una página de prueba: Password::getOptimalCost().
-// IMPORTANTE: ¡NUNCA emplear valores menores que 10!
-// NOTA: si vale menos que 10, no será tenido en cuenta.
-const SMP_PASSWORD_COST = 13;
-// --
-//
 // -- Nombre de usuario y contraseña
+/**
+ * Este parámetro se emplea en la clase Password para generar nuevas
+ * contraseñas.<br />
+ * Es conveniente buscar un valor óptimo ejecutando en
+ * una página de prueba: echo Password::getOptimalCost().<br />
+ * <b>NOTA</b>: si vale menos que 10 o más de 31, no será tenido en cuenta.
+ */
+const SMP_PASSWORD_COST = 13;
+
+/**
+ * Tiempo de vida de la contraseña, en días. Pasado este tiempo, la contraseña
+ * deberá cambiarse.<br />
+ * Si es 0, la contraseña nunca expira.
+ */
+const SMP_PASSWORD_MAXDAYS = 365;
+
+/**
+ * Tiempo de vida del Token de reestablecimiento de contraseña, en segundos.
+ */
+const SMP_PASSWORD_RESTORETIME = 1800;  // 30 minutos
+
 const SMP_USRNAME_MAXLEN = 15;
 const SMP_USRNAME_MINLEN = 5;
 const SMP_PWD_MAXLEN = 150;
-const SMP_PWD_MINLEN = 10;
+const SMP_PWD_MINLEN = 13;
 // --
 // 
 // -- Mensajeria

@@ -38,16 +38,26 @@
  * } else {
  *      echo "Contraseña incorrecta";
  * }
+ * // Reestablecimiento de contraseña
+ * $randToken = $pass->getRandomToken();
+ * $timestamp = $pass->getTimestamp();
+ * $restToken = $pass->getToken();
  * </code></pre>
  * 
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.0
+ * @version 1.2
  */
 class Password
 {
-    protected $PlaintextPassword, $PasswordSalted, $PasswordCost;
+    use SessionToken {
+        getToken as sesst_getToken;
+        isValid_sessiontoken as isValid_restoreToken;
+    }
+    
+    protected $PlaintextPassword, $PasswordSalted, $PasswordCost, 
+              $PasswordTimestamp, $passRestoreToken;
 
     // Metodos
     // __ SPECIALS
@@ -57,6 +67,7 @@ class Password
      * restricciones (es decir, es válida), y prepara para encriptarla.
      * Llamar a encryptPassword() para encriptarla.
      * 
+     * @see encryptPassword()
      * @param string $PlaintextPassword Contraseña en texto plano
      */
     public function __construct($PlaintextPassword = NULL)
@@ -66,7 +77,7 @@ class Password
         } elseif (((int) constant('SMP_PASSWORD_COST')) > 31) {
             $this->PasswordCost = 31;
         } else {
-            $this->PasswordCost = constant('SMP_PASSWORD_COST');
+            $this->PasswordCost = SMP_PASSWORD_COST;
         }
         
         $this->setPlaintextPassword($PlaintextPassword);
@@ -123,6 +134,7 @@ class Password
             return FALSE;
         }
     }
+    
     // __ PUB 
     /**
      * Almacena una contraseña en texto plano, si la misma cumple las 
@@ -161,6 +173,86 @@ class Password
     }
     
     /**
+     * Almacena el valor de la última vez que fue modificada la contraseña
+     * (Password Timestamp).
+     * 
+     * @param int $passwordTimestamp
+     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
+     */
+    public function setPasswordTimestamp($passwordTimestamp)
+    {
+        if (!empty($passwordTimestamp) && is_int($passwordTimestamp)) {
+            $this->PasswordTimestamp = $passwordTimestamp;
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Almacena el Token aleatorio para la autenticación del Token de 
+     * reestablecimiento de contraseña.<br />
+     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de 
+     * reestablecimiento nuevo!<br /> 
+     * Usar el método getRandomToken() a este fin.
+     * 
+     * @see getRandomToken()
+     * @param string $randToken Token aleatorio.
+     * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
+     */
+    public function setRandomToken($randToken)
+    {
+        return $this->t_setRandomToken($randToken);
+    }
+    
+    /**
+     * Fija el valor de Timestamp para la función de autenticación del Token de 
+     * reestablecimiento de contraseña.<br />
+     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de 
+     * reestablecimiento nuevo!<br />
+     * Usar el método getTimestamp() a este fin.
+     * 
+     * @see getTimestamp()
+     * @param float $timestamp Timestamp.
+     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
+     */
+    public function setTimestamp($timestamp)
+    {
+        return $this->t_setTimestamp($timestamp);
+    }
+    
+    /**
+     * Fija el valor del Token de reestablecimiento de contraseña que será 
+     * autenticado.
+     * 
+     * @param string $passRestoreToken Token de reestablecimiento de 
+     * contraseña.
+     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
+     */
+    public function setToken($passRestoreToken)
+    {
+        if ($this->isValid_restoreToken($passRestoreToken)) {
+            $this->passRestoreToken = $passRestoreToken;
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Almacena el UID del usuario, pasado como objeto UID.<br />
+     * Se emplea tanto en la función de autenticación del Token de <br />
+     * reestablecimiento de contraseña como en la de generación del mismo.
+     * 
+     * @param UID $uid UID del usuario
+     * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
+     */
+    public function setUID(UID $newUID) 
+    {
+        return $this->t_setUID($newUID);
+    }
+
+    /**
      * Devuelve la contraseña encriptada.  Debe haberse llamado primero a 
      * encryptPassword() o en su defecto setPasswordSalted().
      * 
@@ -198,6 +290,48 @@ class Password
         } while ((($end - $start) < $timeTarget) && ($cost < 31));
 
         return $cost;
+    }
+    
+    /**
+     * Devuelve un Token aleatorio, que es el mismo que se emplea para armar
+     * el Token de restablecimiento de contraseña.
+     * 
+     * @see getToken()
+     * @return string Token aleatorio.
+     */
+    public function getRandomToken()
+    {
+        return $this->t_getRandomToken();
+    }
+    
+    /**
+     * Devuelve el timestamp empleado para crear el Token de restablecimiento 
+     * de contraseña.
+     * 
+     * @return float Timestamp.
+     */
+    public function getTimestamp()
+    {
+        return $this->t_getTimestamp();
+    }
+    
+    /**
+     * Devuelve un Token de restablecimiento de contraseña.<br />
+     * Debe llamarse primero a getRandomToken(), getTimestamp() y setUID().
+     * 
+     * @see getRandomToken()
+     * @see getTimestamp()
+     * @see setUID()
+     * @param boolean $notStrict Si es TRUE, permite usar valores externos<br />
+     * vía setRandomToken() y setTimestamp() para generar el Token de 
+     * restablecimiento de contraseña.<br />
+     * FALSE por defecto.
+     * @return mixed Token de restablecimiento de contraseña, 
+     * o FALSE en caso de error.
+     */ 
+    public function getToken($notStrict = FALSE)
+    {
+        return $this->sesst_getToken($notStrict);
     }
     
     /**
@@ -245,5 +379,51 @@ class Password
             return (boolean) password_verify($this->PlaintextPassword, 
                                              $this->PasswordSalted);
         }
+    }
+    
+    /**
+     * Autentica el Token de reestablecimiento de contraseña.<br />
+     * Devuelve TRUE si es auténtico, FALSE en cualquier otro caso.
+     * 
+     * @return boolean TRUE si el Token de reestablecimiento de contraseña
+     * es auténtico, FALSE si no.
+     */
+    public function authenticateToken() 
+    {
+        $now = microtime(TRUE);
+
+        if (isset($this->timestamp)
+            && ($now >= $this->timestamp) 
+            && ($now < ($this->timestamp + SMP_PASSWORD_RESTORETIME))
+            && isset($this->passRestoreToken)
+            && ($this->passRestoreToken === $this->getToken(TRUE))
+        ) {
+            return TRUE;            
+        }
+
+        return FALSE; 
+    }
+
+
+    /**
+     * Determina si la contraseña ya ha expirado o no.<br />
+     * Debe fijarse el valor de Password Timestamp.
+     * 
+     * @see setPasswordTimestamp()
+     * @return boolean|null TRUE si la contraseña expiró, FALSE si no.<br />
+     * Si no se puede determinar, devuelve NULL.
+     */
+    public function isExpired()
+    {
+        if (SMP_PASSWORD_MAXDAYS > 0) {
+            if (empty($this->PasswordTimestamp)) {
+                return NULL;
+            } elseif (($this->PasswordTimestamp + 
+                       (SMP_PASSWORD_MAXDAYS * 86400)) < time()) {
+                return TRUE;
+            }
+        }
+        
+        return FALSE;
     }
 }

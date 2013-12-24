@@ -84,10 +84,15 @@ class Fingerprint
      */
     protected static function tokenMake($randToken)
     {
-        if (self::isValid_token($randToken)) {
+        if (self::isValid_token($randToken) 
+        ) {
+            // Para forzar una vida util durante sólo el mismo dia.
+            // Si cambia el dia, el valor de la operacion cambiara.
+            
             return Crypto::getHash(Sanitizar::glSERVER('HTTP_USER_AGENT')
                                     . Sanitizar::glSERVER('REMOTE_ADDR')
                                     . SMP_FINGERPRINT_TKN
+                                    . Timestamp::getToday()
                                     . $randToken
             );
         }
@@ -120,11 +125,11 @@ class Fingerprint
      */ 
     public function getToken($notStrict = FALSE)
     {
-        if ($this->isValid_token($this->randToken)) {
+        if (isset($this->randToken)) {
             if ($notStrict) {
                 return $this->tokenMake($this->randToken);
             } else {
-                if ($this->ownrandToken) {
+                if (isset($this->ownrandToken) && $this->ownrandToken) {
                     return $this->tokenMake($this->randToken);
                 } 
             }
@@ -134,12 +139,14 @@ class Fingerprint
     }
     
     /**
-     * No implementado
+     * Devuelve el timestamp empleado para crear el Token de Fingerprint.
+     * 
+     * @return float Timestamp.
      */
-    public function getTimestamp() 
-    {
-        return $this->t_getTimestamp();
-    }
+//    public function getTimestamp() 
+//    {
+//        return $this->t_getTimestamp();
+//    }
 
 
     /**
@@ -173,12 +180,19 @@ class Fingerprint
     }
     
     /**
-     * No implementado
+     * Fija el valor de Timestamp para la función de autenticación.<br />
+     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de Fingeprint
+     * nuevo!<br />
+     * Usar el método getTimestamp() a este fin.
+     * 
+     * @see getTimestamp()
+     * @param float $timestamp Timestamp.
+     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
      */
-    public function setTimestamp($timestamp) 
-    {
-        $this->t_setTimestamp($timestamp);
-    }
+//    public function setTimestamp($timestamp) 
+//    {
+//        $this->t_setTimestamp($timestamp);
+//    }
 
     /**
      * Autentica un Token de Figerprint.<br />
@@ -192,7 +206,10 @@ class Fingerprint
      */
     public function authenticateToken() 
     {      
-        if (empty($this->fingerprintToken) || empty($this->randToken)) {
+        if (empty($this->fingerprintToken) 
+            || empty($this->randToken) 
+            || empty($this->fingerprintToken)
+        ) {
             return NULL;
         }
         elseif ($this->fingerprintToken === $this->getToken(TRUE)) {
