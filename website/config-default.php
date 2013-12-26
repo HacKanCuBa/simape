@@ -32,7 +32,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.81
+ * @version 0.82
  */
 
 // << Config
@@ -175,6 +175,25 @@ const SMP_MGS_MAXLEN = 140;
 // de no usar base64).
 // MEDIUMBLOB 15,9MB! Limite de la DB!!
 const SMP_FILE_MAXSTORESIZE = 15728640;    // 15MB
+// --
+// 
+// -- Constantes internas
+const SMP_SESSIONKEY_TOKEN = 'sessionkeyToken';
+const SMP_SESSIONKEY_TIMESTAMP = 'sessionkeyTimestamp';
+const SMP_SESSIONKEY_RANDOMTOKEN = 'sessionkeyRandomToken';
+const SMP_FINGERPRINT_TOKEN = 'fingerprintToken';
+const SMP_FINGERPRINT_RANDOMTOKEN = 'fingerprintRandomToken';
+const SMP_FORM_TOKEN = 'formToken';
+const SMP_FORM_TIMESTAMP = 'formTimestamp';
+const SMP_FORM_RANDOMTOKEN = 'formRandomToken';
+const SMP_PAGE_TOKEN = 'pageToken';
+const SMP_PAGE_TIMESTAMP = 'pageTimestamp';
+const SMP_PAGE_RANDOMTOKEN = 'pageRandomToken';
+const SMP_NOTIF_ERR = 'notifErr';
+const SMP_NOTIF_MSG = 'notifMsg';
+const SMP_USERNAME = 'username';
+const SMP_NAV_ACTION = 'accion';
+const SMP_LOGOUT = 'logout';
 // --
 // 
 // >>

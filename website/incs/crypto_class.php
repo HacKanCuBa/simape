@@ -29,15 +29,14 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.93
+ * @version 0.94
  */
 
 class Crypto
 {  
-    const SMP_CRYPTO_ENC_ID = 'SMP_ENC';
-    const SMP_CRYPTO_ENC_SEPARATOR = '$';
-    const SMP_CRYPTO_IV_LEN = 16;
-
+    const ENC_ID = 'SMP_ENC';
+    const ENC_SEPARATOR = '$';
+    const IV_LEN = 16;
 
     // __ SPECIALS
         
@@ -59,7 +58,7 @@ class Crypto
         ) {
             // IV debe ser = 16 BYTES
             //$iv = substr(hash('sha256', $iv), 0, 16);
-            if (strlen($iv) == self::SMP_CRYPTO_IV_LEN) {
+            if (strlen($iv) == self::IV_LEN) {
                 return openssl_encrypt($string, 'AES-256-CTR', $password, 
                                        OPENSSL_ZERO_PADDING, $iv);
             }
@@ -83,7 +82,7 @@ class Crypto
         ) {
             // IV debe ser = 16 BYTES
             //$iv = substr(hash('sha256', $iv), 0, 16);
-            if (strlen($iv) == self::SMP_CRYPTO_IV_LEN) {
+            if (strlen($iv) == self::IV_LEN) {
                 return openssl_decrypt($encString, 'AES-256-CTR', $password, 
                                        OPENSSL_ZERO_PADDING, $iv);
             }
@@ -98,7 +97,7 @@ class Crypto
      */
     protected static function getEncID()
     {
-        return self::SMP_CRYPTO_ENC_SEPARATOR . self::SMP_CRYPTO_ENC_ID;
+        return self::ENC_SEPARATOR . self::ENC_ID;
     }
 
     /**
@@ -111,8 +110,8 @@ class Crypto
     protected static function getEncFormat($iv, $encString)
     {
         return self::getEncID() 
-               . self::SMP_CRYPTO_ENC_SEPARATOR . $iv 
-               . self::SMP_CRYPTO_ENC_SEPARATOR . $encString;
+               . self::ENC_SEPARATOR . $iv 
+               . self::ENC_SEPARATOR . $encString;
     }
 
     /**
@@ -132,12 +131,12 @@ class Crypto
         if (self::isEncrypted($smpEncString)) {
             $iv = substr($smpEncString, 
                          strlen(self::getEncID()) 
-                         + strlen(self::SMP_CRYPTO_ENC_SEPARATOR), 
-                         self::SMP_CRYPTO_IV_LEN);
+                         + strlen(self::ENC_SEPARATOR), 
+                         self::IV_LEN);
             $encStr = substr($smpEncString, 
                              strlen(self::getEncID()) 
-                             + (2 * strlen(self::SMP_CRYPTO_ENC_SEPARATOR))
-                             + self::SMP_CRYPTO_IV_LEN);
+                             + (2 * strlen(self::ENC_SEPARATOR))
+                             + self::IV_LEN);
             return array('IV' => $iv, 'ENC' => $encStr);
         }
         
@@ -268,7 +267,7 @@ class Crypto
      */
     public static function getRandomIV()
     {
-        return self::getRandomHexStr(self::SMP_CRYPTO_IV_LEN);
+        return self::getRandomHexStr(self::IV_LEN);
     }
 
     /**
@@ -357,12 +356,14 @@ class Crypto
             $encIDlen = strlen($encID);
             $ivSeparatorPos = $encIDlen;
             $encSeparatorPos = $encIDlen 
-                               + self::SMP_CRYPTO_IV_LEN 
-                               + strlen(self::SMP_CRYPTO_ENC_SEPARATOR);
-            if ((strpos($encString, $encID) == 0) 
-                && (strpos($encString, self::SMP_CRYPTO_ENC_SEPARATOR, 
+                               + self::IV_LEN 
+                               + strlen(self::ENC_SEPARATOR);
+
+            if ((strlen($encString) > $encSeparatorPos)
+                && (strpos($encString, $encID) == 0) 
+                && (strpos($encString, self::ENC_SEPARATOR, 
                            $encIDlen) == $ivSeparatorPos)
-                && (strpos($encString, self::SMP_CRYPTO_ENC_SEPARATOR, 
+                && (strpos($encString, self::ENC_SEPARATOR, 
                            $encSeparatorPos) == $encSeparatorPos)
             ) {
                 return TRUE;

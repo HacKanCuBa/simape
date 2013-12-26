@@ -25,55 +25,52 @@
  * Este index.php debe estar siempre en la raiz del sitio
  */
 
-$_SESSION['req_o'] = ['class_sanitizar', 'funciones'];
 require_once 'load.php';
 
-// Iniciar o continuar sesion
-session_start();
+Session::terminate();
+Session::initiate();
 
+$fingerprint = new Fingerprint();
+Session::store(SMP_FINGERPRINT_RANDOMTOKEN, $fingerprint->getRandomToken());
+Session::store(SMP_FINGERPRINT_TOKEN, $fingerprint->getToken());
 
-if(!empty(Sanitizar::glPOST('do_login')))
+if(!empty(Sanitizar::glPOST('login')))
 {
-    page_goto(SMP_LOC_LOGIN);
+    Page::go_to(SMP_LOC_LOGIN);
     exit();
 }
-?>
 
-<?php echo page_get_head('SiMaPe'); ?>
-<?php echo "\n\t<style type='text/css'>\n\t.data { margin-left: auto; }"
-            . "\n\t</style>"; ?>
-<?php echo page_get_body(); ?>
-<?php echo page_get_header(); ?>
-<?php echo page_get_header_close(); ?>
-<?php echo page_get_main(); ?>
+echo Page::getHead('SiMaPe');
+echo Page::getBody();
+echo Page::getHeader();
+echo Page::getHeaderClose();
+echo Page::getMain();
 
-        <form style="text-align: center;" method="post">
-            <h3>Ingresar al sistema</h3>
-            <p>Para ingresar al sistema, debe 
-                <input name="do_login" type="submit"
-                       value="Iniciar sesi&oacute;n" />
-            </p>
-        </form>
-        <h3>Acerca de SiMaPe</h3>
-        <p>Este sistema se encuentra siendo desarrollado en exclusivo para el 
-            uso interno de la oficina de Recursos Humanos del Cuerpo 
-            M&eacute;dico Forense, con miras a expandirse a todo el Cuerpo en 
-            el mediano plazo.</p>
-        <p>Es importante destacar que el mismo a&uacute;n no est&aacute; 
-            completo, por lo que pueden faltar caracter&iacute;siticas y 
-            sobrar errores inesperados.</p>
-        <p>El proyecto SiMaPe abarcar&aacute;, entre otras, las siguientes 
-            caracter&iacute;sticas:</p>
-        <ul>
-                <li>Legajos del personal, digitales (con foto incluida)</li>
-                <li>Mensajer&iacute;a interna</li>
-                <li>Control y manejo de asistencias/inasistencias</li>
-                <li>Visualizar fichaje por parte del personal</li>
-                <li>Solicitar licencias extraordinarias sin necesidad de 
-                    papel (se implementar&aacute;n firmas digitales)</li>
-                <li>Control de usuarios, manejo de permisos</li>
-                <li>Dise&ntilde;o a medida, escalable.</li>
-        </ul>
-<?php echo page_get_main_close(); ?>
-<?php echo page_get_footer(); ?>
-
+echo "\n\t\t<form style='text-align: center;' method='post'>";
+echo "\n\t\t\t<h3>Ingresar al sistema</h3>";
+echo "\n\t\t\t<p>Para ingresar al sistema, debe <input name='login' "
+     . "type='submit' value='Iniciar sesi&oacute;n' /></p>";
+echo "\n\t\t</form>";
+echo "\n\t\t<h3>Acerca de SiMaPe</h3>";
+echo "\n\t\t\t<p>Este sistema se encuentra siendo desarrollado en exclusivo " 
+     . "para el uso interno de la oficina de Recursos Humanos del Cuerpo "
+     . "M&eacute;dico Forense, con miras a expandirse a todo el Cuerpo en "
+     . "el mediano plazo.</p>";
+echo "\n\t\t\t<p>Es importante destacar que el mismo a&uacute;n no est&aacute; " 
+     . "completo, por lo que pueden faltar caracter&iacute;siticas y "
+     . "sobrar errores inesperados.</p>";
+echo "\n\t\t\t<p>El proyecto SiMaPe abarcar&aacute;, entre otras, las "
+     . "siguientes caracter&iacute;sticas:</p>";
+echo "\n\t\t\t<ul>";
+echo "\n\t\t\t\t<li>Legajos del personal, digitales (con foto incluida)</li>";
+echo "\n\t\t\t\t<li>Mensajer&iacute;a interna</li>";
+echo "\n\t\t\t\t<li>Control y manejo de asistencias/inasistencias</li>";
+echo "\n\t\t\t\t<li>Visualizar fichaje por parte del personal</li>";
+echo "\n\t\t\t\t<li>Solicitar licencias extraordinarias sin necesidad de "
+     . "papel (se implementar&aacute;n firmas digitales)</li>";
+echo "\n\t\t\t\t<li>Control de usuarios, manejo de permisos</li>";
+echo "\n\t\t\t\t<li>Dise&ntilde;o a medida, escalable.</li>";
+echo "\n\t\t\t</ul>";
+                        
+echo Page::getMainClose();
+echo Page::getFooter();

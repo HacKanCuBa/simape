@@ -55,7 +55,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.96
+ * @version 0.99
  */
 class Page
 {  
@@ -65,35 +65,40 @@ class Page
      * Nombre del archivo de imágen que se carga en el encabezado <br />
      * (debe incluir extensión y residir en SMP_LOC_IMGS).
      */
-    const SMP_PAGE_HEADER_IMG = 'header_small.png';
+    const HEADER_IMG = 'header_small.png';
     
     /**
      * Nombre del archivo Favicon predeterminado
      * (debe residir en la raíz del sitio).
      */
-    const SMP_PAGE_FAVICON = 'favicon';
+    const FAVICON = 'favicon';
     
     /**
      * Nombre de la hoja de estilos predeterminada 
      * (debe residir en el subdirectorio SMP_LOC_CSS).
      */
-    const SMP_PAGE_STYLESHEET_DEFAULT = 'main';
+    const STYLESHEET_DEFAULT = 'main';
     /**
      * Determina la logitud máxima que puede tener una ruta relativa desde '/' 
      * a una página.
      */
-    const SMP_PAGE_LOC_MAXLEN = 100;
+    const LOC_MAXLEN = 100;
     
     /**
      * Determina la longitud máxima que puede tener el nombre de una página 
      * (sin extensión, y sin ruta).
      */
-    const SMP_PAGE_NAME_MAXLEN = 25;
+    const NAME_MAXLEN = 25;
 
     /**
      * Tiempo de vida de un token de página, en segundos.
      */
-    const SMP_PAGE_TOKEN_LIFETIME = 3600;
+    const TOKEN_LIFETIME = 3600;
+    
+    /**
+     * Extensiones permitidas, separadas por coma.
+     */
+    const EXTENSIONS = 'php,html';
 
     /**
      * Nombre de la hoja de estilos que será cargada 
@@ -131,11 +136,27 @@ class Page
     
     // __ PROT
     /**
+     * Determina si una extensión de página dada es válida.
+     * 
+     * @param string $extension Extensión
+     * @return boolean TRUE si es válida, FALSE si no.
+     */
+    protected static function isValid_extension($extension)
+    {
+        if (strstr(self::EXTENSIONS, $extension) != FALSE) {
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+
+    /**
      * Determina si una ruta es válida.<br />
      * Solo puede contener letras mayúsculas y minúsculas del alfabeto inglés,
      * números y los símbolos '/', '-' y '_'.<br />
+     * Solo puede contener un único '.' para la extensión.<br />
      * El primer caracter debe ser una letra o un número.<br />
-     * La longitud máxima la determina SMP_PAGE_LOC_MAXLEN.
+     * La longitud máxima la determina LOC_MAXLEN.
      * 
      * @param string $loc Ruta a validar
      * @return boolean TRUE si la ruta es válida, FALSE si no.
@@ -144,10 +165,15 @@ class Page
     {
         if (!empty($loc)
             && is_string($loc)
-            && preg_match('/^[a-zA-Z0-9]{1}[a-zA-Z0-9\_\-\/\.]{0,'
-                          . (self::SMP_PAGE_LOC_MAXLEN - 1) . '}$/', $loc)
         ) {
-            return TRUE;
+            //$ext = pathinfo($loc, PATHINFO_EXTENSION);
+            list($url, $ext) = explode('.', $loc, 2);
+            if (self::isValid_extension($ext)
+                && preg_match('/^[a-zA-Z0-9]{1}[a-zA-Z0-9\_\-\/\.]{0,'
+                          . (self::LOC_MAXLEN - 1) . '}$/', $url)
+            ){
+                return TRUE;
+            }
         }
         
         return FALSE;
@@ -172,7 +198,7 @@ class Page
         if (!empty($stylesheet)
             && is_string($stylesheet)
             && preg_match('/^[a-zA-Z0-9]{1}[a-z0-9A-Z\_\-]{0,' 
-                      . (self::SMP_PAGE_NAME_MAXLEN - 1)
+                      . (self::NAME_MAXLEN - 1)
                       . '}$/', $stylesheet)
         ) {
             return TRUE;
@@ -213,14 +239,16 @@ class Page
     protected static function urlMake($loc = NULL, $params = NULL) 
     {
         $strParams = '';
-        if (is_array($params)) {
-            foreach ($params as $name => $param) {
-                $strParams .= $name . '=' . $param . '&';
+        if (!empty($params)) {
+            if (is_array($params)) {
+                foreach ($params as $name => $param) {
+                    $strParams .= $name . '=' . $param . '&';
+                }
+                // Elimina el último &
+                $strParams = '?' . substr($strParams, 0, -1);
+            } else {
+                $strParams = '?' . $params;
             }
-            // Elimina el último &
-            $strParams = '?' . substr($strParams, 0, -1);
-        } elseif (is_string($params)) {
-            $strParams = '?' . $params;
         }
         
         $pathPage = '';
@@ -248,7 +276,7 @@ class Page
             $time = $timestamp - (float) Timestamp::getToday();
             
             return Crypto::getHash(Timestamp::getThisSeconds(
-                                    self::SMP_PAGE_TOKEN_LIFETIME) 
+                                    self::TOKEN_LIFETIME) 
                                     . $randToken
                                     . $time
                                     . SMP_PAGE_TKN);
@@ -266,7 +294,7 @@ class Page
     * @param string $title Título de la página.
     * @param array $stylesheet Array de nombres de hojas de estilos que serán 
     * cargadas, con la forma: ['miCss1', 'miCss2',...].<br />
-    * De no indicar ninguna, se cargará SMP_PAGE_STYLESHEET_DEFAULT.<br />
+    * De no indicar ninguna, se cargará STYLESHEET_DEFAULT.<br />
     * @return string Encabezado del documento HTML debidamente formateado para
     * ser usado con echo().
     */
@@ -284,12 +312,12 @@ class Page
                 . "\n\t<title>$titulo</title>"
                 . "\n\t<meta name='robots' content='noindex,nofollow' />"
                 . "\n\t<link rel='icon' type='image/ico' href='" 
-                . SMP_WEB_ROOT . self::SMP_PAGE_FAVICON . ".ico' />";
+                . SMP_WEB_ROOT . self::FAVICON . ".ico' />";
           
         if (empty($stylesheet)) {
             $code .= "\n\t<link rel='stylesheet' type='text/css' ";
             $code .= "href='" . SMP_WEB_ROOT . SMP_LOC_CSS;
-            $code .= self::SMP_PAGE_STYLESHEET_DEFAULT . ".css' />";
+            $code .= self::STYLESHEET_DEFAULT . ".css' />";
         } elseif (is_array($stylesheet)) {
             foreach ($stylesheet as $css) {
                 if (self::isValid_cssFName($css)) {
@@ -328,7 +356,7 @@ class Page
     {
         return "\n\t<div class='header'>"
                 . "\n\t\t<img src='". SMP_WEB_ROOT . SMP_LOC_IMGS 
-                . self::SMP_PAGE_HEADER_IMG . "' alt='CSJN - CMF - SIMAPE' "
+                . self::HEADER_IMG . "' alt='CSJN - CMF - SIMAPE' "
                 . "title='Corte Suprema de Justicia de la Naci&oacute;n - "
                 . "A&ntilde;o de su Sesquicentenario - Cuerpo "
                 . "M&eacute;dico Forense - SiMaPe' id='img_header' />";
@@ -354,37 +382,79 @@ class Page
      * @see getHeaderClose()
      * @return string Código HTML de la barra de navegación vertical
      */
-    public static function getNavbarVertical(array $buttons) 
+    public static function getDefaultNavbarVertical() 
     {
-        // TODO
-        // Aceptar un array ['nombre_boton' => 'nombre_pag', ...]
-        // y armar dinámicamente la barra de navegación
-        //
+        $navbar = new Navbar;
+        $navbar->setIndent(1);
+        $btns = array ('&iexcl;Bienvenido <i>' 
+                       . Session::retrieve(SMP_USERNAME) . '</i>!',
+                       'Mensajes',
+                       'Mi perfil de empleado',
+                       'Mi perfil de usuario',
+                       'Administraci&oacute;n de usuarios',
+                       'Listar todos los existentes',
+                       'Cargar nuevo perfil',
+                       'Modificar perfil existente',
+                       'Administraci&oacute;n de empleados',
+                       'Listar todos los existentes',
+                       'Cargar nuevo perfil',
+                       'Modificar perfil existente',
+                       'Reemplazos',
+                       'Asistencias / Inasistencias',
+                       'Ver por fecha',
+                       'Ver por empleado',
+                       'Cerrar sesi&oacute;n'
+                      );
+        $urls = array('', 
+                      self::urlMake(SMP_LOC_NAV, 
+                                    [ SMP_NAV_ACTION => SMP_LOC_MSGS ]),
+                      self::urlMake(SMP_LOC_NAV, 
+                                    [ SMP_NAV_ACTION => SMP_LOC_EMPLEADO ]),
+                      self::urlMake(SMP_LOC_NAV, 
+                                    [ SMP_NAV_ACTION => SMP_LOC_USUARIO ]),
+                      16 => self::urlMake(SMP_LOC_NAV, 
+                                    [ SMP_NAV_ACTION => SMP_LOGOUT ])
+                     );
+        $classes = array(Navbar::BTN_CLASS_CATEGORY,
+                         4 => Navbar::BTN_CLASS_CATEGORY,
+                         8 => Navbar::BTN_CLASS_CATEGORY,
+                         13 => Navbar::BTN_CLASS_CATEGORY,
+                         16 => Navbar::BTN_CLASS_CATEGORY
+                        );
+        $navbar->addButton($btns, $urls, $classes);
+        
+        return $navbar->getVertical();
         
         /*return "\n\t<div class='nav_vertbox'>"
                 . "\n\t\t<ul class='nav_vert'>"
                 . "\n\t\t\t<li class='category'><a>&iexcl;Bienvenido <i>" 
-                . Session::get('username') . "</i>!</a>"
-                . "\n\t\t\t<li><a href='" . page_get_url(SMP_LOC_NAV, 'accion=mensajes') 
+                . Session::retrieve(SMP_USERNAME) . "</i>!</a></li>"
+                . "\n\t\t\t<li><a href='" . self::urlMake(SMP_LOC_NAV, 
+                [ SMP_NAV_ACTION => SMP_LOC_MSGS ])
                 . "'>Mensajes</a></li>"
-                . "\n\t\t\t<li><a href='" . page_get_url(SMP_LOC_NAV, 'accion=perfilemp') 
+                . "\n\t\t\t<li><a href='" . self::urlMake(SMP_LOC_NAV, 
+                [ SMP_NAV_ACTION => SMP_LOC_EMPLEADO ]) 
                 . "'>Mi perfil de empleado</a></li>"
-                . "\n\t\t\t<li><a href='" . page_get_url(SMP_LOC_NAV, 'accion=perfilusr') 
+                . "\n\t\t\t<li><a href='" . self::urlMake(SMP_LOC_NAV, 
+                [ SMP_NAV_ACTION => SMP_LOC_USUARIO ]) 
                 . "'>Mi perfil de usuario</a></li>"            
-                . "\n\t\t\t<li class='category'><a>Administraci&oacute;n de usuarios</a></li>"
+                . "\n\t\t\t<li class='category'><a>"
+                . "Administraci&oacute;n de usuarios</a></li>"
                 . "\n\t\t\t<li><a href='#'>Listar todos los existentes</a></li>"
                 . "\n\t\t\t<li><a href='#'>Cargar nuevo perfil</a></li>"
                 . "\n\t\t\t<li><a href='#'>Modificar perfil existente</a></li>"
-                . "\n\t\t\t<li class='category'><a>Administraci&oacute;n de empleados</a></li>"
+                . "\n\t\t\t<li class='category'><a>"
+                . "Administraci&oacute;n de empleados</a></li>"
                 . "\n\t\t\t<li><a href='#'>Listar todos los existentes</a></li>"
                 . "\n\t\t\t<li><a href='#'>Cargar nuevo perfil</a></li>"
                 . "\n\t\t\t<li><a href='#'>Modificar perfil existente</a></li>"
                 . "\n\t\t\t<li><a href='#'>Reemplazos</a></li>"
-                . "\n\t\t\t<li class='category'><a>Asistencias / Inasistencias</a></li>"
+                . "\n\t\t\t<li class='category'><a>"
+                . "Asistencias / Inasistencias</a></li>"
                 . "\n\t\t\t<li><a href='#'>Ver por fecha</a></li>"
                 . "\n\t\t\t<li><a href='#'>Ver por empleado</a></li>"
                 . "\n\t\t\t<li class='category'><a href='" 
-                . page_get_url(SMP_LOC_NAV, 'accion=logout') 
+                . self::urlMake(SMP_LOC_NAV, [ SMP_NAV_ACTION => SMP_LOGOUT ])  
                 . "'>Cerrar sesi&oacute;n</a></li>"
                 . "\n\t\t</ul>"
                 . "\n\t</div>";*/
@@ -591,13 +661,16 @@ class Page
             && !empty($this->timestamp)
             && !empty($this->randToken)
             && ($now >= $this->timestamp) 
-            && ($now < ($this->timestamp + self::SMP_PAGE_TOKEN_LIFETIME))
-            && isset($this->pageToken)
-            && ($this->pageToken === $this->getToken(TRUE))) {
-            return TRUE;
-        } else {
-            return FALSE;
+            && ($now < ($this->timestamp + self::TOKEN_LIFETIME))
+        ) {
+            // Verifico que getToken no sea FALSE.
+            $pageToken = $this->getToken(TRUE);
+            if ($pageToken && ($this->pageToken === $pageToken)) {
+                return TRUE;
+            }
         }
+        
+        return FALSE;
     }
     
     /**
@@ -640,9 +713,25 @@ class Page
     public static function indent($level = 1)
     {
         if (is_int($level)) {
-            return str_repeat('\t', $level);
+            return str_repeat("\t", $level);
         }
         
         return NULL;
+    }
+    
+    /**
+     * Determina si una URL relativa a la raíz del sitio es válida o no.
+     * 
+     * @param string $relativeURL URL a validar.
+     * @return boolean TRUE si es una URL válida, FALSE si no.
+     */
+    public static function isValid($relativeURL)
+    {
+        if (self::isValid_loc($relativeURL)
+            && file_exists(SMP_INC_ROOT . $relativeURL)) {
+            return TRUE;
+        }
+        
+        return FALSE;
     }
 }

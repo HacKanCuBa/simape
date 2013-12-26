@@ -22,47 +22,49 @@
  *****************************************************************************/
 
 /**
- * Maneja la creación y autenticación del Token de Sesión.
+ * Maneja la creación y autenticación del Token de Formulario.
  *
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.42
+ * @version 0.2
  */
-trait SessionToken 
+
+class FormToken 
 {
     use Token;
     
-    protected $sessionToken;
+    const SMP_FORMTOKEN_LIFETIME = 1800;
+    
+    protected $formToken;
 
     // __ SPECIALS
     
     // __ PRIV
     
-    // __ PROT 
+    // __ PROT
     /**
-     * Determina si el Token de Sesión indicado es válido.
-     * @param string $sessionToken Token de Sesión a validar.
-     * @return boolean TRUE si es un Token de Sesión válido, FALSE si no.
+     * Determina si el string indicado es un Token de Formulario válido.
+     * 
+     * @param string $formToken Token de Formulario a validar.
+     * @return boolean TRUE si es válido, FALSE si no.
      */
-    protected static function isValid_sessiontoken($sessionToken)
+    protected static function isValid_formToken($formToken)
     {
-        return self::isValid_token($sessionToken);
+        return self::isValid_token($formToken);
     }
-    
+
     /**
-     * Devuelve un Token de Sesión armado.
+     * Devuelve un Token de Formulario armado.
      * 
      * @param string $randToken Token aleatorio.
      * @param float $timestamp Timestamp.
-     * @param UID $uid UID del usuario.
-     * @return mixed Token de Sesión o FALSE en caso de error.
+     * @return mixed Token de Formulario o FALSE en caso de error.
      */
-    protected static function tokenMake($randToken, $timestamp, UID $uid)
+    protected static function tokenMake($randToken, $timestamp)
     {
         if (self::isValid_token($randToken) 
             && self::isValid_timestamp($timestamp)
-            && self::isValid_UID($uid)
         ) {        
             // Para forzar una vida util durante sólo el mismo dia.
             // Si cambia el dia, el valor de la operacion cambiara.
@@ -71,29 +73,18 @@ trait SessionToken
             // Se utiliza Timestamp::getThisSeconds para fozar la vida útil máxima
             return Crypto::getHash(Crypto::getHash($time 
                         . $randToken 
-                        . Timestamp::getThisSeconds(SMP_SESSIONKEY_LIFETIME) 
-                        . $uid->getHash()
-                        . constant('SMP_SESSIONKEY_TKN')));
+                        . Timestamp::getThisSeconds(self::SMP_FORMTOKEN_LIFETIME) 
+                        . SMP_FORM_TKN));
         } else {
             return FALSE;
         }        
     }
+    
     // __ PUB
     /**
-     * Almacena el UID del usuario, pasado como objeto UID.<br />
-     * Se emplea tanto en la función de autenticación como en la de generación.
-     * 
-     * @param UID $uid UID del usuario
-     * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
-     */
-    public function setUID(UID $newUID) 
-    {
-        return $this->t_setUID($newUID);
-    }
-    
-    /**
      * Fija un Token aleatorio.  Se emplea en la función de autenticación.<br />
-     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de Sesión nuevo!<br /> 
+     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de 
+     * Formulario nuevo!<br /> 
      * Usar el método getRandomToken() a este fin.
      * 
      * @see getRandomToken()
@@ -104,10 +95,11 @@ trait SessionToken
     {
         return $this->t_setRandomToken($randToken);
     }
-	 
+    
     /**
      * Fija el valor de Timestamp para la función de autenticación.<br />
-     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de Sesión nuevo!<br />
+     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de 
+     * Formulario nuevo!<br />
      * Usar el método getTimestamp() a este fin.
      * 
      * @see getTimestamp()
@@ -120,15 +112,15 @@ trait SessionToken
     }
     
     /**
-     * Fija el valor del Token de Sesión que será autenticado.
+     * Fija el valor del Token de Formulario que será autenticado.
      * 
-     * @param string $sessionToken Token de Sesión.
+     * @param string $formToken Token de Fromulario.
      * @return boolean TRUE si se almacenó correctamente, FALSE si no.
      */
-    public function setToken($sessionToken)
+    public function setToken($formToken)
     {
-        if ($this->isValid_sessionToken($sessionToken)) {
-            $this->sessionToken = $sessionToken;
+        if ($this->isValid_formToken($formToken)) {
+            $this->formToken = $formToken;
             return TRUE;
         }
         
@@ -137,7 +129,7 @@ trait SessionToken
     
     /**
      * Devuelve un Token aleatorio, que es el mismo que se emplea para armar
-     * el Token de Sesión.
+     * el Token de Formulario.
      * 
      * @see getToken()
      * @return string Token aleatorio.
@@ -148,7 +140,7 @@ trait SessionToken
     }
     
     /**
-     * Devuelve el timestamp empleado para crear el Token de Sesión.
+     * Devuelve el timestamp empleado para crear el Token de Formulario.
      * 
      * @return float Timestamp.
      */
@@ -158,27 +150,26 @@ trait SessionToken
     }
     
     /**
-     * Devuelve un Token de Sesión.
-     * Debe llamarse primero a getRandomToken(), getTimestamp() y setUID().
+     * Devuelve un Token de Formulario.
+     * Debe llamarse primero a getRandomToken() y getTimestamp().
      * 
      * @see getRandomToken()
      * @see getTimestamp()
-     * @see setUID()
-     * @param boolean $notStrict Si es TRUE, permite usar valores externos<br />
-     * vía setRandomToken() y setTimestamp() para generar el Token de Sesión.<br />
+     * @param boolean $notStrict Si es TRUE, permite usar valores 
+     * externos<br />
+     * vía setRandomToken() y setTimestamp() para generar el Token de 
+     * Formulario.<br />
      * FALSE por defecto.
-     * @return mixed Token de Sesión, o FALSE en caso de error.
+     * @return mixed Token de Formulario, o FALSE en caso de error.
      */ 
     public function getToken($notStrict = FALSE)
     {
         if (isset($this->randToken) 
             && isset($this->timestamp)
-            && isset($this->uid)
         ) {
             if ($notStrict) {
                 return self::tokenMake($this->randToken, 
-                                        $this->timestamp, 
-                                        $this->uid);
+                                        $this->timestamp);
             } else {
                 if (isset($this->ownrandToken) 
                     && $this->ownrandToken
@@ -186,8 +177,7 @@ trait SessionToken
                     && $this->ownTimestamp 
                 ) {
                     return self::tokenMake($this->randToken, 
-                                            $this->timestamp, 
-                                            $this->uid);
+                                            $this->timestamp);
                 } 
             }
         }
@@ -207,13 +197,13 @@ trait SessionToken
 
         if (isset($this->timestamp)
             && ($now >= $this->timestamp) 
-            && ($now < ($this->timestamp + SMP_SESSIONKEY_LIFETIME))
-            && isset($this->sessionToken)
+            && ($now < ($this->timestamp + self::SMP_FORMTOKEN_LIFETIME))
+            && isset($this->formToken)
         ) {
             // Verifico que getToken no sea FALSE.
-            $sessToken = $this->getToken(TRUE);
-            if ($sessToken && ($sessToken === $this->sessionToken)) {
-                return TRUE;            
+            $formToken = $this->getToken(TRUE);
+            if ($formToken && ($this->formToken === $formToken)) {
+                return TRUE;
             }
         }
 

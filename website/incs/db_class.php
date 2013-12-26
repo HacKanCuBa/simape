@@ -47,14 +47,16 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.9
+ * @version 1.01
  */
 class DB extends mysqli
 {  
+    const AUTO_PASSWORD = 'PASSWORD';
+    const AUTO_UID = 'UID';
+    
     protected $queryStmt, $bindParam, $queryParams;
     protected $queryData;
     protected $affectedRows;
-
 
     // Metodos
     // __ SPECIALS
@@ -431,6 +433,42 @@ class DB extends mysqli
         } else {
             return NULL;
         }
+    }
+    
+    /**
+     * Ejecuta querys conocidas, seleccionando la deseada mendiante una palabra 
+     * clave.
+     * 
+     * @param string $keyword Palabra clave.
+     * @param mixed $params Los parámetros que requiera la query 
+     * (si requere alguno).
+     * @return mixed Los datos de la query o bien FALSE en caso de error.
+     */
+    public function auto($keyword, $params = NULL)
+    {
+        switch ($keyword) {
+            case self::AUTO_PASSWORD:
+                $this->setQuery('SELECT PasswordSalted FROM Usuario WHERE Nombre = ?');
+                $this->setBindParam('s');
+                $this->setQueryParams($params);
+                $this->queryExecute();
+                $retVal = $this->queryGetData();
+                break;
+            
+            case self::AUTO_UID:
+                $this->setQuery('SELECT UID FROM Usuario WHERE Nombre = ?');
+                $this->setBindParam('s');
+                $this->setQueryParams($params);
+                $this->queryExecute();
+                $retVal = $this->queryGetData();
+                break;
+            
+            default:
+                $retVal = FALSE;
+                break;
+        }
+        
+        return $retVal;
     }
     // --
 }
