@@ -31,17 +31,17 @@
  * } else {
  *  echo "NO es un UID valido";
  * }
- * $nuevoUID = UID::getRandomUID();
+ * $nuevoUID = UID::getRandom();
  * 
  * $uid = new UID;
- * $uid->makeUID();
- * $otroUID = $uid->getUID();
+ * $uid->make();
+ * $otroUID = $uid->get();
  * </code></pre>
  *
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.40
+ * @version 0.42
  */
 class UID
 {  
@@ -51,9 +51,9 @@ class UID
     // __ SPECIALS
     /**
      * Recibe un string de UID y lo almacena si el mismo el válido.  Emplear
-     * getUID() para determinar si se trató de un UID válido.
+     * get() para determinar si se trató de un UID válido.
      * 
-     * @see getUID()
+     * @see get()
      * @param string $uid UID a almacenar.
      */
     public function __construct($uid = NULL) 
@@ -85,9 +85,9 @@ class UID
     /**
      * Genera y almacena un UID aleatorio
      */
-    public function makeUID()
+    public function make()
     {
-        $this->uid = $this->getRandomUID();
+        $this->uid = $this->getRandom();
     }
     
     /**
@@ -107,12 +107,12 @@ class UID
     }
     
     /**
-     * Devuelve el UID generado por makeUID() o almacenado por setUID(), 
+     * Devuelve el UID generado por make() o almacenado por setUID(), 
      * o NULL.
      * 
      * @return string UID o NULL.
      */
-    public function getUID()
+    public function get()
     {
         if(!empty($this->uid)) {
             return $this->uid;
@@ -126,7 +126,7 @@ class UID
      * 
      * @return string Hash del UID o NULL.
      */
-    public function getUIDHash()
+    public function getHash()
     {
         if(!empty($this->uid)) {
             return Crypto::getHash($this->uid);
@@ -140,7 +140,7 @@ class UID
      * 
      * @return string UID aleatorio.
      */
-    public static function getRandomUID() 
+    public static function getRandom() 
     {        
         return Crypto::getUUIDv4();
     }
@@ -154,5 +154,27 @@ class UID
     public static function isValid($uid)
     {
         return self::isValid_uuid($uid);
+    }
+    
+    /**
+     * Busca el UID del usuario indicado en la DB y lo almacena.
+     * Recuperar el valor con get().
+     * 
+     * @param string $username Nombre de usuario.
+     * @return boolean TRUE si se encontró y almacenó correctamente, 
+     * FALSE si no. 
+     */
+    public function retrieveFromDB($username)
+    {
+        if (!empty($username) && is_string($username)) {
+            $db = new DB;
+            $uid = $db->auto(DB::AUTO_UID, $username);
+            if ($uid) {
+                $this->uid = $uid;
+                return TRUE;
+            }
+        }
+        
+        return FALSE;
     }
 }

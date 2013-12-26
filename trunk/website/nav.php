@@ -25,57 +25,80 @@
 
 /**
  * Esta página se emplea para navegar entre las distintas secciones del sitio.
- * Todas las paginas deben llamar a ésta y ésta redireccionara adecuadamente.
+ * Todas las paginas deben llamar a ésta y ésta redireccionará adecuadamente.
+ * 
+ * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
+ * @copyright (c) 2013, Iván A. Barrera Oro
+ * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
+ * @version 1.0
  */
 
-session_start();
+require_once 'load.php';
 
-include 'load.php';
+// Iniciar o continuar sesion
+Session::initiate();
 
-if (fingerprint_token_validate() &&
-        sessionkey_validate(session_get_username(), session_get_sessionkey())) {
+$session = new Session;
+$uid = new UID;
+$uid->retrieveFromDB($session->retrieve(SMP_USERNAME));
+$session->setPassword($uid->get());
+
+$session->setRandomToken($session->retrieveEnc(SMP_SESSIONKEY_RANDOMTOKEN));
+$session->setTimestamp($session->retrieveEnc(SMP_SESSIONKEY_TIMESTAMP));
+$session->setUID($uid);
+$session->setToken($session->retrieveEnc(SMP_SESSIONKEY_TOKEN));
+
+$fingerprint = new Fingerprint;
+$fingerprint->setRandomToken($session->retrieveEnc(SMP_FINGERPRINT_RANDOMTOKEN));
+$fingerprint->setToken($session->retrieveEnc(SMP_FINGERPRINT_TOKEN));
+
+if ($fingerprint->authenticateToken() && $session->authenticateToken()) {
     // Login OK 
-    // Realizar navegacion...
-    // 
-    // FIXME
-    // mejorar esto: cambiar la navegacion por paginas
-    session_unset_data(); // debo limpiar en caso q el usuario halla llegado x la nav bar
-    //
+    // Realizar navegacion...  
     
-    $params = "pagetkn=" . page_token_get_new();
-    switch(get_get_action()) {
+    $action = Sanitizar::glGET(SMP_NAV_ACTION);
+    
+    switch($action) {
         case 'logout':
-            session_unset_sessionkey();
+            Session::remove(SMP_SESSIONKEY_RANDOMTOKEN);
+            Session::remove(SMP_SESSIONKEY_TIMESTAMP);
+            Session::remove(SMP_SESSIONKEY_TOKEN);
             $params = NULL;
             $redirect = NULL;
             break;
 
-        case 'perfilusr':
-            $redirect = SMP_LOC_USUARIO;
-            break;
-
-        case 'perfilemp':
-            $redirect = SMP_LOC_EMPLEADO;
-            break;
-
-        case 'mensajes':
         default:
-            $redirect = SMP_LOC_MSGS;
-            $params .= "#tabR";
+            if (Page::isValid($action)){
+                $page = new Page;
+                
+                $session->storeEnc(SMP_PAGE_RANDOMTOKEN, 
+                                    $page->getRandomToken());
+                $session->storeEnc(SMP_PAGE_TIMESTAMP, 
+                                    $page->getTimestamp());
+
+                $params = "pagetkn=" . $page->getToken();
+                
+                // Parche para la página de mensajes
+                if ($action == SMP_LOC_MSGS) {
+                    $params .= "#tabR";
+                }
+                $redirect = $action;
+            } else {
+                $redirect = NULL;
+                $params = NULL;
+            }
             break;
     }
 }
 else
 {
     // Error de autenticacion
-    //
-    session_terminate();
-    session_do();
-    session_set_errt(SMP_ERR_AUTHFAIL);
+    Session::terminate();
+    Session::initiate();
+    Session::store(SMP_NOTIF_ERR, SMP_ERR_AUTHFAIL);
     $redirect = SMP_LOC_LOGIN;  
     $params = NULL;
 }
 
-page_goto($redirect, $params);
+Page::go_to($redirect, $params);
 exit();
-?>

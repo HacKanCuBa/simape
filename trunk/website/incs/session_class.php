@@ -45,7 +45,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.00
+ * @version 1.03
  */
 class Session
 {
@@ -94,7 +94,7 @@ class Session
         // El nombre debe empezar obligatoriamente con una letra minúscula
         $length = 9;
         $letters = range('a', 'z');
-        $name = $letters[mt_rand(0, count($letters))];
+        $name = $letters[mt_rand(0, count($letters) - 1)];
         $name .= substr(str_shuffle(md5(mt_rand()) . md5(mt_rand())), 0, $length);
         //session_name($name);
 
@@ -153,7 +153,7 @@ class Session
      * @param mixed $key Índice, puede ser un string o un entero.
      * @param mixed $value Valor, puede ser cualquier elemento serializable
      * (se recomienta emplear valores escalares o arrays, y evitar objetos).
-     * @param boolean $sanitize Si es TRUE, sanitiza el valor antes de 
+     * @param boolean $dontSanitize Si es TRUE, NO sanitiza el valor antes de 
      * almacenarlo (FALSE por defecto).
      * @param string $password Contraseña.
      * @return boolean TRUE si se almacenó el valor satisfactoriamente, 
@@ -161,13 +161,13 @@ class Session
      * @see setPassword().
      */
     public static function store($key, $value = NULL, 
-                                    $sanitize = FALSE, $password = NULL)
+                                  $dontSanitize = FALSE, $password = NULL)
     {
         if (self::status() == PHP_SESSION_ACTIVE) {
             if (isset($key) 
                 && (is_string($key) || is_integer($key))
             ) {
-                if ($sanitize) {
+                if (!$dontSanitize) {
                     $value = Sanitizar::value($value);
                 }
                 
@@ -288,6 +288,16 @@ class Session
         }
         
         return FALSE;
+    }
+    
+    /**
+     * Elimina el valor indicado por $key, es decir, elimina $_SESSION[$key].
+     * 
+     * @param mixed $key Índice del valor a eliminar.
+     */
+    public static function remove($key)
+    {
+        unset($_SESSION[$key]);
     }
 
     /**

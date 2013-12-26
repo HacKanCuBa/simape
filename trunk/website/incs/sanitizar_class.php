@@ -37,7 +37,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.71
+ * @version 0.72
  */
 class Sanitizar
 {
@@ -134,7 +134,7 @@ class Sanitizar
      * Sanitiza un valor de la variable super global $_POST
      * 
      * @param mixed $POSTkey Nombre del índice de $_POST, string o int.
-     * @return mixed Devuelve un string sanitizado.
+     * @return string Devuelve un string sanitizado.
      * En caso de error, realiza una llamada del sistema para 
      * notificarlo.  Usar error_get_last() u otra para determinarlo.
      */
@@ -146,7 +146,7 @@ class Sanitizar
                                     FILTER_FLAG_STRIP_LOW);
             }
             
-            return NULL;
+            return '';
         } catch (Exception $err) {
             trigger_error(__METHOD__ . '(): El valor indicado no es valido.  '
                           . 'Detalles: ' . $err->getMessage());
@@ -157,7 +157,7 @@ class Sanitizar
      * Sanitiza un valor de la variable super global $_GET
      * 
      * @param mixed $GETkey Nombre del índice de $_GET, string o int.
-     * @return mixed Devuelve un string sanitizado.
+     * @return string Devuelve un string sanitizado.
      * En caso de error, realiza una llamada del sistema para 
      * notificarlo.  Usar error_get_last() u otra para determinarlo.
      */
@@ -169,7 +169,7 @@ class Sanitizar
                                     FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH);
             }
         
-            return NULL;
+            return '';
         } catch (Exception $err) {
             trigger_error(__METHOD__ . '(): El valor indicado no es valido.  '
                           . 'Detalles: ' . $err->getMessage());
@@ -180,7 +180,7 @@ class Sanitizar
      * Sanitiza un valor de la variable super global $_SERVER
      * 
      * @param string $SERVERkey Nombre del índice de $_SERVER
-     * @return mixed Devuelve un string sanitizado.
+     * @return string Devuelve un string sanitizado.
      * En caso de error, realiza una llamada del sistema para 
      * notificarlo.  Usar error_get_last() u otra para determinarlo.
      */
@@ -192,7 +192,7 @@ class Sanitizar
                                     FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH);
             }
         
-            return NULL;
+            return '';
         } catch (Exception $err) {
             trigger_error(__METHOD__ . '(): El valor indicado no es valido.  '
                           . 'Detalles: ' . $err->getMessage());

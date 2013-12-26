@@ -41,7 +41,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.41
+ * @version 0.43
  */
 class Fingerprint
 {
@@ -85,14 +85,10 @@ class Fingerprint
     protected static function tokenMake($randToken)
     {
         if (self::isValid_token($randToken) 
-        ) {
-            // Para forzar una vida util durante sólo el mismo dia.
-            // Si cambia el dia, el valor de la operacion cambiara.
-            
+        ) {            
             return Crypto::getHash(Sanitizar::glSERVER('HTTP_USER_AGENT')
                                     . Sanitizar::glSERVER('REMOTE_ADDR')
                                     . SMP_FINGERPRINT_TKN
-                                    . Timestamp::getToday()
                                     . $randToken
             );
         }
@@ -211,11 +207,16 @@ class Fingerprint
             || empty($this->fingerprintToken)
         ) {
             return NULL;
-        }
-        elseif ($this->fingerprintToken === $this->getToken(TRUE)) {
-            return TRUE;
         } else {
-            return FALSE;
+            // Verifico que getToken no sea FALSE.
+            $fingerprintToken = $this->getToken(TRUE);
+            if ($fingerprintToken 
+                && ($this->fingerprintToken === $fingerprintToken)
+            ) {
+                return TRUE;
+            }
         }
+
+        return FALSE;
     }
 }

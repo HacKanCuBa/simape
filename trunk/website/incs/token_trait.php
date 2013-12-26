@@ -80,7 +80,7 @@ trait Token
      */
     protected static function isValid_UID(UID $uid)
     {
-        if (!empty($uid) && is_a($uid, 'UID') && !empty($uid->getUID())) {
+        if (!empty($uid) && is_a($uid, 'UID') && !empty($uid->get())) {
             return TRUE;
         }
         
