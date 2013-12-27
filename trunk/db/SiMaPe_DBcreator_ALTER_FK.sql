@@ -202,14 +202,6 @@ ALTER TABLE `SiMaPe`.`LicenciaOrdinaria`
   ON UPDATE CASCADE
 , ADD INDEX `fk_LicenciaOrdinaria_Desc` (`LicenciaOrdinariaDescId` ASC) ;
 
-ALTER TABLE `SiMaPe`.`Fichero` 
-  ADD CONSTRAINT `fk_Fichero_SubidoPor`
-  FOREIGN KEY (`UsuarioId` )
-  REFERENCES `SiMaPe`.`Usuario` (`UsuarioId` )
-  ON DELETE CASCADE
-  ON UPDATE CASCADE
-, ADD INDEX `fk_Fichero_SubidoPor` (`UsuarioId` ASC) ;
-
 ALTER TABLE `SiMaPe`.`HorarioLaboral` 
   ADD CONSTRAINT `fk_HorarioLaboral_Dia`
   FOREIGN KEY (`DiaLaboralDescId` )
@@ -237,6 +229,14 @@ ALTER TABLE `SiMaPe`.`HorarioExtra`
   ON UPDATE CASCADE
 , ADD INDEX `fk_HorarioLaboral_Dia` (`DiaLaboralDescId` ASC) 
 , ADD INDEX `fk_HorarioLaboral_Empleado` (`EmpleadoId` ASC) ;
+
+ALTER TABLE `SiMaPe`.`Fichero` 
+  ADD CONSTRAINT `fk_Fichero_Usuario`
+  FOREIGN KEY (`UsuarioId` )
+  REFERENCES `SiMaPe`.`Usuario` (`UsuarioId` )
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+, ADD INDEX `fk_Fichero_Usuario` (`UsuarioId` ASC) ;
 
 
 SET SQL_MODE=@OLD_SQL_MODE;

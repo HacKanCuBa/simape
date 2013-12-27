@@ -50,6 +50,8 @@ CREATE  TABLE IF NOT EXISTS `SiMaPe`.`Usuario` (
   `PasswordSalted` VARCHAR(255) NOT NULL COMMENT 'Usar funcion password_hash con BCRYPT en PHP5' ,
   `PasswordTimestamp` INT UNSIGNED NOT NULL ,
   `Activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Activo: TRUE - No activo: FALSE' ,
+  `PrivKey` BLOB NULL ,
+  `PubKey` BLOB NULL ,
   `CreacionTimestamp` INT UNSIGNED NOT NULL COMMENT 'Fecha de registro' ,
   `ModificacionTimestamp` INT UNSIGNED NOT NULL ,
   PRIMARY KEY (`UsuarioId`) )
@@ -59,6 +61,10 @@ COMMENT = 'Los permisos se asignan mediante perfiles unicamente';
 CREATE UNIQUE INDEX `Nombre_UNIQUE` ON `SiMaPe`.`Usuario` (`Nombre` ASC) ;
 
 CREATE UNIQUE INDEX `UID_UNIQUE` ON `SiMaPe`.`Usuario` (`UID` ASC) ;
+
+CREATE UNIQUE INDEX `PrivKey_UNIQUE` ON `SiMaPe`.`Usuario` (`PrivKey` ASC) ;
+
+CREATE UNIQUE INDEX `PubKey_UNIQUE` ON `SiMaPe`.`Usuario` (`PubKey` ASC) ;
 
 
 -- -----------------------------------------------------
@@ -294,6 +300,7 @@ ENGINE = InnoDB;
 CREATE  TABLE IF NOT EXISTS `SiMaPe`.`Oficina` (
   `OficinaId` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `EmpleadoId` INT UNSIGNED NOT NULL ,
+  `Email` VARCHAR(50) NULL ,
   `OficinaNro` SMALLINT UNSIGNED NOT NULL ,
   `PisoNro` TINYINT UNSIGNED NOT NULL ,
   `TelInternoNro` INT UNSIGNED NOT NULL ,
@@ -500,7 +507,7 @@ COMMIT;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `SiMaPe`;
-INSERT INTO `SiMaPe`.`Usuario` (`UsuarioId`, `EmpleadoId`, `UsuarioPerfilId`, `Nombre`, `UID`, `PasswordSalted`, `PasswordTimestamp`, `Activo`, `CreacionTimestamp`, `ModificacionTimestamp`) VALUES (1, 1, 1, 'simape', '3281b512-a508-4738-b5ce-3fbe96725f9c', '$2y$15$EYmCNeWygCFX5J9MMyx5qe71SXBuiyuKFS/29mMygoKgEqnIqOz8W', 1386012582, 1, 1386012582, 1386012582);
+INSERT INTO `SiMaPe`.`Usuario` (`UsuarioId`, `EmpleadoId`, `UsuarioPerfilId`, `Nombre`, `UID`, `PasswordSalted`, `PasswordTimestamp`, `Activo`, `PrivKey`, `PubKey`, `CreacionTimestamp`, `ModificacionTimestamp`) VALUES (1, 1, 1, 'simape', '3281b512-a508-4738-b5ce-3fbe96725f9c', '$2y$15$EYmCNeWygCFX5J9MMyx5qe71SXBuiyuKFS/29mMygoKgEqnIqOz8W', 1386012582, 1, NULL, NULL, 1386012582, 1386012582);
 
 COMMIT;
 
