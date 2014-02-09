@@ -34,8 +34,14 @@
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @version 0.7 untested
  */
-class Usuario extends UsuarioPerfil 
+class Usuario extends Empleado 
 {    
+    use UsuarioPerfil {
+        getId as getUsuarioPerfilId;
+        getNombre as getUsuarioPerfilNombre;
+        getTimestamp as getUsuarioPerfilTimestamp;
+    }
+    
     protected $Usuario = array ('UsuarioId' => '',
                                 'EmpleadoId' => '',
                                 'UsuarioPerfilId' => '',
@@ -45,9 +51,8 @@ class Usuario extends UsuarioPerfil
                                 'Activo' => '',
                                 'CreacionTimestamp' => '',
                                 'ModificacionTimestamp' => ''
-                                ),
-              $db, $crypto, $password,
-              $EsNuevoUsuario;
+                                );
+    protected $password, $uid, $EsNuevoUsuario;
     
     // Metodos
     // __ SPECIALS
@@ -60,19 +65,25 @@ class Usuario extends UsuarioPerfil
      * Si no lo encuentra, considera que se esta creando un nuevo usuario.
      * 
      * @param string $Nombre Nombre de usuario.
-     * @param string $UID UID del usuario.
-     * @param Empleado $Empleado Objeto Empleado.
-     * @param string $PasswordPlain Nueva clave en texto plano.
+     * @param mixed $UID UID del usuario, como objeto o string.
+     * @param mixed $Password Nueva clave (como objeto) o bien se considerará 
+     * nueva clave en texto plano como string.
      * @param boolean $Activo TRUE para indicar que el nuevo usario estará 
-     * activo, FALSE para desactivarlo.
+     * activo (por defecto), FALSE para desactivarlo.
      */
     function __construct($Nombre = NULL, $UID = NULL, 
-                          Empleado $Empleado = NULL,
-                          $PasswordPlain = NULL, $Activo = TRUE
-    ) {       
-        $this->db = new DB;
-        $this->crypto = new Crypto();
+                          $Password = NULL, $Activo = TRUE
+    ) {      
         
+        if (!$this->setUID($UID)) {
+            $this->uid = new UID;
+        }
+        
+        if (!$this->setPassword($Password)) {
+            $this->password = new Password;
+        }       
+        
+        /* !!! */
         // Búsqueda
         $UsuarioId = 0;
         if (!empty($Nombre)) {
@@ -102,7 +113,7 @@ class Usuario extends UsuarioPerfil
         } else {
             // No encotrado
             $this->EsNuevoUsuario = TRUE;
-            $this->setUID($this->crypto->getUID());
+            $this->setUID($this->crypto->get());
             $this->setUsuarioCreacionTimestamp(time());
         }
         
@@ -120,17 +131,16 @@ class Usuario extends UsuarioPerfil
     // __ PRIV
     
     // __ PROT    
-    protected function isValid_username($username) 
+    /**
+     * Valida un string y determina si cumple las restricciones impuestas 
+     * en la configuración sobre los nombres de usuario.
+     * 
+     * @param string $username Nombre de usuario.
+     * @return boolean TRUE si el string es un nombre de usuario válido, 
+     * FALSE si no lo es.
+     */
+    protected static function isValid_username($username) 
     {
-        /**
-         * Valida un string y determina si cumple las restricciones impuestas 
-         * en la configuración sobre los nombres de usuario.
-         * 
-         * @param string $username Nombre de usuario.
-         * @return boolean TRUE si el string es un nombre de usuario válido, 
-         * FALSE si no lo es.
-         */
-
         if (!empty($username) 
             && is_string($username)
             && (strlen($username) <= constant('SMP_USRNAME_MAXLEN')) 
@@ -143,31 +153,72 @@ class Usuario extends UsuarioPerfil
     }
     
     /**
-     * Valida un string y determina si se trata de un código UUID4.
+     * Valida y determina si se trata de un objeto UID.
      * 
-     * @param string $uuid String a validar.
-     * @return boolean TRUE si el string cumple los requisitos y es un código 
-     * UUID4 válido, FALSE si no lo es..
+     * @param mixed $uid
+     * @return boolean TRUE si se trata de un objeto UID, FALSE si no.
      */
-    protected function isValid_uuid($uuid) 
+    protected static function isValid_UID($uid)
     {
-        if (!empty($uuid) && is_string($uuid)) {
-            return (bool) preg_match('/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-'
-                                     . '[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i', 
-                                     $uuid);
+        if (!empty($uid) && is_a($uid, 'UID')) {
+            return TRUE;
         }
-
+        
         return FALSE;
     }
 
-    protected function isDataReady() 
+    /**
+     * Valida y determina si se trata de un objeto Empleado.
+     * 
+     * @param mixed $empleado
+     * @return boolean TRUE si se trata de un objeto Empleado, FALSE si no.
+     */
+    protected static function isValid_Empleado($empleado)
     {
-        /**
-         * Verifica si todos los datos están en orden para guardar en la DB.
-         * 
-         * @return boolean TRUE si los datos están en orden, FALSE si no.
-         */
+        if (!empty($empleado) && is_a($empleado, 'Empleado')) {
+            return TRUE;
+        }
         
+        return FALSE;
+    }
+    
+    /**
+     * Valida y determina si se trata de un objeto DB.
+     * 
+     * @param mixed $db
+     * @return boolean TRUE si se trata de un objeto DB, FALSE si no.
+     */
+    protected static function isValid_DB($db)
+    {
+        if (!empty($db) && is_a($db, 'DB')) {
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Valida y determina si se trata de un objeto Password.
+     * 
+     * @param mixed $password
+     * @return boolean TRUE si se trata de un objeto Password, FALSE si no.
+     */
+    protected static function isValid_Password($password)
+    {
+        if (!empty($password) && is_a($password, 'Password')) {
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+
+    /**
+     * Verifica si todos los datos están en orden para guardar en la DB.
+     * 
+     * @return boolean TRUE si los datos están en orden, FALSE si no.
+     */
+    protected function isDataReady() 
+    {        
         if (isset($this->db) && is_a($this->db, 'DB')
             && isset($this->Usuario['Nombre'])
             && isset($this->Usuario['PasswordSalted'])
@@ -182,104 +233,41 @@ class Usuario extends UsuarioPerfil
         }
     }
 
-    protected function paswordGen($plaintext) 
-    {
-        /**
-         * Devuelve un string que debe ser usado como contraseña para el sistema
-         * de login.
-         * 
-         * @param string $plaintext Contraseña en texto plano que 
-         * será encriptada.
-         * @return string Contraseña encriptada.
-         */
-        
-        $this->crypto->setValue($plaintext);
-        return $this->crypto->getPassword();
-    }
-
-    protected function getUserTblFromDB() {
-        /**
-         * Busca en la DB todos los datos del usuario, usando como parámetro
-         * UsuarioId.
-         * 
-         * @return mixed Todos los valores en un array, o bien TRUE si la
-         * consulta no produjo resultados pero fue exitosa.  FALSE si se produjo
-         * un error.
-         */
-        $this->db->setQuery('SELECT * FROM Usuario WHERE UsuarioId = ?');
-        $this->db->setBindParam('i');
-        $this->db->setQueryParams(array($this->Usuario['UsuarioId']));
-        $this->db->queryExecute();
-        return $this->db->getQueryData();
-    }
-    
-    protected function findUsuarioId_usingNombre($Nombre)
-    {
-        $this->db->setQuery('SELECT UsuarioId FROM Usuario WHERE '
-                             . 'Nombre = ?');
-        $this->db->setBindParam('s');
-        $this->db->setQueryParams(array($Nombre));
-        $this->db->queryExecute();
-        $data = $this->db->queryGetData();
-        if (is_array($data)) {
-            return (int) current($data);
-        }
-        return FALSE;
-    }
-    
-    protected function findUsuarioId_usingUID($UID)
-    {
-        $this->db->setQuery('SELECT UsuarioId FROM Usuario WHERE '
-                             . 'UID = ?');
-        $this->db->setBindParam('s');
-        $this->db->setQueryParams(array($UID));
-        $this->db->queryExecute();
-        $data = $this->db->queryGetData();
-        if (is_array($data)) {
-            return (int) current($data);
-        }
-        return FALSE;
-    }
-    
-    protected function findUsuarioId_usingEmpleadoId($EmpleadoId)
-    {
-        $this->db->setQuery('SELECT UsuarioId FROM Usuario WHERE '
-                             . 'EmpleadoId = ?');
-        $this->db->setBindParam('i');
-        $this->db->setQueryParams(array($EmpleadoId));
-        $this->db->queryExecute();
-        $data = $this->db->queryGetData();
-        if (is_array($data)) {
-            return (int) current($data);
-        }
-        return FALSE;
-    }
-    
-    protected function findUsuarioId($searchParam)
-    {
-        /**
-         * Busca en la DB el valor de UsuarioId que corresponda con el parámetro
-         * de búsqueda.  Éste puede ser Nombre, UID o EmpleadoId.
-         * 
-         * @param mixed $searchParam Puede ser EmpleadoId, UID o Nombre de 
-         * usuario.
-         * @return integer UsuarioId, o bien 0 en caso de error o no 
-         * encontrarlo.
-         */
-        
+    /**
+     * Busca en la DB todos los datos del usuario, usando como parámetro
+     * UsuarioId, UID o Nombre.
+     * 
+     * @param mixed (int) UsuarioId, (UID) UID o (string) Nombre.
+     * @return mixed Todos los valores en un array, FALSE si se produjo
+     * un error.
+     */
+    protected static function getTblFromDB($searchParam) {
         if (!empty($searchParam)) {
+            $db = new DB;
             if (is_int($searchParam)) {
-                return $this->findUsuarioId_usingEmpleadoId($searchParam);
-            } elseif ($this->isValid_uuid($searchParam)) {
-                return $this->findUsuarioId_usingUID($searchParam);
-            } elseif ($this->isValid_username($searchParam)) {
-                return $this->findUsuarioId_usingNombre($searchParam);
+                $db->setQuery('SELECT * FROM Usuario WHERE UsuarioId = ?');
+                $db->setBindParam('i');
+            } elseif (self::isValid_UID($searchParam)) {
+                $db->setQuery('SELECT * FROM Usuario WHERE UID = ?');
+                $db->setBindParam('s');
+                $searchParam = $searchParam->get();
+            } elseif (self::isValid_username($searchParam)) {
+                $db->setQuery('SELECT * FROM Usuario WHERE Nombre = ?');
+                $db->setBindParam('s');
+            } else {
+                return FALSE;
             }
+
+            $db->setQueryParams($searchParam);
+            $db->queryExecute();
+            $result = $db->getQueryData();
+            unset($db);
+            return $result;
         }
         
-        return 0;
+        return FALSE;
     }
-    
+        
     protected function setUsuarioCreacionTimestamp($NuevoTimestamp)
     {
         $this->Usuario['CreacionTimestamp'] = $NuevoTimestamp;
@@ -288,7 +276,7 @@ class Usuario extends UsuarioPerfil
     // --
     // __ PUB
     // Set
-    public function setUsuarioNombre($NuevoNombreUsuario) {
+    public function setNombre($NuevoNombreUsuario) {
         if ($this->isValid_username($NuevoNombreUsuario)) {
             $this->Usuario['Nombre'] = strtolower($NuevoNombreUsuario);
             return TRUE;
@@ -296,33 +284,66 @@ class Usuario extends UsuarioPerfil
         return FALSE;
     }
     
-    public function setPasswordPlain($NuevoPassword) {
-        if ($this->isValid_password($NuevoPassword)) {
-            if (isset($this->password)) {
-                $this->password->setPlaintextPassword($NuevoPassword);
-            } else {
-                $this->password = new Password($NuevoPassword);
-            }
-            return TRUE;
+    /**
+     * Almacena una nueva contraseña, como objeto o string.  El objeto debe 
+     * contener una contraseña en texto plano o encriptada.
+     * @param type $NuevoPassword
+     * @return boolean
+     */
+    public function setPassword($NuevoPassword) 
+    {
+        $retval = FALSE;
+        
+        if (self::isValid_Password($NuevoPassword) 
+            && (!empty($NuevoPassword->getPlaintext()) 
+                || !empty($NuevoPassword->getEncrypted()))
+        ) {
+            $this->password = $NuevoPassword;
+            $retval = TRUE;
+        } elseif (Password::isStrong($NuevoPassword)) {
+            $this->password = new Password;
+            $this->password->setPlaintext($NuevoPassword);
+            $retval = TRUE;
         }
-        return FALSE;
+        
+        return $retval;
     }
   
     public function setActivo($NuevoActivo) {
         if (!empty($NuevoActivo) 
-            && is_bool($NuevoActivo)) {
+            && is_bool($NuevoActivo)
+        ) {
             $this->Usuario['Activo'] = $NuevoActivo;
             return TRUE;
         }
         return FALSE;
     }
     
-    public function setUID($NuevoUID) {
-        if (isValid_uuid($NuevoUID)) {
-            $this->Usuario['UID'] = $NuevoUID;
-            return TRUE;
+    /**
+     * Almacena el UID indicado como nuevo UID del usuario.  Acepta objeto UID 
+     * o string.<br />
+     * El objeto debe contener un UID válido para ser aceptado.<br />
+     * Al crear un usuario nuevo, el sistema creará un nuevo UID si no se 
+     * almacenó uno previamente, por lo que no es necesario llamar a éste 
+     * método a tal fin.
+     * 
+     * @param mixed $NuevoUID (UID) o (string) Nuevo UID.
+     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
+     */
+    public function setUID($NuevoUID) 
+    {
+        $retval = FALSE;
+    
+        if (self::isValid_UID($NuevoUID) && !empty($NuevoUID->get())) {
+            $this->uid = $NuevoUID;
+            $retval = TRUE;
+        } elseif (UID::isValid($NuevoUID)) {
+            $this->uid = new UID;
+            $this->uid->set($NuevoUID);
+            $retval = TRUE;
         }
-        return FALSE;
+        
+        return $retval;
     }
     // --
     // Get
@@ -330,7 +351,7 @@ class Usuario extends UsuarioPerfil
         return (string) $this->Usuario['Nombre'];
     }
     
-    public function getUID() {
+    public function get() {
         return (string) $this->Usuario['UID'];
     }
 

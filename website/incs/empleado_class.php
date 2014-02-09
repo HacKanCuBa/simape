@@ -33,6 +33,17 @@
  * @version 0.1 untested
  */
 
-class Empleado {
+class Empleado 
+{
     
+    // __ SPECIALS
+    public function __construct() 
+    {
+        
+    }
+    // __ PRIV
+    
+    // __ PROT
+    
+    // __ PUB
 }

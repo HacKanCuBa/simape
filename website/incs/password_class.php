@@ -22,6 +22,7 @@
  *****************************************************************************/
 
 /**
+ * password_class.php
  * Maneja la creacion de contraseñas y la autenticación.
  * 
  * Ejemplo de uso:
@@ -47,7 +48,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.24
+ * @version 1.25
  */
 class Password
 {
@@ -161,14 +162,24 @@ class Password
      * restricciones (es decir, es válida), y prepara para encriptarla.
      * 
      * @param string $plaintextPassword Contraseña en texto plano
+     * @param boolean $requireStrong Si es TRUE, requiere que la contraseña 
+     * sea <i>fuerte</i>; FALSE por defecto.
      * @return boolean TRUE si la contraseña es válida y fue almacenada, 
      * FALSE si no.
      */
-    public function setPlaintext($plaintextPassword)
+    public function setPlaintext($plaintextPassword, $requireStrong = FALSE)
     {
         if ($this->isValid_ptPassword($plaintextPassword)) {
-            $this->plaintextPassword = $plaintextPassword;
-            return TRUE;
+            if ($requireStrong) {
+                if (self::isStrong($plaintextPassword)) {
+                    $this->plaintextPassword = $plaintextPassword;
+                    return TRUE;
+                }
+            } else {
+                $this->plaintextPassword = $plaintextPassword;
+                return TRUE;
+            }
+            
         }
         
         return FALSE;
@@ -277,17 +288,47 @@ class Password
      * encryptPassword() o en su defecto setEncrypted().
      * 
      * @see encryptPassword()
-     * @return string La contraseña encriptada.
+     * @return string|FALSE La contraseña encriptada.
      */
     public function getEncrypted()
     {
         if (isset($this->encryptedPassword)) {
-            return (string) $this->encryptedPassword;
+            return $this->encryptedPassword;
         } else {
-            return NULL;
+            return FALSE;
         }
     }
     
+    /**
+     * Devuelve la contraseña almacenada en texto plano, o NULL si no hay 
+     * ninguna.
+     * 
+     * @return string|FALSE La contraseña en texto plano.
+     */
+    public function getPlaintext()
+    {
+        if (isset($this->plaintextPassword)) {
+            return $this->plaintextPassword;
+        } else {
+            return FALSE;
+        }
+    }
+    
+    /**
+     * Devuelve el timestamp de la contraseña almacenado, o FALSE si no hay 
+     * ninguno.
+     * 
+     * @return int|FALSE Timestamp.
+     */
+    public function getPasswordTimestamp()
+    {
+        if (isset($this->PasswordTimestamp)) {
+            return $this->PasswordTimestamp;
+        } else {
+            return FALSE;
+        }
+    }
+
     /**
      * This code will benchmark your server to determine how high of a cost you can
      * afford. You want to set the highest cost that you can without slowing down
@@ -359,16 +400,22 @@ class Password
      * resultado: getEncrypted().
      * NOTA: ¡puede demorar varios segundos!
      * @see getEncrypted()
-     * @return void No devuelve nada.
+     * @return boolean TRUE si se encriptó correctamente, FALSE si no.
      */
     public function encryptPassword() 
     {
         if (!empty($this->plaintextPassword)) {
             $options = array('cost' => $this->PasswordCost);
-            $this->encryptedPassword = password_hash($this->plaintextPassword, 
-                                                  PASSWORD_DEFAULT, 
-                                                  $options);
+            $encryptedPassword = password_hash($this->plaintextPassword, 
+                                               PASSWORD_DEFAULT, 
+                                               $options);
+            if ($encryptedPassword) {
+                $this->encryptedPassword = $encryptedPassword;
+                return TRUE;
+            }
         }
+        
+        return FALSE;
     }
     
     /** 

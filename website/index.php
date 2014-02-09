@@ -34,9 +34,9 @@ $fingerprint = new Fingerprint();
 Session::store(SMP_FINGERPRINT_RANDOMTOKEN, $fingerprint->getRandomToken());
 Session::store(SMP_FINGERPRINT_TOKEN, $fingerprint->getToken());
 
-if(!empty(Sanitizar::glPOST('login')))
+if(!empty(Sanitizar::glPOST('frm_buttonLogin')))
 {
-    Page::go_to(SMP_LOC_LOGIN);
+    Page::nav(SMP_LOC_LOGIN);
     exit();
 }
 
@@ -48,7 +48,7 @@ echo Page::getMain();
 
 echo "\n\t\t<form style='text-align: center;' method='post'>";
 echo "\n\t\t\t<h3>Ingresar al sistema</h3>";
-echo "\n\t\t\t<p>Para ingresar al sistema, debe <input name='login' "
+echo "\n\t\t\t<p>Para ingresar al sistema, debe <input name='frm_buttonLogin' "
      . "type='submit' value='Iniciar sesi&oacute;n' /></p>";
 echo "\n\t\t</form>";
 echo "\n\t\t<h3>Acerca de SiMaPe</h3>";
