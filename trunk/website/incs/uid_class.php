@@ -41,7 +41,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.42
+ * @version 0.44
  */
 class UID
 {  
@@ -58,7 +58,7 @@ class UID
      */
     public function __construct($uid = NULL) 
     {
-        $this->setUID($uid);
+        $this->set($uid);
     }
     // __ PRIV
     
@@ -96,7 +96,7 @@ class UID
      * @param string $uid UID a almacenar.
      * @return boolean TRUE si el UID recibido es válido, FALSE si no.
      */
-    public function setUID($uid)
+    public function set($uid)
     {
         if ($this->isValid($uid)) {
             $this->uid = $uid;

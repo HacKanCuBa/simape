@@ -694,7 +694,7 @@ class Page
      * @return boolean TRUE si se enviaron correctamente los headers, 
      * FALSE si no.
      */
-    public static function go_to ($loc = NULL, $params = NULL) 
+    public static function go_to($loc = NULL, $params = NULL) 
     {
         if (file_exists(SMP_INC_ROOT . self::urlMake($loc))) {
             header("Location: " . SMP_WEB_ROOT . self::urlMake($loc, $params));
@@ -704,6 +704,12 @@ class Page
         return FALSE;
     }
     
+    public static function nav($params = NULL)
+    {
+        $action = [ SMP_NAV_ACTION => $params ];
+        self::go_to(SMP_LOC_NAV, $action);
+    }
+
     /**
      * Devuelve indentado para el nivel requerido.
      * 

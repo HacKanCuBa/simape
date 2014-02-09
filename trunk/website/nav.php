@@ -24,13 +24,14 @@
 // ESTA PAGINA NO DEBE SER ACCEDIDA DIRECTAMENTE POR EL USUARIO
 
 /**
+ * nav.php
  * Esta página se emplea para navegar entre las distintas secciones del sitio.
  * Todas las paginas deben llamar a ésta y ésta redireccionará adecuadamente.
  * 
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.0
+ * @version 1.2
  */
 
 require_once 'load.php';
@@ -38,66 +39,66 @@ require_once 'load.php';
 // Iniciar o continuar sesion
 Session::initiate();
 
-$session = new Session;
-$uid = new UID;
-$uid->retrieveFromDB($session->retrieve(SMP_USERNAME));
-$session->setPassword($uid->get());
+// Realizar navegacion...  
 
-$session->setRandomToken($session->retrieveEnc(SMP_SESSIONKEY_RANDOMTOKEN));
-$session->setTimestamp($session->retrieveEnc(SMP_SESSIONKEY_TIMESTAMP));
-$session->setUID($uid);
-$session->setToken($session->retrieveEnc(SMP_SESSIONKEY_TOKEN));
+$action = Sanitizar::glGET(SMP_NAV_ACTION);
+$params = NULL;
+$redirect = NULL;
 
-$fingerprint = new Fingerprint;
-$fingerprint->setRandomToken($session->retrieveEnc(SMP_FINGERPRINT_RANDOMTOKEN));
-$fingerprint->setToken($session->retrieveEnc(SMP_FINGERPRINT_TOKEN));
+switch($action) {
+    case 'logout':
+        Session::remove(SMP_SESSIONKEY_RANDOMTOKEN);
+        Session::remove(SMP_SESSIONKEY_TIMESTAMP);
+        Session::remove(SMP_SESSIONKEY_TOKEN);      
+        // $redirect=NULL lleva a index.php
+        break;
 
-if ($fingerprint->authenticateToken() && $session->authenticateToken()) {
-    // Login OK 
-    // Realizar navegacion...  
-    
-    $action = Sanitizar::glGET(SMP_NAV_ACTION);
-    
-    switch($action) {
-        case 'logout':
-            Session::remove(SMP_SESSIONKEY_RANDOMTOKEN);
-            Session::remove(SMP_SESSIONKEY_TIMESTAMP);
-            Session::remove(SMP_SESSIONKEY_TOKEN);
-            $params = NULL;
-            $redirect = NULL;
-            break;
+    case NULL:
+    case '':
+    case SMP_WEB_ROOT:
+        // $redirect=NULL lleva a index.php
+        break;
 
-        default:
-            if (Page::isValid($action)){
-                $page = new Page;
-                
+    default:
+        if (Page::isValid($action)) {
+            $page = new Page;
+            
+            // Si el usuario está loggeado, dirigirse a la pag solicitada con un
+            // page token.
+            $session = new Session;
+            $uid = new UID;
+            $uid->retrieveFromDB($session->retrieve(SMP_USERNAME));
+            $session->setPassword($uid->get());
+            
+            $session->setRandomToken($session->retrieveEnc(SMP_SESSIONKEY_RANDOMTOKEN));
+            $session->setTimestamp($session->retrieveEnc(SMP_SESSIONKEY_TIMESTAMP));
+            $session->setUID($uid);
+            $session->setToken($session->retrieveEnc(SMP_SESSIONKEY_TOKEN));
+            
+            $fingerprint = new Fingerprint;
+            $fingerprint->setRandomToken($session->retrieveEnc(SMP_FINGERPRINT_RANDOMTOKEN));
+            $fingerprint->setToken($session->retrieveEnc(SMP_FINGERPRINT_TOKEN));
+            
+            if ($fingerprint->authenticateToken() 
+                && $session->authenticateToken()) 
+            {
+                //Login OK
                 $session->storeEnc(SMP_PAGE_RANDOMTOKEN, 
                                     $page->getRandomToken());
                 $session->storeEnc(SMP_PAGE_TIMESTAMP, 
                                     $page->getTimestamp());
 
                 $params = "pagetkn=" . $page->getToken();
-                
+
                 // Parche para la página de mensajes
                 if ($action == SMP_LOC_MSGS) {
                     $params .= "#tabR";
                 }
-                $redirect = $action;
-            } else {
-                $redirect = NULL;
-                $params = NULL;
             }
-            break;
-    }
-}
-else
-{
-    // Error de autenticacion
-    Session::terminate();
-    Session::initiate();
-    Session::store(SMP_NOTIF_ERR, SMP_ERR_AUTHFAIL);
-    $redirect = SMP_LOC_LOGIN;  
-    $params = NULL;
+            
+            $redirect = $action;
+        }
+        break;
 }
 
 Page::go_to($redirect, $params);

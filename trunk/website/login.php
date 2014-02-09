@@ -27,13 +27,14 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.90
+ * @version 0.95
  */
 
 /*
  * ToDo:
- *  - opcional loguearse con email, legajo, dni o algun otro campo unico
- *   (si algo paso con el nombre de usuario)
+ *  - loguearse con email, legajo, dni o algun otro campo unico
+ *  - reestablecer contraseña
+ *   
  */
 
 require_once 'load.php';
@@ -93,16 +94,14 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
 
         $session->store(SMP_USERNAME, $user_form);
 
-        $redirect = SMP_LOC_NAV;
-        $params = [ SMP_NAV_ACTION => SMP_LOC_MSGS ];
+        $nav = SMP_LOC_MSGS;
     } else {
         // Enviar mensaje user pass incorrecto       
         Session::store(SMP_NOTIF_ERR, SMP_ERR_AUTHFAIL);
     }
     //$end = microtime(TRUE);
 } elseif (!empty(Sanitizar::glPOST('frm_btnCancel'))) {
-    $redirect = 'index.php';
-    $params = NULL;
+    $nav = SMP_WEB_ROOT;
 } elseif (!empty(Sanitizar::glPOST('frm_btnForget'))) {
     //
 }
@@ -116,8 +115,8 @@ if (empty(Session::retrieve(SMP_FINGERPRINT_RANDOMTOKEN))
     Session::store(SMP_FINGERPRINT_TOKEN, $fingerprint->getToken());
 }
 
-if (!empty($redirect)) {
-    Page::go_to($redirect, $params);
+if (isset($nav)) {
+    Page::nav($nav);
     exit();
 }
 
