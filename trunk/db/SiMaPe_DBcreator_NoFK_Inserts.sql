@@ -50,6 +50,7 @@ CREATE  TABLE IF NOT EXISTS `SiMaPe`.`Usuario` (
   `PasswordSalted` VARCHAR(255) NOT NULL COMMENT 'Usar funcion password_hash con BCRYPT en PHP5' ,
   `PasswordTimestamp` INT UNSIGNED NOT NULL ,
   `RandomToken` VARCHAR(255) NULL ,
+  `RandomTokenTimestamp` INT UNSIGNED NULL ,
   `Activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Activo: TRUE - No activo: FALSE' ,
   `PrivKey` BLOB NULL ,
   `PubKey` BLOB NULL ,
@@ -508,7 +509,7 @@ COMMIT;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `SiMaPe`;
-INSERT INTO `SiMaPe`.`Usuario` (`UsuarioId`, `EmpleadoId`, `UsuarioPerfilId`, `Nombre`, `UID`, `PasswordSalted`, `PasswordTimestamp`, `RandomToken`, `Activo`, `PrivKey`, `PubKey`, `CreacionTimestamp`, `ModificacionTimestamp`) VALUES (1, 1, 1, 'simape', '3281b512-a508-4738-b5ce-3fbe96725f9c', '$2y$15$EYmCNeWygCFX5J9MMyx5qe71SXBuiyuKFS/29mMygoKgEqnIqOz8W', 1386012582, NULL, 1, NULL, NULL, 1386012582, 1386012582);
+INSERT INTO `SiMaPe`.`Usuario` (`UsuarioId`, `EmpleadoId`, `UsuarioPerfilId`, `Nombre`, `UID`, `PasswordSalted`, `PasswordTimestamp`, `RandomToken`, `RandomTokenTimestamp`, `Activo`, `PrivKey`, `PubKey`, `CreacionTimestamp`, `ModificacionTimestamp`) VALUES (1, 1, 1, 'simape', '3281b512-a508-4738-b5ce-3fbe96725f9c', '$2y$15$EYmCNeWygCFX5J9MMyx5qe71SXBuiyuKFS/29mMygoKgEqnIqOz8W', 1386012582, NULL, NULL, 1, NULL, NULL, 1386012582, 1386012582);
 
 COMMIT;
 
