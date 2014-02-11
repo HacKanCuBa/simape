@@ -32,7 +32,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.82
+ * @version 0.83
  */
 
 // << Config
@@ -85,6 +85,8 @@ const SMP_SESSIONKEY_TKN =
 const SMP_PAGE_TKN = 
         'RANDOM_STRING';
 const SMP_FORM_TKN = 
+        'RANDOM_STRING';
+const SMP_PWDRESTORE_TKN = 
         'RANDOM_STRING';
 // --
 // 
