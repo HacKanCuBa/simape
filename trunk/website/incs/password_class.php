@@ -48,7 +48,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.25
+ * @version 1.26
  */
 class Password
 {
@@ -130,6 +130,29 @@ class Password
         } else {
             return FALSE;
         }
+    }
+    
+    /**
+     * Devuelve un Token de Reestablecimiento de contraseña armado.
+     * 
+     * @param string $randToken Token aleatorio.
+     * @param float $timestamp Timestamp.
+     * @param UID $uid UID del usuario.
+     * @return mixed Token de Sesión o FALSE en caso de error.
+     */
+    protected static function tokenMake($randToken, $timestamp, UID $uid)
+    {
+        if (self::isValid_token($randToken) 
+            && self::isValid_timestamp($timestamp)
+            && self::isValid_UID($uid)
+        ) {        
+            return Crypto::getHash(Crypto::getHash($timestamp
+                        . $randToken 
+                        . $uid->getHash()
+                        . constant('SMP_PWDRESTORE_TKN')));
+        } else {
+            return FALSE;
+        }        
     }
     
     // __ PUB 
