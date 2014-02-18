@@ -14,3 +14,11 @@ http://manual.phpdoc.org/HTMLSmartyConverter/HandS/phpDocumentor/tutorial_tags.p
 ----
 === Es importante seguir el Principio de Kerchoof: ===
 <p align="center">_A cryptosystem should be secure even if everything about the system, except the key, is public knowledge.</p>
+----
+=== Otras pautas sobre código ===
+
+  * Las constantes se escriben íntegramente en mayúscula, y comienzan con {{{SMP_}}} (no sé por qué, empecé así, y sin una buena razón para _no_ hacerlo, seguiré así).
+
+  * Las constantes _solo_ pueden existir en: el archivo de configuración (config.php) o dentro de una clase.
+
+  * En lugar de escribir funciones, puede que sea conveniente usar una clase de métodos estáticos.  Salvo que se justifique lo contrario, éste debería ser el procedimiento.
