@@ -51,6 +51,9 @@ Session::remove(SMP_SESSIONKEY_TOKEN);
 $fingerprint = new Fingerprint;
 $formToken = new FormToken;
 
+// Recuperar el nombre de usuario
+$user_form = Sanitizar::glPOST('frm_txt');
+
 if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
     
     //$start = microtime(TRUE);
@@ -61,8 +64,6 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
     $formToken->setRandomToken(Session::retrieve(SMP_FORM_RANDOMTOKEN));
     $formToken->setTimestamp(Session::retrieve(SMP_FORM_TIMESTAMP));
     $formToken->setToken(Sanitizar::glPOST(SMP_FORM_TOKEN));
-
-    $user_form = Sanitizar::glPOST('frm_txt');
 
     $password = new Password(Sanitizar::glPOST('frm_pwdLogin'));
     $password->retrieveFromDB($user_form);
@@ -100,10 +101,23 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
         Session::store(SMP_NOTIF_ERR, SMP_ERR_AUTHFAIL);
     }
     //$end = microtime(TRUE);
-} elseif (!empty(Sanitizar::glPOST('frm_btnCancel'))) {
+} elseif (!empty(Sanitizar::glPOST('frm_btnCancelLogin'))) {
+    // Volver a la pág inicial
     $nav = SMP_WEB_ROOT;
+} elseif (!empty(Sanitizar::glPOST('frm_btnCancelRestore'))) {
+    // Cargar Login normal
 } elseif (!empty(Sanitizar::glPOST('frm_btnForget'))) {
-    //
+    // Cargar form de reestablecimiento de contraseña
+    $pwdRestore = TRUE;
+} elseif (!empty(Sanitizar::glPOST('frm_btnRestore'))) {
+    // Enviar email
+    /**
+     * TODO
+     */
+    $pwdRestoreSent = TRUE;
+} elseif (!empty(Sanitizar::glGET('passRestoreToken'))) {
+    $password = new Password();
+    $password->setToken(Sanitizar::glGET('passRestoreToken'));
 }
 
 // Crear tokens si no existen
@@ -134,58 +148,83 @@ echo Page::getMain();
 echo "\n\t\t<h2 style='text-align: center;'>Sistema Integrado de Manejo de Personal</h2>";
 echo "\n\t\t<form style='text-align: center; margin: 0 auto; width: 100%;' "
      . "name='loginform' id='loginform' method='post' >";
-echo "\n\t\t\t<address>Por favor, identif&iacute;quese para continuar</address>";
-echo "\n\t\t\t<br />";
-if (!empty(Session::retrieve(SMP_NOTIF_ERR))) {
-    echo "\n\t\t\t<address class='fadeout' "
-         . "style='color:red; text-align: center;' >" 
-         . Session::retrieve(SMP_NOTIF_ERR) . "</address>\n"; 
-    Session::remove(SMP_NOTIF_ERR);
-} else {
+if (empty($pwdRestoreSent)) {
+    echo "\n\t\t\t<address>Por favor, identif&iacute;quese para continuar</address>";
     echo "\n\t\t\t<br />";
+    if (!empty(Session::retrieve(SMP_NOTIF_ERR))) {
+        echo "\n\t\t\t<address class='fadeout' "
+             . "style='color:red; text-align: center;' >" 
+             . Session::retrieve(SMP_NOTIF_ERR) . "</address>\n"; 
+        Session::remove(SMP_NOTIF_ERR);
+    } else {
+        echo "\n\t\t\t<br />";
+    }
+    echo "\n\t\t\t<table style='text-align: left; margin: auto; with: auto;' >";
+    echo "\n\t\t\t\t<tbody>";
+    echo "\n\t\t\t\t\t<tr>";
+    echo "\n\t\t\t\t\t\t<td style='text-align: left;'>";
+    echo "\n\t\t\t\t\t\t\t<br />";
+    echo "\n\t\t\t\t\t\t\t<span style='font-weight: bold;' >Nombre de usuario:"
+         . "</span>";
+    echo "\n\t\t\t\t\t\t</td>";
+    echo "\n\t\t\t\t\t\t<td style='text-align: left;'>";
+    echo "\n\t\t\t\t\t\t\t<br />";
+    echo "\n\t\t\t\t\t\t\t<input name='frm_txt' "
+         . "title='Ingrese el nombre de usuario' maxlength='" 
+         . SMP_USRNAME_MAXLEN . "' type='text' autofocus value='" . $user_form 
+         . "'/>";
+    echo "\n\t\t\t\t\t\t</td>";
+    echo "\n\t\t\t\t\t</tr>";
+    if (empty($pwdRestore)) {
+        echo "\n\t\t\t\t\t<tr>";
+        echo "\n\t\t\t\t\t\t<td style='text-align: left;' >";
+        echo "\n\t\t\t\t\t\t\t<br />";
+        echo "\n\t\t\t\t\t\t\t<span style='font-weight: bold;' >"
+             . "Contrase&ntilde;a:</span>";
+        echo "\n\t\t\t\t\t\t</td>";
+        echo "\n\t\t\t\t\t\t<td style='text-align: left;' >";
+        echo "\n\t\t\t\t\t\t\t<br />";
+        echo "\n\t\t\t\t\t\t\t<input name='frm_pwdLogin' "
+             . "title='Ingrese la constrase&ntilde;a' type='password' maxlength='" 
+             . SMP_PWD_MAXLEN . "' />";
+        echo "\n\t\t\t\t\t\t</td>";
+        echo "\n\t\t\t\t\t</tr>";
+        echo "\n\t\t\t\t\t<tr>";
+        echo "\n\t\t\t\t\t\t<td colspan='2' style='text-align: center;' >";
+        echo "\n\t\t\t\t\t\t\t<br />";
+        echo "\n\t\t\t\t\t\t\t<input name='frm_btnLogin' value='Iniciar sesi&oacute;n' "
+             . "type='submit' />";
+        echo "\n\t\t\t\t\t\t\t<input name='frm_btnForget' value='Me olvide la contrase&ntilde;a' "
+             . "title='Proceso para reestablecer su contraseña' "
+             . "value='Me olvid&eacute; la contrase&ntilde;a' type='submit' />";
+        echo "\n\t\t\t\t\t\t\t<input name='frm_btnCancelLogin' value='Cancelar' " 
+             . "title='Volver a la p&aacute;gina inicial' type='submit' />";
+        echo "\n\t\t\t\t\t\t</td>";
+        echo "\n\t\t\t\t\t</tr>";
+    } else {
+        echo "\n\t\t\t\t\t<tr>";
+        echo "\n\t\t\t\t\t\t<td colspan='2' style='text-align: center;' >";
+        echo "\n\t\t\t\t\t\t\t<br />";
+        echo "\n\t\t\t\t\t\t\t<address style='width: auto; max-width: 350px;'>"
+             . "Se enviará un email a su dirección registrada en el sistema "
+             . "para continuar con el proceso de reestablecimiento de "
+             . "contrase&ntilde;a</address>";
+        echo "\n\t\t\t\t\t\t\t<br />";
+        echo "\n\t\t\t\t\t\t\t<input name='frm_btnRestore' value='Reestablecer "
+             . "contrase&ntilde;a' title='Env&iacute;a un email a su casilla registrada' "
+             . "type='submit' />";
+        echo "\n\t\t\t\t\t\t\t<input name='frm_btnCancelRestore' value='Cancelar' " 
+             . "title='Volver a la p&aacute;gina anterior' type='submit' />";
+        echo "\n\t\t\t\t\t\t</td>";
+        echo "\n\t\t\t\t\t</tr>";
+    }
+    echo "\n\t\t\t\t</tbody>";
+    echo "\n\t\t\t</table>";
+} else {
+    // TODO: casilla de email enmascarada
+    echo "\n\t\t\tSe ha enviado un email a su casilla con instrucciones "
+         . "para continuar.<br />Puede cerrar &eacute;sta p&aacute;gina.";
 }
-echo "\n\t\t\t<table style='text-align: left; margin: auto; with: auto;' >";
-echo "\n\t\t\t\t<tbody>";
-echo "\n\t\t\t\t\t<tr>";
-echo "\n\t\t\t\t\t\t<td style='text-align: left;'>";
-echo "\n\t\t\t\t\t\t\t<br />";
-echo "\n\t\t\t\t\t\t\t<span style='font-weight: bold;' >Nombre de usuario:"
-     . "</span>";
-echo "\n\t\t\t\t\t\t</td>";
-echo "\n\t\t\t\t\t\t<td style='text-align: left;'>";
-echo "\n\t\t\t\t\t\t\t<br />";
-echo "\n\t\t\t\t\t\t\t<input name='frm_txt' "
-     . "title='Ingrese el nombre de usuario' maxlength='" 
-    . SMP_USRNAME_MAXLEN . "' type='text' autofocus />";
-echo "\n\t\t\t\t\t\t</td>";
-echo "\n\t\t\t\t\t</tr>";
-echo "\n\t\t\t\t\t<tr>";
-echo "\n\t\t\t\t\t\t<td style='text-align: left;' >";
-echo "\n\t\t\t\t\t\t\t<br />";
-echo "\n\t\t\t\t\t\t\t<span style='font-weight: bold;' >"
-     . "Contrase&ntilde;a:</span>";
-echo "\n\t\t\t\t\t\t</td>";
-echo "\n\t\t\t\t\t\t<td style='text-align: left;' >";
-echo "\n\t\t\t\t\t\t\t<br />";
-echo "\n\t\t\t\t\t\t\t<input name='frm_pwdLogin' "
-     . "title='Ingrese la constrase&ntilde;a' type='password' maxlength='" 
-     . SMP_PWD_MAXLEN . "' />";
-echo "\n\t\t\t\t\t\t</td>";
-echo "\n\t\t\t\t\t</tr>";
-echo "\n\t\t\t\t\t<tr>";
-echo "\n\t\t\t\t\t\t<td colspan='2' style='text-align: center;' >";
-echo "\n\t\t\t\t\t\t\t<br />";
-echo "\n\t\t\t\t\t\t\t<input name='frm_btnLogin' value='Iniciar sesi&oacute;n' "
-     . "type='submit' />";
-echo "\n\t\t\t\t\t\t\t<input name='frm_btnForget' "
-     . "title='Reestablecer contraseña' "
-     . "value='Me olvid&eacute; la contrase&ntilde;a' type='submit' />";
-echo "\n\t\t\t\t\t\t\t<input name='frm_btnCancel' value='Cancelar' " 
-     . "title='Volver a la p&aacute;gina inicial' type='submit' />";
-echo "\n\t\t\t\t\t\t</td>";
-echo "\n\t\t\t\t\t</tr>";
-echo "\n\t\t\t\t</tbody>";
-echo "\n\t\t\t</table>";
 echo "\n\t\t\t<input type='hidden' name='formToken' value='"
      . $formToken->getToken() . "' />";
 echo "\n\t\t</form>";

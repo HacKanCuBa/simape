@@ -131,11 +131,11 @@ class Session
      * <i>NOTA: el nombre de sesión no está aún implementado, se usa el nombre 
      * por defecto.</i>
      */
-    public static function initiate($donChangeID = FALSE)
+    public static function initiate($dontChangeID = FALSE)
     {
         if (session_status() == PHP_SESSION_NONE) {
             if(self::begin()) {
-                if (!$donChangeID) {
+                if (!$dontChangeID) {
                     session_regenerate_id(TRUE);
                 }
                 return TRUE;
@@ -187,7 +187,7 @@ class Session
     }
     
     /**
-     * Idem store(), pero siempre guardael valor encriptado usando la contraseña 
+     * Idem store(), pero siempre guarda el valor encriptado usando la contraseña 
      * proveída por setPassword().
      * 
      * @param mixed $key Índice, puede ser un string o un entero.

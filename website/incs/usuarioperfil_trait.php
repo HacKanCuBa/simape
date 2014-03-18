@@ -22,38 +22,50 @@
  *****************************************************************************/
 
 /**
- * load.php
- * Es un bootstrap loader para el sitio:
- * - Busca y carga el archivo de configuración (configload.php).
- * - Verifica la configuración (configverify.php).
- * - Carga las dependencias de clases automáticamente.
+ * Esta clase maneja todo lo referido a los perfiles de permisos:
+ * - Crear nuevo
+ * - Obtener informacion del actual
+ * - Verificar si el usuario tiene o no un permiso determinado
+ * - etc
  * 
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.4
+ * @version 0.1 untested
  */
 
-// Para asegurar que toda la aplicación está bien hecha
-error_reporting(E_ALL);
-
-require 'configload.php';
-include 'configverify.php';
-
-// Autocarga de dependencias
-set_include_path(get_include_path() 
-                 . PATH_SEPARATOR . SMP_INC_ROOT . SMP_LOC_INCS);
-spl_autoload_extensions('_class.php,_trait.php,_interface.php');
-spl_autoload_register();
-// --
-
-// Carga de otras dependencias
-//Session::initiate();
-//Session::store('inc', [ 'dependencia1.php', 'dependencia2.php' ]);
-//Session::store('inc_o', [ 'dependencia1.php', 'dependencia2.php' ]);
-//Session::store('req', [ 'dependencia1.php', 'dependencia2.php' ]);
-//Session::store('req_o', [ 'dependencia1.php', 'dependencia2.php' ]);
-//require_once 'loadothers.php';
-// --
-
-// --
+trait UsuarioPerfil
+{    
+    protected $UsuarioPerfil = array('UsuarioPerfilId' => '',
+                                     'Nombre' => '',
+                                     'Timestamp' => ''
+                                    );
+    
+    // __ SPECIALS
+    
+    // __ PRIV
+    
+    // __ PROT
+    
+    // __ PUB
+    public function getId() 
+    {
+        if (isset($this->UsuarioPerfil['UsuarioPerfilId'])) {
+            return $this->UsuarioPerfil['UsuarioPerfilId'];
+        }
+    }
+    
+    public function getNombre() 
+    {
+        if (isset($this->UsuarioPerfil['Nombre'])) {
+            return $this->UsuarioPerfil['Nombre'];
+        }
+    }
+    
+    public function getTimestamp() 
+    {
+        if (isset($this->UsuarioPerfil['Timestamp'])) {
+            return $this->UsuarioPerfil['Timestamp'];
+        }
+    }
+}
