@@ -24,19 +24,42 @@
  *****************************************************************************/
 
 /**
- * Esta clase comprende funciones criptográficas o del estilo.
+ * crypto_class.php
+ * Esta clase comprende funciones criptográficas y del estilo.
  * 
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.94
+ * @version 0.95
  */
 
 class Crypto
 {  
+    /**
+     * Cabecera de un string encriptado.
+     */
     const ENC_ID = 'SMP_ENC';
+    
+    /**
+     * Separador de información en un string encriptado.
+     */
     const ENC_SEPARATOR = '$';
+    
+    /**
+     * Algoritmo de encriptación.
+     */
+    const ENC_ALGO = 'AES-256-CTR';
+    
+    /**
+     * Longitud del IV, requerido por el algoritmo de encriptación.<br />
+     * No modificar si no está seguro de lo que está haciendo.
+     */
     const IV_LEN = 16;
+    
+    /**
+     * Algoritmo de hashing.
+     */
+    const HASH_ALGO = 'sha512';
 
     // __ SPECIALS
         
@@ -59,7 +82,7 @@ class Crypto
             // IV debe ser = 16 BYTES
             //$iv = substr(hash('sha256', $iv), 0, 16);
             if (strlen($iv) == self::IV_LEN) {
-                return openssl_encrypt($string, 'AES-256-CTR', $password, 
+                return openssl_encrypt($string, self::ENC_ALGO, $password, 
                                        OPENSSL_ZERO_PADDING, $iv);
             }
         }
@@ -83,7 +106,7 @@ class Crypto
             // IV debe ser = 16 BYTES
             //$iv = substr(hash('sha256', $iv), 0, 16);
             if (strlen($iv) == self::IV_LEN) {
-                return openssl_decrypt($encString, 'AES-256-CTR', $password, 
+                return openssl_decrypt($encString, self::ENC_ALGO, $password, 
                                        OPENSSL_ZERO_PADDING, $iv);
             }
         }
@@ -183,7 +206,7 @@ class Crypto
     public static function getHash($string) 
     {
         if (is_string($string)) {
-            return hash('sha512', $string, FALSE);
+            return hash(self::HASH_ALGO, $string, FALSE);
         } else {
             return FALSE;
         }
@@ -216,7 +239,8 @@ class Crypto
     public static function getRandomHexStr($lenght)
     {
         if (!empty($lenght) && is_int($lenght)) {
-            if ($lenght < 32) {
+            if ($lenght < 64) {
+                // Fuerza un mínimo criptográficamente seguro
                 $byteLen = 32;
             } else {
                 $byteLen = (int) ($lenght / 2) + 1;
