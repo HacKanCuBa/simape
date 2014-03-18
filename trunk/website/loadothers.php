@@ -40,7 +40,7 @@
  * - - - $_SESSION['req_o'] = ['arch1', 'arch2', ...]
  * 
  * Reconoce todos los parámetros, y cargará el archivo pedido desde:
- * SMP_INC_ROOT . SMP_LOC_INCS . [calificador] . php
+ * SMP_INC_ROOT . SMP_LOC_INCS . [calificador] . ".php"
  * Los calificadores solo pueden tener letras, nros, - y _, ningún otro símbolo
  * está admitido.  
  * Longitud máxima: SMP_LOAD_MAXLEN caracteres.
@@ -49,7 +49,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.1
+ * @version 0.2
  */
 
 // Constantes

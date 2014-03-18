@@ -22,38 +22,44 @@
  *****************************************************************************/
 
 /**
- * load.php
- * Es un bootstrap loader para el sitio:
- * - Busca y carga el archivo de configuración (configload.php).
- * - Verifica la configuración (configverify.php).
- * - Carga las dependencias de clases automáticamente.
- * 
+ * form_class.php
+ * Manejo de formularios: crear, modelizar y autenticar.
+ *
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.4
+ * @version 0.1 untested
  */
 
-// Para asegurar que toda la aplicación está bien hecha
-error_reporting(E_ALL);
+class Form extends FormToken
+{
+    const SMP_FRM_BUTTON = 'frm_button';
+    const SMP_FRM_TEXT = 'frm_text';
+    const SMP_FRM_PASSWORD = 'frm_password';
+    const SMP_FRM_OPTION = 'frm_option';
 
-require 'configload.php';
-include 'configverify.php';
-
-// Autocarga de dependencias
-set_include_path(get_include_path() 
-                 . PATH_SEPARATOR . SMP_INC_ROOT . SMP_LOC_INCS);
-spl_autoload_extensions('_class.php,_trait.php,_interface.php');
-spl_autoload_register();
-// --
-
-// Carga de otras dependencias
-//Session::initiate();
-//Session::store('inc', [ 'dependencia1.php', 'dependencia2.php' ]);
-//Session::store('inc_o', [ 'dependencia1.php', 'dependencia2.php' ]);
-//Session::store('req', [ 'dependencia1.php', 'dependencia2.php' ]);
-//Session::store('req_o', [ 'dependencia1.php', 'dependencia2.php' ]);
-//require_once 'loadothers.php';
-// --
-
-// --
+    // __ SPECIALS
+    
+    // __ PRIV
+    
+    // __ PROT
+    
+    // __ PUB
+    public static function createForm()
+    {
+        
+    }
+    
+    public static function createItem($itemType, 
+                                       $itemID = NULL, 
+                                       $tabPosition = NULL, 
+                                       $style = NULL)
+    {
+        
+    }
+    
+    public static function getItemValue($itemType, $itemID)
+    {
+        
+    }
+}

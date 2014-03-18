@@ -35,7 +35,7 @@
 
 if (!defined('CONFIG')) { require_once 'loadconfig.php'; }
 
-session_do();
+session_start();
 
 // Instanciar un token del formulario
 $form_token = form_token_get_new();
@@ -339,7 +339,7 @@ if (page_token_validate(get_get_pagetkn()) &&
     // Error de autenticacion
     //
     session_terminate();
-    session_do();
+    session_start();
     session_set_errt(SMP_ERR_AUTHFAIL);
     $redirect = SMP_LOC_NAV;  
     $params = 'accion=logout';
