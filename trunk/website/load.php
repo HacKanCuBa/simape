@@ -23,7 +23,8 @@
 
 /**
  * load.php
- * Es un bootstrap loader para el sitio:
+ * Carga todo lo que la aplicación requiere.  Cada página debe 
+ * "requiere_once load.php":
  * - Busca y carga el archivo de configuración (configload.php).
  * - Verifica la configuración (configverify.php).
  * - Carga las dependencias de clases automáticamente.
