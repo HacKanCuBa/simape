@@ -306,7 +306,9 @@ class Page
             $titulo = 'SiMaPe';
         }
         
-        $code = "<!DOCTYPE html>\n<html lang='es-AR'>\n<head>" 
+        $code = "<!DOCTYPE html>"
+                . "\n<html lang='es-AR'>"
+                . "\n<head>" 
                 . "\n\t<meta content='text/html; charset=". SMP_PAGE_CHARSET 
                 . "' http-equiv='Content-Type' />"
                 . "\n\t<title>$titulo</title>"
@@ -318,7 +320,7 @@ class Page
             $code .= "\n\t<link rel='stylesheet' type='text/css' ";
             $code .= "href='" . SMP_WEB_ROOT . SMP_LOC_CSS;
             $code .= self::STYLESHEET_DEFAULT . ".css' />";
-        } elseif (is_array($stylesheet)) {
+        } else {/*elseif (is_array($stylesheet)) {*/
             foreach ($stylesheet as $css) {
                 if (self::isValid_cssFName($css)) {
                     $cssFullName = SMP_WEB_ROOT . SMP_LOC_CSS . $css . '.css';
