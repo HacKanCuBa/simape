@@ -30,7 +30,7 @@ Todos los css en uno...
 /* HEADER */
 body {
     	width: auto;
-	margin: 100px;
+	/*margin: 100px;*/
 	color: #666;
         font: normal .8em/1.5em Arial, Helvetica, sans-serif;
         background: #e0e0e0; /*url('/simape/imgs/simape_logo_text.png') no-repeat center center; */   
@@ -59,6 +59,7 @@ body {
     margin-top: 150px;
     z-index: 0;
     margin-left: 200px; /* tener en cuenta la vert nav bar */
+    margin-right: 200px;
     position: relative;
 }
 

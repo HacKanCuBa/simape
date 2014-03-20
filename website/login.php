@@ -138,8 +138,6 @@ Session::store(SMP_FORM_RANDOMTOKEN, $formToken->getRandomToken());
 Session::store(SMP_FORM_TIMESTAMP, $formToken->getTimestamp());
 
 echo Page::getHead('SiMaPe - Iniciar Sesi&oacute;n');
-echo "\n\t<style type='text/css'>\n\t.data { margin-left: auto; }"
-     . "\n\t</style>";
 echo Page::getBody();
 echo Page::getHeader();
 echo Page::getHeaderClose();
