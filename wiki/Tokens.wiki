@@ -4,9 +4,7 @@
 = Intro =
 La aplicación utiliza diversos tokens para autenticar (session, page, password restore, etc), todos basados en principio en el mismo trait: _token_trait_.
 
-
 = Token =
-
 
 Los tokens están formados por:
  * Token constante definido en _config.php_
@@ -18,3 +16,21 @@ Los tokens están formados por:
 
 Se utilizan los métodos _get_ del objeto tipo Token que corresponda (session, fingerprint, page, etc) para obtener la información respectiva a Random Token, Timestamp y Token propiamente dicho.
 Luego, se autentica comparando el valor del Token con el generado luego de usar los métodos _set_ del objeto, para insertar la información pertinente.  Dicho objeto incluye la función de autenticación que recibe como parámetro el Token propiamente dicho.  Éste método devuelve un valor booleano que debe usarse para autenticar (TRUE es válido, FALSE no).
+
+== Session Token ==
+
+A diferencia de los otros tokens, éste emplea el UID del usuario para validar de forma unívoca a la sesión, una vez que el usuario está loggeado.  No confundir con la _session_ de PHP.
+Los valores de Random Token y Timestamp se almacenan en la DB, en _SESSION_.
+Para autenticar, se lee, de la DB los datos, se almacenan en el objeto y se emplea el método de autenticación.
+
+== Page Token ==
+
+El Random Token y Timestamp se almacenan en _SESSION_.  El Page Token se pasa a través de la url (por GET).  Se autentica por el método apropiado.
+
+== Password Restore Token ==
+
+El Random Token y Timestamp se almacenan en la DB.  El Token se pasa a través de la URL, o bien mediante un formulario (fallback).  Se autentica con el método apropiado.
+
+== Fingerprint Token ==
+
+El Random Token y el Token se almacenan en _SESSION_.  Asimismo, se emplean identificadores únicos del navegador del usuario.
