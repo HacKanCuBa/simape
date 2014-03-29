@@ -19,9 +19,9 @@ Luego, se autentica comparando el valor del Token con el generado luego de usar 
 
 == Session Token ==
 
-A diferencia de los otros tokens, éste emplea el UID del usuario para validar de forma unívoca a la sesión, una vez que el usuario está loggeado.  No confundir con la _session_ de PHP.
-Los valores de Random Token y Timestamp se almacenan en la DB, en _SESSION_.
-Para autenticar, se lee, de la DB los datos, se almacenan en el objeto y se emplea el método de autenticación.
+A diferencia de los otros tokens, éste emplea el UID del usuario para validar de forma unívoca a la sesión, una vez que el usuario está loggeado.  No confundir con _SESSION_ de PHP.
+Los valores de Random Token y Timestamp se almacenan en la DB.  El Token, en _SESSION_.
+Para autenticar, se lee de la DB los datos, se almacenan en el objeto y se emplea el método de autenticación para contrastar con el Token de _SESSION_.
 
 == Page Token ==
 
@@ -33,4 +33,4 @@ El Random Token y Timestamp se almacenan en la DB.  El Token se pasa a través d
 
 == Fingerprint Token ==
 
-El Random Token y el Token se almacenan en _SESSION_.  Asimismo, se emplean identificadores únicos del navegador del usuario.
+El Random Token y el Token se almacenan en la DB.  Asimismo, se emplean identificadores únicos del navegador del usuario.  Se autentica tomando el Random Token de la DB, y contrastando con el método apropiado contra el Token también de la DB.
