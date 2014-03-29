@@ -39,18 +39,33 @@ COMMENT = 'Tabla con perfiles de permisos';
 
 
 -- -----------------------------------------------------
+-- Table `SiMaPe`.`Token`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `SiMaPe`.`Token` (
+  `TokenId` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
+  `Session_RandomToken` VARCHAR(255) NULL ,
+  `Session_Timestamp` VARCHAR(255) NULL ,
+  `PasswordRestore_RandomToken` VARCHAR(255) NULL ,
+  `PasswordRestore_Timestamp` VARCHAR(255) NULL ,
+  `Fingerprint_RandomToken` VARCHAR(255) NULL ,
+  `Fingerprint_Token` VARCHAR(255) NULL ,
+  PRIMARY KEY (`TokenId`) )
+ENGINE = InnoDB
+COMMENT = 'Tokens del usuario.';
+
+
+-- -----------------------------------------------------
 -- Table `SiMaPe`.`Usuario`
 -- -----------------------------------------------------
 CREATE  TABLE IF NOT EXISTS `SiMaPe`.`Usuario` (
   `UsuarioId` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `EmpleadoId` INT UNSIGNED NOT NULL ,
   `UsuarioPerfilId` INT UNSIGNED NOT NULL ,
+  `TokenId` INT UNSIGNED NULL COMMENT 'Tokens del usuario. Login único.' ,
   `Nombre` VARCHAR(15) NOT NULL COMMENT 'Username' ,
   `UID` VARCHAR(100) NOT NULL COMMENT 'UUIDv4' ,
   `PasswordSalted` VARCHAR(255) NOT NULL COMMENT 'Usar funcion password_hash con BCRYPT en PHP5' ,
   `PasswordTimestamp` INT UNSIGNED NOT NULL ,
-  `RandomToken` VARCHAR(255) NULL ,
-  `RandomTokenTimestamp` INT UNSIGNED NULL ,
   `Activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Activo: TRUE - No activo: FALSE' ,
   `PrivKey` BLOB NULL ,
   `PubKey` BLOB NULL ,
@@ -509,7 +524,7 @@ COMMIT;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `SiMaPe`;
-INSERT INTO `SiMaPe`.`Usuario` (`UsuarioId`, `EmpleadoId`, `UsuarioPerfilId`, `Nombre`, `UID`, `PasswordSalted`, `PasswordTimestamp`, `RandomToken`, `RandomTokenTimestamp`, `Activo`, `PrivKey`, `PubKey`, `CreacionTimestamp`, `ModificacionTimestamp`) VALUES (1, 1, 1, 'simape', '3281b512-a508-4738-b5ce-3fbe96725f9c', '$2y$15$EYmCNeWygCFX5J9MMyx5qe71SXBuiyuKFS/29mMygoKgEqnIqOz8W', 1386012582, NULL, NULL, 1, NULL, NULL, 1386012582, 1386012582);
+INSERT INTO `SiMaPe`.`Usuario` (`UsuarioId`, `EmpleadoId`, `UsuarioPerfilId`, `TokenId`, `Nombre`, `UID`, `PasswordSalted`, `PasswordTimestamp`, `Activo`, `PrivKey`, `PubKey`, `CreacionTimestamp`, `ModificacionTimestamp`) VALUES (1, 1, 1, NULL, 'simape', '3281b512-a508-4738-b5ce-3fbe96725f9c', '$2y$15$EYmCNeWygCFX5J9MMyx5qe71SXBuiyuKFS/29mMygoKgEqnIqOz8W', 1386012582, 1, NULL, NULL, 1386012582, 1386012582);
 
 COMMIT;
 
