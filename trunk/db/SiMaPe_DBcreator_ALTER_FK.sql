@@ -146,9 +146,15 @@ ALTER TABLE `SiMaPe`.`Usuario`
   FOREIGN KEY (`UsuarioPerfilId` )
   REFERENCES `SiMaPe`.`UsuarioPerfil` (`UsuarioPerfilId` )
   ON DELETE CASCADE
+  ON UPDATE CASCADE, 
+  ADD CONSTRAINT `fk_Usuario_Tokens`
+  FOREIGN KEY (`TokenId` )
+  REFERENCES `SiMaPe`.`Token` (`TokenId` )
+  ON DELETE CASCADE
   ON UPDATE CASCADE
 , ADD INDEX `fk_Usuario_Empleado` (`EmpleadoId` ASC) 
-, ADD INDEX `fk_Usuario_Permisos` (`UsuarioPerfilId` ASC) ;
+, ADD INDEX `fk_Usuario_Permisos` (`UsuarioPerfilId` ASC) 
+, ADD INDEX `fk_Usuario_Tokens` (`TokenId` ASC) ;
 
 ALTER TABLE `SiMaPe`.`Direccion` 
   ADD CONSTRAINT `fk_Direccion_Pcia`
