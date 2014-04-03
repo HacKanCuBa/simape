@@ -204,7 +204,6 @@ class Fingerprint
     {      
         if (empty($this->fingerprintToken) 
             || empty($this->randToken) 
-            || empty($this->fingerprintToken)
         ) {
             return NULL;
         } else {

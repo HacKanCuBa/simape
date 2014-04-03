@@ -55,7 +55,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.99
+ * @version 1.0
  */
 class Page
 {  
@@ -361,7 +361,8 @@ class Page
                 . self::HEADER_IMG . "' alt='CSJN - CMF - SIMAPE' "
                 . "title='Corte Suprema de Justicia de la Naci&oacute;n - "
                 . "A&ntilde;o de su Sesquicentenario - Cuerpo "
-                . "M&eacute;dico Forense - SiMaPe' id='img_header' />";
+                . "M&eacute;dico Forense - SiMaPe' id='img_header' "
+                . "height='120px' width='850px'/>";
     }
 
     /**
