@@ -38,7 +38,7 @@
 // Para asegurar que toda la aplicación está bien hecha
 error_reporting(E_ALL);
 
-require 'configload.php';
+require_once 'configload.php';
 include 'configverify.php';
 
 // Autocarga de dependencias

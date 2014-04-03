@@ -47,7 +47,7 @@ echo Page::getHeaderClose();
 echo Page::getMain();
 echo "\n\t\t<form style='text-align: center;' method='post'>";
 echo "\n\t\t\t<p><input name='frm_buttonLogin' type='submit' "
-     . "style='font-style:italic;'"
+     . "style='font-style:italic;' "
      . "value='Ingresar al sistema - Iniciar sesi&oacute;n' /></p>";
 echo "\n\t\t</form>";
 echo "\n\t\t<h3>Acerca de SiMaPe</h3>";

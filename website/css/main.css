@@ -24,7 +24,7 @@
     Created on : 25/11/2013, 00:06:43
     Author     : Ivan Ariel Barrera Oro
 
-Todos los css en uno...
+    Todos los css en uno...
 */
 
 /* HEADER */
@@ -88,7 +88,13 @@ body {
     animation-iteration-count: 1;
     animation-direction: alternate;
     animation-timing-function: ease-in-out;
-    animation-fill-mode:forwards;
+    animation-fill-mode: forwards;
+    -webkit-animation-duration: 7s;
+    -webkit-animation-name: fadeout;
+    -webkit-animation-iteration-count: 1;
+    -webkit-animation-direction: alternate;
+    -webkit-animation-timing-function: ease-in-out;
+    -webkit-animation-fill-mode: forwards;
 }
 @keyframes fadeout {
     from {
@@ -98,7 +104,14 @@ body {
         opacity: 0;                    
     }
 }
-
+@-webkit-keyframes fadeout {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;                    
+    }
+}
 .hide {
     display: none;
 }
@@ -129,6 +142,7 @@ a {
 	
 	-webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
 	-moz-box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
 
 	background: #8b8b8b; /* for non-css3 browsers */
 	filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#a9a9a9', endColorstr='#7a7a7a'); /* for IE */
@@ -178,6 +192,7 @@ a {
 	color: #666;
 	-webkit-box-shadow: none;
 	-moz-box-shadow: none;
+        box-shadow: none;
 }
 #nav_hor ul a:hover {
 	background: #0399d4 !important; /* for non-css3 browsers */
@@ -188,6 +203,7 @@ a {
 	color: #fff !important;
 	-webkit-border-radius: 0;
 	-moz-border-radius: 0;
+        border-radius: 0;
 	text-shadow: 0 1px 1px rgba(0, 0, 0, .1);
 }
 /* level 2 list */

@@ -192,7 +192,7 @@ if (empty($pwdRestoreSent)) {
         echo "\n\t\t\t\t\t\t\t<br />";
         echo "\n\t\t\t\t\t\t\t<input name='frm_btnLogin' value='Iniciar sesi&oacute;n' "
              . "type='submit' />";
-        echo "\n\t\t\t\t\t\t\t<input name='frm_btnForget' value='Me olvide la contrase&ntilde;a' "
+        echo "\n\t\t\t\t\t\t\t<input name='frm_btnForget' "
              . "title='Proceso para reestablecer su contraseña' "
              . "value='Me olvid&eacute; la contrase&ntilde;a' type='submit' />";
         echo "\n\t\t\t\t\t\t\t<input name='frm_btnCancelLogin' value='Cancelar' " 

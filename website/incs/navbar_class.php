@@ -26,6 +26,11 @@
  * 
  * Ejemplo de uso:
  * <pre><code>
+ * $navbar = new Navbar;
+ * $navbar->addButton('Inicio', '/', Navbar::BTN_CLASS_CATEGORY);
+ * $navbar->addButton(['&iexcl;Bienvenido <i>testing</i>!', 'other'], ['', '#'], Navbar::BTN_CLASS_CURRENT);
+ * $navbar->setIndent(1);
+ * $navbar->getHorizontal(TRUE);
  * </code></pre>
  * 
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
@@ -136,6 +141,27 @@ class Navbar
         }
         
         return FALSE;
+    }
+    
+    /**
+     * Remueve un botón de la barra de botones.  Recibe el nombre del botón a 
+     * eliminar.
+     * @param mixed $name Nombre del botón a borrar
+     * @return boolean TRUE si se eliminó el botón, FALSE si no.
+     */
+    public function delButton($name) 
+    {
+        $retval = FALSE;
+        if(isset($this->buttons)) {
+            foreach ($this->buttons as $key => $value) {
+                if($value['name'] == $name) {
+                    unset($this->buttons[$key]);
+                    $retval = TRUE;
+                }
+            }
+        }
+        
+        return $retval;
     }
     
     /**
