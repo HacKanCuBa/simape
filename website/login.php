@@ -39,6 +39,27 @@
 
 require_once 'load.php';
 
+/**
+ * Nombre de indice de _SESSION donde se almacena la cuenta de reintentos de
+ * inicio de sesión.
+ */
+const LOGIN_RETRY_COUNT = 'RETRY_COUNT';
+
+/**
+ * Valor que indica cantidad máxima de reintentos de login sin captcha.
+ */
+const LOGIN_RETRY_MAX = 2;
+
+/**
+ * Texto de error que se mostrará cuando el captcha no sea superado.
+ */
+const LOGIN_ERR_CAPTCHA = 'El captcha no ha sido resuelto correctamente';
+
+/**
+ * Nombre de indice de _SESSION donde se almacena el valor del captcha.
+ */
+const LOGIN_CAPTCHA = 'CAPTCHA';
+
 // Iniciar o continuar sesion
 Session::initiate();
 
@@ -52,7 +73,7 @@ $fingerprint = new Fingerprint;
 $formToken = new FormToken;
 
 // Recuperar el nombre de usuario
-$user_form = Sanitizar::glPOST('frm_txt');
+$user_form = Sanitizar::glPOST('frm_txtLogin');
 
 if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
     
@@ -65,40 +86,61 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
     $formToken->setTimestamp(Session::retrieve(SMP_FORM_TIMESTAMP));
     $formToken->setToken(Sanitizar::glPOST(SMP_FORM_TOKEN));
 
-    $password = new Password(Sanitizar::glPOST('frm_pwdLogin'));
-    $password->retrieveFromDB($user_form);
+    // Pruebo captcha primero
+    // si aun no hay captcha, ambos seran equivalentes (NULL y STRING NULL)
+    if (Session::retrieve(LOGIN_CAPTCHA) == Sanitizar::glPOST('frm_txtCaptcha'))
+    {
+        // captcha OK
+        $password = new Password(Sanitizar::glPOST('frm_pwdLogin'));
+        $password->retrieveFromDB($user_form);
+        
+        // Ejecuto la autenticación de la contraseña aún si el form o fingerprint
+        // token no validan, para evitar Timing Oracle.
+        if($password->authenticatePassword() 
+           && $formToken->authenticateToken()
+           && $fingerprint->authenticateToken()
+        ) {
+            // Login OK          
+            $uid = new UID;
+            $uid->retrieveFromDB($user_form);
 
-    // Ejecuto la autenticación de la contraseña aún si el form o fingerprint
-    // token no validan, para evitar Timing Oracle.
-    if($password->authenticatePassword() 
-       && $formToken->authenticateToken()
-       && $fingerprint->authenticateToken()
-    ) {
-        // Login OK          
-        $uid = new UID;
-        $uid->retrieveFromDB($user_form);
+            $session = new Session;
+            $session->setPassword($uid->get());
+            $session->setUID($uid);
+            $session->storeEnc(SMP_SESSIONKEY_RANDOMTOKEN, 
+                           $session->getRandomToken());
+            $session->storeEnc(SMP_SESSIONKEY_TIMESTAMP, 
+                           $session->getTimestamp());
+            $session->storeEnc(SMP_SESSIONKEY_TOKEN, 
+                           $session->getToken());
 
-        $session = new Session;
-        $session->setPassword($uid->get());
-        $session->setUID($uid);
-        $session->storeEnc(SMP_SESSIONKEY_RANDOMTOKEN, 
-                       $session->getRandomToken());
-        $session->storeEnc(SMP_SESSIONKEY_TIMESTAMP, 
-                       $session->getTimestamp());
-        $session->storeEnc(SMP_SESSIONKEY_TOKEN, 
-                       $session->getToken());
+            $session->storeEnc(SMP_FINGERPRINT_RANDOMTOKEN, 
+                           $fingerprint->getRandomToken());
+            $session->storeEnc(SMP_FINGERPRINT_TOKEN, 
+                           $fingerprint->getToken());
 
-        $session->storeEnc(SMP_FINGERPRINT_RANDOMTOKEN, 
-                       $fingerprint->getRandomToken());
-        $session->storeEnc(SMP_FINGERPRINT_TOKEN, 
-                       $fingerprint->getToken());
+            $session->store(SMP_USERNAME, $user_form);
 
-        $session->store(SMP_USERNAME, $user_form);
+            // elimino el captcha, si existiese
+            Session::remove(LOGIN_CAPTCHA);
+            
+            $nav = SMP_LOC_MSGS;
+        } else {
+            // Enviar mensaje user pass incorrecto       
+            Session::store(SMP_NOTIF_ERR, SMP_ERR_AUTHFAIL);
 
-        $nav = SMP_LOC_MSGS;
+            // Almacenar cant de reintentos de login
+            Session::store(LOGIN_RETRY_COUNT, 
+                Session::retrieve(LOGIN_RETRY_COUNT) + 1);
+        }  
     } else {
-        // Enviar mensaje user pass incorrecto       
-        Session::store(SMP_NOTIF_ERR, SMP_ERR_AUTHFAIL);
+        // captcha ERR
+        // Enviar mensaje captcha incorrecto       
+        Session::store(SMP_NOTIF_ERR, LOGIN_ERR_CAPTCHA);
+
+        // Almacenar cant de reintentos de login
+        Session::store(LOGIN_RETRY_COUNT, 
+            Session::retrieve(LOGIN_RETRY_COUNT) + 1);
     }
     //$end = microtime(TRUE);
 } elseif (!empty(Sanitizar::glPOST('frm_btnCancelLogin'))) {
@@ -149,16 +191,46 @@ echo "\n\t\t<form style='text-align: center; margin: 0 auto; width: 100%;' "
 if (empty($pwdRestoreSent)) {
     echo "\n\t\t\t<address>Por favor, identif&iacute;quese para continuar</address>";
     echo "\n\t\t\t<br />";
-    if (!empty(Session::retrieve(SMP_NOTIF_ERR))) {
-        echo "\n\t\t\t<address class='fadeout' "
-             . "style='color:red; text-align: center;' >" 
-             . Session::retrieve(SMP_NOTIF_ERR) . "</address>\n"; 
-        Session::remove(SMP_NOTIF_ERR);
-    } else {
-        echo "\n\t\t\t<br />";
-    }
     echo "\n\t\t\t<table style='text-align: left; margin: auto; with: auto;' >";
     echo "\n\t\t\t\t<tbody>";
+    if (!empty(Session::retrieve(SMP_NOTIF_ERR))) {
+        echo "\n\t\t\t\t\t<tr>";
+        echo "\n\t\t\t\t\t\t<td colspan='2' style='text-align:center;'>";
+        echo "\n\t\t\t\t\t\t\t<address class='fadeout' "
+             . "style='color:red; text-align: center;' >" 
+             . Session::retrieve(SMP_NOTIF_ERR) . "</address>";
+        echo "\n\t\t\t\t\t\t</td>";
+        echo "\n\t\t\t\t\t</tr>";
+        $retry_count = Session::retrieve(LOGIN_RETRY_COUNT);
+        if ($retry_count > LOGIN_RETRY_MAX) {
+            // mostrar captcha
+            echo "\n\t\t\t\t\t<tr>";
+            echo "\n\t\t\t\t\t\t<td style='text-align:left;'>";
+            echo "\n\t\t\t\t\t\t\t<br />";
+            echo "\n\t\t\t\t\t\t\t<span style='font-style:italic;' >"
+                 . "&iquest;Cuánto d&aacute; ";
+            $captcha = rand(30, 99);
+            $captcha_string = $captcha . " + ";
+            for ($i = LOGIN_RETRY_MAX; $i < $retry_count; $i++) {
+                $value = rand(1, 9);
+                $captcha += $value;
+                $captcha_string .= $value . " + ";
+            }
+            Session::store(LOGIN_CAPTCHA, $captcha);
+            $captcha_string = substr($captcha_string, 0, 
+                                strlen($captcha_string) - 3);
+            echo $captcha_string . "?";
+            echo "</span>";
+            echo "\n\t\t\t\t\t\t</td>";
+            echo "\n\t\t\t\t\t\t<td style='text-align:left;'>";
+            echo "\n\t\t\t\t\t\t\t<br />";
+            echo "\n\t\t\t\t\t\t\t<input name='frm_txtCaptcha' type='number' "
+                    . "title='Ingrese el resultado del captcha' maxlength='3' />";
+            echo "\n\t\t\t\t\t\t</td>";
+            echo "\n\t\t\t\t\t</tr>";
+        }
+        Session::remove(SMP_NOTIF_ERR);
+    }     
     echo "\n\t\t\t\t\t<tr>";
     echo "\n\t\t\t\t\t\t<td style='text-align: left;'>";
     echo "\n\t\t\t\t\t\t\t<br />";
@@ -167,7 +239,7 @@ if (empty($pwdRestoreSent)) {
     echo "\n\t\t\t\t\t\t</td>";
     echo "\n\t\t\t\t\t\t<td style='text-align: left;'>";
     echo "\n\t\t\t\t\t\t\t<br />";
-    echo "\n\t\t\t\t\t\t\t<input name='frm_txt' "
+    echo "\n\t\t\t\t\t\t\t<input name='frm_txtLogin' "
          . "title='Ingrese el nombre de usuario' maxlength='" 
          . SMP_USRNAME_MAXLEN . "' type='text' autofocus value='" . $user_form 
          . "'/>";
