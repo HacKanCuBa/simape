@@ -12,4 +12,4 @@ GRANT SELECT ON SiMaPe.* TO 'appro'@'localhost';
 
 -- Application ReadWrite
 CREATE USER 'apprw'@'localhost' IDENTIFIED BY PASSWORD '<encrypted_pass: SELECT PASSWORD('mipassword')>';
-GRANT SELECT, UPDATE, INSERT, DELETE ON SiMaPe.* TO 'apprw'@'localhost';
+GRANT SELECT, UPDATE, INSERT, DELETE, CREATE TEMPORARY TABLES ON SiMaPe.* TO 'apprw'@'localhost';
