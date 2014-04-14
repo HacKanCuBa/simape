@@ -39,22 +39,6 @@ COMMENT = 'Tabla con perfiles de permisos';
 
 
 -- -----------------------------------------------------
--- Table `SiMaPe`.`Token`
--- -----------------------------------------------------
-CREATE  TABLE IF NOT EXISTS `SiMaPe`.`Token` (
-  `TokenId` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
-  `Session_RandomToken` VARCHAR(255) NULL ,
-  `Session_Timestamp` VARCHAR(255) NULL ,
-  `PasswordRestore_RandomToken` VARCHAR(255) NULL ,
-  `PasswordRestore_Timestamp` VARCHAR(255) NULL ,
-  `Fingerprint_RandomToken` VARCHAR(255) NULL ,
-  `Fingerprint_Token` VARCHAR(255) NULL ,
-  PRIMARY KEY (`TokenId`) )
-ENGINE = InnoDB
-COMMENT = 'Tokens del usuario.';
-
-
--- -----------------------------------------------------
 -- Table `SiMaPe`.`Usuario`
 -- -----------------------------------------------------
 CREATE  TABLE IF NOT EXISTS `SiMaPe`.`Usuario` (
@@ -474,6 +458,22 @@ CREATE  TABLE IF NOT EXISTS `SiMaPe`.`HorarioExtra` (
   PRIMARY KEY (`HorarioExtraId`) )
 ENGINE = InnoDB
 COMMENT = 'Dias y horas laborales extras';
+
+
+-- -----------------------------------------------------
+-- Table `SiMaPe`.`Token`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `SiMaPe`.`Token` (
+  `TokenId` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
+  `Session_RandomToken` VARCHAR(255) NULL ,
+  `Session_Timestamp` VARCHAR(255) NULL ,
+  `PasswordRestore_RandomToken` VARCHAR(255) NULL ,
+  `PasswordRestore_Timestamp` VARCHAR(255) NULL ,
+  `Fingerprint_RandomToken` VARCHAR(255) NULL ,
+  `Fingerprint_Token` VARCHAR(255) NULL ,
+  PRIMARY KEY (`TokenId`) )
+ENGINE = InnoDB
+COMMENT = 'Tokens del usuario.';
 
 
 
