@@ -33,4 +33,4 @@ El Random Token y Timestamp se almacenan en la DB.  El Token se pasa a través d
 
 == Fingerprint Token ==
 
-El Random Token y el Token se almacenan en la DB.  Asimismo, se emplean identificadores únicos del navegador del usuario.  Se autentica tomando el Random Token de la DB, y contrastando con el método apropiado contra el Token también de la DB.
+El Token se almacena en la DB.  Se emplean identificadores únicos del navegador del usuario y la IP.  Se autentica tomando el Token de la DB, y contrastando con el método apropiado (_authenticateToken_).  El mismo debería mantenerse durante toda la sesión, si cambia implica un error (intento de hackeo?).
