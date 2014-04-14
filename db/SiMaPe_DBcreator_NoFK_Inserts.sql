@@ -47,7 +47,6 @@ CREATE  TABLE IF NOT EXISTS `SiMaPe`.`Token` (
   `Session_Timestamp` VARCHAR(255) NULL ,
   `PasswordRestore_RandomToken` VARCHAR(255) NULL ,
   `PasswordRestore_Timestamp` VARCHAR(255) NULL ,
-  `Fingerprint_RandomToken` VARCHAR(255) NULL ,
   `Fingerprint_Token` VARCHAR(255) NULL ,
   PRIMARY KEY (`TokenId`) )
 ENGINE = InnoDB
@@ -524,7 +523,7 @@ COMMIT;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `SiMaPe`;
-INSERT INTO `SiMaPe`.`Token` (`TokenId`, `Session_RandomToken`, `Session_Timestamp`, `PasswordRestore_RandomToken`, `PasswordRestore_Timestamp`, `Fingerprint_RandomToken`, `Fingerprint_Token`) VALUES (1, NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `SiMaPe`.`Token` (`TokenId`, `Session_RandomToken`, `Session_Timestamp`, `PasswordRestore_RandomToken`, `PasswordRestore_Timestamp`, `Fingerprint_Token`) VALUES (1, NULL, NULL, NULL, NULL, NULL);
 
 COMMIT;
 
