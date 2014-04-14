@@ -27,10 +27,9 @@
  * Ejemplo de uso:
  * <pre><code>
  * $fing = new Fingerprint;
- * $randToken = fing->getRandomToken();
  * $fingToken = fing->getToken();
  * ...
- * $otherfing = new Fingerprint($randToken, $fingToken);
+ * $otherfing = new Fingerprint($fingToken);
  * if ($otherfing->authenticateToken()) {
  *      echo "Token de Fingerprint auténtico!";
  * } else {
@@ -41,24 +40,19 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.43
+ * @version 0.5
  */
 class Fingerprint
-{
-    use Token;
-	
+{	
     protected $fingerprintToken;
 
     // __ SPECIALS
     /**
      * Fija los valores de el Token aleatorio y el Token de Fingerprint.
-     * @param string $randToken Token aleatorio.
      * @param string $fingerprintToken Token de Fingerprint.
      */
-    public function __construct($randToken = NULL,  
-                                 $fingerprintToken = NULL) 
+    public function __construct($fingerprintToken = NULL) 
     {
-        $this->setRandomToken($randToken);
         $this->setToken($fingerprintToken);
     }
     // __ PRIV
@@ -72,93 +66,33 @@ class Fingerprint
      */
     protected static function isValid_fingerprintToken($fingerprintToken)
     {
-		// No difiere de un token estandard
-        return self::isValid_token($fingerprintToken);
+	if (!empty($fingerprintToken) 
+            && is_string($fingerprintToken)
+        ) {
+            return TRUE;
+        }
+        
+        return FALSE;
     }
     
     /**
      * Devuelve un Token de Fingerprint armado.
      * 
-     * @param string $randToken Token aleatorio.
-     * @return mixed Token de Fingerprint o FALSE en caso de error.
+     * @return string Token de Fingerprint.
      */
-    protected static function tokenMake($randToken)
-    {
-        if (self::isValid_token($randToken) 
-        ) {            
-            return Crypto::getHash(Sanitizar::glSERVER('HTTP_USER_AGENT')
-                                    . Sanitizar::glSERVER('REMOTE_ADDR')
-                                    . SMP_FINGERPRINT_TKN
-                                    . $randToken
-            );
-        }
-        
-        return FALSE;
+    protected static function tokenMake()
+    {           
+        return Crypto::getHash(Sanitizar::glSERVER('HTTP_USER_AGENT')
+                                . Sanitizar::glSERVER('REMOTE_ADDR')
+                                . Sanitizar::glSERVER('HTTP_HOST')
+                                . Sanitizar::glSERVER('HTTP_X_HTTP_PROTO')
+                                . Sanitizar::glSERVER('HTTP_X_REAL_IP')
+                                . Sanitizar::glSERVER('SERVER_PROTOCOL')
+                                . SMP_FINGERPRINT_TKN
+                                );
     }
 
     // __ PUB    
-    /**
-     * Devuelve un Token aleatorio, que es el mismo que se emplea para armar
-     * el Token de Fingerprint.
-     * 
-     * @see getToken()
-     * @return string Token aleatorio.
-     */
-    public function getRandomToken()
-    {
-        return $this->t_getRandomToken();
-    }
-    
-    /**
-     * Devuelve un Token que representa al usuario (navegador, IP, etc...).
-     * Debe llamarse primero a getRandomToken().
-     * 
-     * @see getRandomToken()
-     * @param boolean $notStrict Si es TRUE, permite usar valores externos vía<br />
-     * setRandomToken() para generar el Token de Fingerprint.<br />
-     * FALSE por defecto.
-     * @return mixed Fingerprint Token, o FALSE en caso de error.
-     */ 
-    public function getToken($notStrict = FALSE)
-    {
-        if (isset($this->randToken)) {
-            if ($notStrict) {
-                return $this->tokenMake($this->randToken);
-            } else {
-                if (isset($this->ownrandToken) && $this->ownrandToken) {
-                    return $this->tokenMake($this->randToken);
-                } 
-            }
-        }
-        
-        return FALSE;
-    }
-    
-    /**
-     * Devuelve el timestamp empleado para crear el Token de Fingerprint.
-     * 
-     * @return float Timestamp.
-     */
-//    public function getTimestamp() 
-//    {
-//        return $this->t_getTimestamp();
-//    }
-
-
-    /**
-     * Fija un Token aleatorio.  Se emplea en la función de autenticación.<br />
-     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de página nuevo!<br /> 
-     * Usar el método getRandomToken() a este fin.
-     * 
-     * @see getRandomToken()
-     * @param string $randToken Token aleatorio.
-     * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
-     */
-    public function setRandomToken($randToken)
-    {
-        return $this->t_setRandomToken($randToken);
-    }
-    
     /**
      * Fija el valor del Token de Fingerprint que será autenticado.
      * 
@@ -176,44 +110,15 @@ class Fingerprint
     }
     
     /**
-     * Fija el valor de Timestamp para la función de autenticación.<br />
-     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de Fingeprint
-     * nuevo!<br />
-     * Usar el método getTimestamp() a este fin.
+     * Autentica un Token de Figerprint.
      * 
-     * @see getTimestamp()
-     * @param float $timestamp Timestamp.
-     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
-     */
-//    public function setTimestamp($timestamp) 
-//    {
-//        $this->t_setTimestamp($timestamp);
-//    }
-
-    /**
-     * Autentica un Token de Figerprint.<br />
-     * Debe fijarse primero el Token aleatorio con el que fue creado el 
-     * Token de Fingerprint a autenticar.
-     * 
-     * @see setRandomToken()
      * @return boolean TRUE si el Token de Fingerprint es auténtico, 
      * FALSE si no.<br />
-     * Si algún Token es nulo, devuelve NULL.
      */
     public function authenticateToken() 
     {      
-        if (empty($this->fingerprintToken) 
-            || empty($this->randToken) 
-        ) {
-            return NULL;
-        } else {
-            // Verifico que getToken no sea FALSE.
-            $fingerprintToken = $this->getToken(TRUE);
-            if ($fingerprintToken 
-                && ($this->fingerprintToken === $fingerprintToken)
-            ) {
-                return TRUE;
-            }
+        if ($this->fingerprintToken === $this->tokenMake()) {
+            return TRUE;
         }
 
         return FALSE;
