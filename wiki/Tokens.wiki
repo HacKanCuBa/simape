@@ -15,7 +15,8 @@ Los tokens están formados por:
   * Fingerprint Token: datos del navegador
 
 Se utilizan los métodos _get_ del objeto tipo Token que corresponda (session, fingerprint, page, etc) para obtener la información respectiva a Random Token, Timestamp y Token propiamente dicho.
-Luego, se autentica comparando el valor del Token con el generado luego de usar los métodos _set_ del objeto, para insertar la información pertinente.  Dicho objeto incluye la función de autenticación que recibe como parámetro el Token propiamente dicho.  Éste método devuelve un valor booleano que debe usarse para autenticar (TRUE es válido, FALSE no).
+Luego, se autentica comparando el valor del Token con el generado luego de usar los métodos _set_ del objeto, para insertar la información pertinente.  Dicho objeto incluye la función de autenticación (_authenticateToken_).  Éste método devuelve un valor booleano que debe usarse para autenticar (TRUE es válido, FALSE no).
+Los Tokens se almacenan en la DB luego de que el usuario se loggea satisfactoriamente.
 
 == Session Token ==
 
@@ -33,4 +34,4 @@ El Random Token y Timestamp se almacenan en la DB.  El Token se pasa a través d
 
 == Fingerprint Token ==
 
-El Token se almacena en la DB.  Se emplean identificadores únicos del navegador del usuario y la IP.  Se autentica tomando el Token de la DB, y contrastando con el método apropiado (_authenticateToken_).  El mismo debería mantenerse durante toda la sesión, si cambia implica un error (intento de hackeo?).
+El Token se almacena en la DB.  Se emplean identificadores únicos del navegador del usuario y la IP.  Se autentica tomando el Token de la DB, y contrastando con el método apropiado.  El mismo debería mantenerse durante toda la sesión, si cambia implica un error (intento de hackeo?).
