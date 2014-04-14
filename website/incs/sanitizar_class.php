@@ -37,7 +37,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.72
+ * @version 0.73
  */
 class Sanitizar
 {
@@ -103,7 +103,7 @@ class Sanitizar
      * NOTA: valores de tipo distinto a string o array serán devueltos sin 
      * sanitizar, dado que no requieren ser sanitizados. 
      * 
-     * @param mixed $valor Valor a sanitizar.
+     * @param mixed $value Valor a sanitizar.
      * @return mixed Valor sanitizado.  
      * En caso de error, realiza una llamada del sistema para 
      * notificarlo.  Usar error_get_last() u otra para determinarlo.
