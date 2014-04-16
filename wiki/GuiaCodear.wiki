@@ -17,7 +17,12 @@ http://manual.phpdoc.org/HTMLSmartyConverter/HandS/phpDocumentor/tutorial_tags.p
 ----
 === Constantes ===
 
-  * Las constantes se escriben íntegramente en mayúscula, y comienzan con {{{SMP_}}} si son globales.  Si no, comienzan con el nombre del archivo al que pertenecen, o bien el nombre de clase/trait/interface...
+  * Las constantes se escriben íntegramente en mayúscula.
+  * Si son globales: comienzan con {{{SMP_}}}.  
+  * Si no son globales:
+   * Si pertenecen a una clase: no comienzan por ningun texto en particular.
+   * Si pertenecen a un trait o interface: comienzan por el nombre del mismo.
+   * Para todo otro caso: comienzan con el nombre del archivo.
 
 === Funciones / Métodos ===
 
