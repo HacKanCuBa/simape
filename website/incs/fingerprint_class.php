@@ -27,6 +27,7 @@
  * Ejemplo de uso:
  * <pre><code>
  * $fing = new Fingerprint;
+ * $fing->setMode(Fingerprint::MODE_USEIP);
  * $fingToken = fing->getToken();
  * ...
  * $otherfing = new Fingerprint($fingToken);
@@ -40,11 +41,28 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.5
+ * @version 0.62
  */
 class Fingerprint
-{	
+{
+    /**
+     * Constantes de modo
+     */
+    const MODE_USEIP = TRUE;
+    const MODE_DONTUSEIP = FALSE;
+    
+    /**
+     *
+     * @var string Fingerprint Token
+     */
     protected $fingerprintToken;
+    
+    /**
+     *
+     * @var boolean TRUE para generar Fingerprint Token teniendo en cuenta la
+     * IP del usuario (por defecto), FALSE para no emplear la IP.
+     */
+    protected $mode = self::MODE_USEIP;
 
     // __ SPECIALS
     /**
@@ -78,21 +96,57 @@ class Fingerprint
     /**
      * Devuelve un Token de Fingerprint armado.
      * 
+     * @param boolean $mode TRUE para generar un token teniendo en cuenta la
+     * IP del usuario (por defecto), FALSE para no emplear la IP.
      * @return string Token de Fingerprint.
      */
-    protected static function tokenMake()
-    {           
-        return Crypto::getHash(Sanitizar::glSERVER('HTTP_USER_AGENT')
+    protected static function tokenMake($mode = self::MODE_USEIP)
+    {    
+        if ($mode) {
+            $tokenContent = Sanitizar::glSERVER('HTTP_USER_AGENT')
                                 . Sanitizar::glSERVER('REMOTE_ADDR')
                                 . Sanitizar::glSERVER('HTTP_HOST')
                                 . Sanitizar::glSERVER('HTTP_X_HTTP_PROTO')
                                 . Sanitizar::glSERVER('HTTP_X_REAL_IP')
                                 . Sanitizar::glSERVER('SERVER_PROTOCOL')
                                 . SMP_FINGERPRINT_TKN
-                                );
+                                ;
+        } else {
+            $tokenContent = Sanitizar::glSERVER('HTTP_USER_AGENT')
+                                . Sanitizar::glSERVER('HTTP_HOST')
+                                . Sanitizar::glSERVER('HTTP_X_HTTP_PROTO')
+                                . Sanitizar::glSERVER('SERVER_PROTOCOL')
+                                . SMP_FINGERPRINT_TKN
+                                ;
+        }
+        return Crypto::getHash($tokenContent);
     }
 
-    // __ PUB    
+    // __ PUB
+    /**
+     * Fija el modo en que se generará el Fingerprint Token: teniendo en
+     * cuenta la IP del usuario o no.
+     * 
+     * @param boolean $mode <b>MODE_USEIP</b> para tener en cuenta la 
+     * IP del usuario.  <b>MODE_DONTUSEIP</b> para no emplear la IP.
+     */
+    public function setMode($mode = self::MODE_USEIP)
+    {
+        $this->mode = boolval($mode);
+    }
+    
+    /**
+     * Devuelve un Token que representa al usuario (navegador, IP, etc...).<br />
+     * Debe fijarse el modo primero.  Por defecto: <i>MODE_USEIP</i>.
+     * 
+     * @see mode
+     * @return string Fingerprint Token.
+     */ 
+    public function getToken()
+    {
+        return self::tokenMake($this->mode);
+    }
+    
     /**
      * Fija el valor del Token de Fingerprint que será autenticado.
      * 
