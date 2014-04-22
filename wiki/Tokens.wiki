@@ -18,6 +18,9 @@ Se utilizan los métodos _get_ del objeto tipo Token que corresponda (session, f
 Luego, se autentica comparando el valor del Token con el generado luego de usar los métodos _set_ del objeto, para insertar la información pertinente.  Dicho objeto incluye la función de autenticación (_authenticateToken_).  Éste método devuelve un valor booleano que debe usarse para autenticar (TRUE es válido, FALSE no).
 Los Tokens se almacenan en la DB luego de que el usuario se loggea satisfactoriamente.
 
+== Form Token ==
+El Random Token y Timestamp se almacenan en _SESSION_.  El Form Token se pasa a través de un campo oculto en el formulario.  Se autentica por el método apropiado.
+
 == Session Token ==
 
 A diferencia de los otros tokens, éste emplea el UID del usuario para validar de forma unívoca a la sesión, una vez que el usuario está loggeado.  No confundir con _SESSION_ de PHP.
