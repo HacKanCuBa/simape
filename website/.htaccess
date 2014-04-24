@@ -7,6 +7,10 @@ Options -Indexes
 # DIRECTORY INDEX FORCE INDEX.PHP
 DirectoryIndex index.php index.html /index.php
 
+# ERROR DOCUMENTS
+ErrorDocument 403 /403.php
+ErrorDocument 404 /404.php
+
 # DENY ACCESS TO PROTECTED SERVER FILES AND FOLDERS
 # Files and folders starting with a dot: .htaccess, .htpasswd, .errordocs, .logs
 RedirectMatch 403 \.(htaccess|htpasswd|errordocs|logs)$
@@ -191,25 +195,13 @@ RewriteCond %{QUERY_STRING} _REQUEST(=|[|%[0-9A-Z]{0,2}) [NC,OR]
 # vuln.php?exec=uname -a;ls -al;whoami
 RewriteCond %{QUERY_STRING} ^.*(=|;)(uname%20-|ls%20-|whoami).*
 
-# Deny access – Select one of the RewriteRules below:
-#
-# You can be nice and send the denial to an error page
-RewriteRule ^(.*)$ /403.html [F,L]
-# or
-# Send them back to their own address
-# RewriteRule ^(.*)$ http://%{REMOTE_ADDR} [R=301,L]
+RewriteRule ^(.*)$ /404.php [F,L]
 
 # XML-RPC DDoS PROTECTION
 # You can whitelist your IP address if you use A Weblog Client
 # or want to whitelist your IP address for any other reasons.
-# Example: uncomment #Allow from x.x.x. by deleting the # sign and
-# replace the x's with your actual IP address. Allow from 99.88.77.
-# Note: It is recommended that you use 3 octets x.x.x. of your IP address
-# instead of 4 octets x.x.x.x of your IP address.
-
 <FilesMatch "^(xmlrpc\.php)">
 Order Deny,Allow
 Deny from all
 #Allow from x.x.x.
 </FilesMatch>
-
