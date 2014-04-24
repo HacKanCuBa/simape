@@ -30,10 +30,10 @@ echo Page::getHeaderClose();
 echo Page::getMain();
 
 echo "\n\t\t<h2 style='text-align: center;font-weight: bold'>"
-     . "Error 403: Acceso denegado</h2>";
+     . "Error 403: No permitido/h2>";
 echo "\n\t\t<br /><br />";
 echo "\n\t\t<p style='text-align: center;font-style: italic'>No tiene permiso "
-     . "para acceder a la p&aacute;gina requerida."
+     . "para acceder a la p&aacute;gina requerida.";
 echo "\n\t\t<p style='text-align: center; font-style: italic'>Si lleg&oacute; "
      . "aqu&iacute; por medio de un enlace, contacte con un administrador del "
      . "sistema.</p>";
