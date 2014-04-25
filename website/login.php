@@ -68,23 +68,20 @@ Session::remove(SMP_SESSIONKEY_RANDOMTOKEN);
 Session::remove(SMP_SESSIONKEY_TIMESTAMP);
 Session::remove(SMP_SESSIONKEY_TOKEN);
 
-// Obtener fingerprint y formtoken
+// Inicializaciones
 $fingerprint = new Fingerprint;
+if (!empty(Session::retrieve(SMP_FINGERPRINT_TOKEN))) {
+    
+}
 $formToken = new FormToken;
+$db = new DB;
 
 // Recuperar el nombre de usuario
-$user_form = Sanitizar::glPOST('frm_txtLogin');
+$username = Sanitizar::glPOST('frm_txtLogin');
 
 if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
     
     //$start = microtime(TRUE);
-    
-    $fingerprint->setRandomToken(Session::retrieve(SMP_FINGERPRINT_RANDOMTOKEN));
-    $fingerprint->setToken(Session::retrieve(SMP_FINGERPRINT_TOKEN));
-    
-    $formToken->setRandomToken(Session::retrieve(SMP_FORM_RANDOMTOKEN));
-    $formToken->setTimestamp(Session::retrieve(SMP_FORM_TIMESTAMP));
-    $formToken->setToken(Sanitizar::glPOST(SMP_FORM_TOKEN));
 
     // Pruebo captcha primero
     // si aun no hay captcha, ambos seran equivalentes (NULL y STRING NULL)
@@ -92,21 +89,41 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
     {
         // captcha OK
         $password = new Password(Sanitizar::glPOST('frm_pwdLogin'));
-        $password->retrieveFromDB($user_form);
+        $password->retrieve_fromDB($username);
+            
+        $formToken->setRandomToken(Session::retrieve(SMP_FORM_RANDOMTOKEN));
+        $formToken->setTimestamp(Session::retrieve(SMP_FORM_TIMESTAMP));
+        $formToken->setToken(Sanitizar::glPOST(SMP_FORM_TOKEN));
         
-        // Ejecuto la autenticación de la contraseña aún si el form o fingerprint
-        // token no validan, para evitar Timing Oracle.
+        /*
+        // Crear token de fingerprint si no existen
+        if (!$fingerprint->setRandomToken($db->auto(DB::DB_AUTO_GET_FINGEPRINT_RANDTKN, 
+                                          $username))
+        ) {
+            $fingerprint->getRandomToken();
+        }
+        $fingerprint->setToken(Session::retrieve(SMP_FINGERPRINT_TOKEN));
+        if (empty(Session::retrieve(SMP_FINGERPRINT_RANDOMTOKEN))
+            || empty(Session::retrieve(SMP_FINGERPRINT_TOKEN))
+        ) {
+            // Almacenar token de identificacion del usario
+            Session::store(SMP_FINGERPRINT_RANDOMTOKEN, $fingerprint->getRandomToken());
+            Session::store(SMP_FINGERPRINT_TOKEN, $fingerprint->getToken());
+        }
+        */
+        // Ejecuto la autenticación de la contraseña aún si el form
+        // token no valida, para evitar Timing Oracle.
         if($password->authenticatePassword() 
            && $formToken->authenticateToken()
-           && $fingerprint->authenticateToken()
         ) {
             // Login OK          
             $uid = new UID;
-            $uid->retrieveFromDB($user_form);
+            $uid->retrieve_fromDB($username);
 
             $session = new Session;
             $session->setPassword($uid->get());
             $session->setUID($uid);
+            // ToDo: almacenar tokens en DB
             $session->storeEnc(SMP_SESSIONKEY_RANDOMTOKEN, 
                            $session->getRandomToken());
             $session->storeEnc(SMP_SESSIONKEY_TIMESTAMP, 
@@ -119,7 +136,7 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
             $session->storeEnc(SMP_FINGERPRINT_TOKEN, 
                            $fingerprint->getToken());
 
-            $session->store(SMP_USERNAME, $user_form);
+            $session->store(SMP_USERNAME, $username);
 
             // elimino el captcha, si existiese
             Session::remove(LOGIN_CAPTCHA);
@@ -160,15 +177,6 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
 } elseif (!empty(Sanitizar::glGET('passRestoreToken'))) {
     $password = new Password();
     $password->setToken(Sanitizar::glGET('passRestoreToken'));
-}
-
-// Crear tokens si no existen
-if (empty(Session::retrieve(SMP_FINGERPRINT_RANDOMTOKEN))
-    || empty(Session::retrieve(SMP_FINGERPRINT_TOKEN))
-) {
-    // Almacenar token de identificacion del usario
-    Session::store(SMP_FINGERPRINT_RANDOMTOKEN, $fingerprint->getRandomToken());
-    Session::store(SMP_FINGERPRINT_TOKEN, $fingerprint->getToken());
 }
 
 if (isset($nav)) {
@@ -241,7 +249,7 @@ if (empty($pwdRestoreSent)) {
     echo "\n\t\t\t\t\t\t\t<br />";
     echo "\n\t\t\t\t\t\t\t<input name='frm_txtLogin' "
          . "title='Ingrese el nombre de usuario' maxlength='" 
-         . SMP_USRNAME_MAXLEN . "' type='text' autofocus value='" . $user_form 
+         . SMP_USRNAME_MAXLEN . "' type='text' autofocus value='" . $username 
          . "'/>";
     echo "\n\t\t\t\t\t\t</td>";
     echo "\n\t\t\t\t\t</tr>";
