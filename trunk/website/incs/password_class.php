@@ -48,7 +48,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.26
+ * @version 1.27
  */
 class Password
 {
@@ -305,6 +305,33 @@ class Password
     {
         return $this->t_setUID($newUID);
     }
+    
+    /**
+     * Almacena en la DB el password encriptado guardado en el objeto, si lo hay.
+     * 
+     * @param string $username Nombre de usuario al que le pertenece el 
+     * password encriptado.
+     * @return boolean TRUE si se almacenó en la DB exitosamente, 
+     * FALSE en caso contrario.
+     */
+    public function store_inDB(string $username) 
+    {
+        if (!empty($this->encryptedPassword) && !empty($username)) {
+            $db = new DB(TRUE);
+            $db->setQuery('UPDATE Usuario SET PasswordSalted = ? '
+                        . 'WHERE Nombre = ?');
+            $db->setBindParam('ss');
+            $db->setQueryParams([$this->encryptedPassword, $username]);
+            //// atenti porque la func devuelve tb nro de error
+            // ToDo: procesar nro de error
+            $retval = $db->queryExecute();
+            if (is_bool($retval)) {
+                return $retval;
+            }
+        }
+        
+        return FALSE;
+    }
 
     /**
      * Devuelve la contraseña encriptada.  Debe haberse llamado primero a 
@@ -419,6 +446,28 @@ class Password
     }
     
     /**
+     * Recupera de la DB la contraseña encriptada del usuario indicado y la 
+     * almacena en el objeto.
+     * 
+     * @param string $username Nombre de usuario.
+     * @return boolean TRUE si se encontró y almacenó correctamente, 
+     * FALSE si no.
+     */
+    public function retrieve_fromDB(string $username)
+    {
+        if (!empty($username)) {
+            $db = new DB;
+            $db->setQuery('SELECT PasswordSalted FROM Usuario WHERE Nombre = ?');
+            $db->setBindParam('s');
+            $db->setQueryParams($username);
+            $db->queryExecute();
+            return $this->setEncrypted($db->queryGetData());
+        }
+        
+        return FALSE;
+    }
+    
+    /**
      * Encripta la contraseña almacenada en texto plano.  Para obtener el 
      * resultado: getEncrypted().
      * NOTA: ¡puede demorar varios segundos!
@@ -513,27 +562,6 @@ class Password
             } elseif (($this->PasswordTimestamp + 
                        (SMP_PASSWORD_MAXDAYS * 86400)) < time()) {
                 return TRUE;
-            }
-        }
-        
-        return FALSE;
-    }
-    
-    /**
-     * Busca en la DB la contraseña encriptada del usuario indicado y la 
-     * almacena.
-     * 
-     * @param string $username Nombre de usuario.
-     * @return boolean TRUE si se encontró y almacenó correctamente, 
-     * FALSE si no.
-     */
-    public function retrieveFromDB($username)
-    {
-        if (!empty($username) && is_string($username)) {
-            $db = new DB;
-            $pass = $db->auto(DB::AUTO_PASSWORD, $username);
-            if ($pass) {
-                return $this->setEncrypted($pass);
             }
         }
         
