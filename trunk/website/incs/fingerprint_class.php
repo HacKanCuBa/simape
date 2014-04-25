@@ -196,7 +196,10 @@ class Fingerprint
      */
     public function getToken()
     {
-        return $this->fingerprintToken;
+        if (isset($this->fingerprintToken)) {
+            return $this->fingerprintToken;
+        }
+        return '';
     }
     
     /**
@@ -215,10 +218,11 @@ class Fingerprint
     }
     
     /**
-     * Devuelve el Fingerprint Token almacenado en la DB.
+     * Recupera el Fingerprint Token almacenado en la DB y lo guarda en el 
+     * objeto.  Usar getToken para obtener el valor.
      * 
-     * @return boolean|string Fingerprint Token si existe, NULL si no existe
-     * o FALSE en caso de error.
+     * @see getToken
+     * @return boolean TRUE si tuvo exito, FALSE si no.
      */
     public function retrieve_fromDB() 
     {
@@ -229,12 +233,8 @@ class Fingerprint
             $db->setBindParam('i');
             $db->setQueryParams($this->TokenId);
             $db->queryExecute();
-            $result = $db->getQueryData();
-            if (is_array($result)) {
-                if ($this->setToken()) {
-                   return $this->fingerprintToken;
-                }
-            }
+            
+            return $this->setToken($db->getQueryData());
         }
         
         return FALSE;
@@ -258,7 +258,7 @@ class Fingerprint
             $db->setQuery('UPDATE Token SET Fingerprint_Token = ? '
                         . 'WHERE TokenId = ?');
             $db->setBindParam('si');
-            $db->setQueryParams($this->TokenId);
+            $db->setQueryParams([$this->fingerprintToken, $this->TokenId]);
             //// atenti porque la func devuelve tb nro de error
             // ToDo: procesar nro de error
             $retval = $db->queryExecute();

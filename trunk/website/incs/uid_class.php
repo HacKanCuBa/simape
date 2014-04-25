@@ -34,14 +34,14 @@
  * $nuevoUID = UID::getRandom();
  * 
  * $uid = new UID;
- * $uid->make();
+ * $uid->generate();
  * $otroUID = $uid->get();
  * </code></pre>
  *
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.44
+ * @version 0.5
  */
 class UID
 {  
@@ -85,7 +85,7 @@ class UID
     /**
      * Genera y almacena un UID aleatorio
      */
-    public function make()
+    public function generate()
     {
         $this->uid = $this->getRandom();
     }
@@ -107,24 +107,54 @@ class UID
     }
     
     /**
-     * Devuelve el UID generado por make() o almacenado por setUID(), 
-     * o NULL.
+     * Almacena en la DB el UID guardado en el objeto, si lo hay.
      * 
-     * @return string UID o NULL.
+     * @see generate
+     * @see set
+     * @param string $username Nombre de usuario al que le pertenece el UID.
+     * @return boolean TRUE si se almacenó en la DB exitosamente, 
+     * FALSE en caso contrario.
      */
-    public function get()
+    public function store_inDB(string $username) 
     {
-        if(!empty($this->uid)) {
-            return $this->uid;
+        if (!empty($this->uid) && !empty($username)) {
+            $db = new DB(TRUE);
+            $db->setQuery('UPDATE Usuario SET UID = ? '
+                        . 'WHERE Nombre = ?');
+            $db->setBindParam('ss');
+            $db->setQueryParams([$this->uid, $username]);
+            //// atenti porque la func devuelve tb nro de error
+            // ToDo: procesar nro de error
+            $retval = $db->queryExecute();
+            if (is_bool($retval)) {
+                return $retval;
+            }
         }
         
-        return NULL;
+        return FALSE;
     }
     
     /**
-     * Devuelve el Hash del UID almacenado, o NULL si no hay ninguno almacenado.
+     * Devuelve el UID generado por generate o almacenado por set.
      * 
-     * @return string Hash del UID o NULL.
+     * @see generate
+     * @see set
+     * @return string UID o string vacío.
+     */
+    public function get()
+    {
+        if(isset($this->uid)) {
+            return $this->uid;
+        }
+        
+        return '';
+    }
+      
+    /**
+     * Devuelve el Hash del UID almacenado, o string vacío si no hay ninguno 
+     * almacenado.
+     * 
+     * @return string Hash del UID o string vacío.
      */
     public function getHash()
     {
@@ -132,7 +162,7 @@ class UID
             return Crypto::getHash($this->uid);
         }
         
-        return NULL;
+        return '';
     }
 
     /**
@@ -144,6 +174,30 @@ class UID
     {        
         return Crypto::getUUIDv4();
     }
+    
+    /**
+     * Recupera el UID del usuario indicado de la DB y lo almacena en el objeto.
+     * Usar get para obtener el valor.
+     * 
+     * @see get
+     * @param string $username Nombre de usuario.
+     * @return boolean TRUE si se encontró y almacenó correctamente, 
+     * FALSE si no. 
+     */
+    public function retrieve_fromDB($username)
+    {
+        if (!empty($username) && is_string($username)) {
+            $db = new DB;
+            
+            $db->setQuery('SELECT UID FROM Usuario WHERE Nombre = ?');
+            $db->setBindParam('s');
+            $db->setQueryParams($username);
+            $db->queryExecute();
+            return $this->set($db->getQueryData());
+        }
+        
+        return FALSE;
+    }
 
     /**
      * Determina si el string recibido es un UID válido.
@@ -154,27 +208,5 @@ class UID
     public static function isValid($uid)
     {
         return self::isValid_uuid($uid);
-    }
-    
-    /**
-     * Busca el UID del usuario indicado en la DB y lo almacena.
-     * Recuperar el valor con get().
-     * 
-     * @param string $username Nombre de usuario.
-     * @return boolean TRUE si se encontró y almacenó correctamente, 
-     * FALSE si no. 
-     */
-    public function retrieveFromDB($username)
-    {
-        if (!empty($username) && is_string($username)) {
-            $db = new DB;
-            $uid = $db->auto(DB::AUTO_UID, $username);
-            if ($uid) {
-                $this->uid = $uid;
-                return TRUE;
-            }
-        }
-        
-        return FALSE;
     }
 }
