@@ -47,13 +47,10 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.01
+ * @version 1.2
  */
 class DB extends mysqli
-{  
-    const AUTO_PASSWORD = 'PASSWORD';
-    const AUTO_UID = 'UID';
-    
+{     
     protected $queryStmt, $bindParam, $queryParams;
     protected $queryData;
     protected $affectedRows;
@@ -65,7 +62,7 @@ class DB extends mysqli
      * Conecta con la DB según el modo indicado e inicializa la conexión.
      * 
      * @param boolean $ModoRW Establece el modo RW si es TRUE, 
-     * RO si es FALSE.
+     * RO si es FALSE (por defecto).
      */
     function __construct($ModoRW = FALSE) 
     {   
@@ -321,9 +318,25 @@ class DB extends mysqli
      * Devuelve los datos obtenidos en la última query, asumiendo que
      * haya sido un SELECT.
      *          
-     * @return mixed Si la consulta produjo resultados los devuelve como 
-     * array; si no hubieron resultados pero la consulta fue exitosa, 
-     * devuelve TRUE; en caso de error, FALSE.
+     * @return mixed Los datos obtenidos de la query (cuando la misma se trató 
+     * de un SELECT) de la siguiente manera:
+     * <ul>
+     * <li>Si la consulta devolvió un único dato, como string.  Si devolvió más 
+     * de un dato, como array.</li>
+     * <li>Si no se obtuvieron datos, como TRUE.</li>
+     * <li>Si la consulta devolvió error, como FALSE.</li>
+     * </ul>
+     * </p>
+     * <p>El array almacenado es:
+     * <ul>
+     * <li>Asociativo cuando la consulta devuelve una fila con multiples 
+     * columnas;</li>
+     * <li>Numerado cuando la consulta devuelve una o varias filas c/u con 
+     * sólo una columna;</li>
+     * <li>Mixto cuando la consulta devuelve multiples filas con multiples 
+     * columnas (las filas serán índice numerado, y dentro un array 
+     * asociativo con las columnas como indices).</li>
+     * </ul>
      */
     public function getQueryData() 
     {        
@@ -406,7 +419,6 @@ class DB extends mysqli
         return $this->getQueryData();
     }
 
-    // --
     // Otras
     /**
      * Sanitiza un valor para ser usado en una consulta.  Puede tratarse de
@@ -434,41 +446,4 @@ class DB extends mysqli
             return NULL;
         }
     }
-    
-    /**
-     * Ejecuta querys conocidas, seleccionando la deseada mendiante una palabra 
-     * clave.
-     * 
-     * @param string $keyword Palabra clave.
-     * @param mixed $params Los parámetros que requiera la query 
-     * (si requere alguno).
-     * @return mixed Los datos de la query o bien FALSE en caso de error.
-     */
-    public function auto($keyword, $params = NULL)
-    {
-        switch ($keyword) {
-            case self::AUTO_PASSWORD:
-                $this->setQuery('SELECT PasswordSalted FROM Usuario WHERE Nombre = ?');
-                $this->setBindParam('s');
-                $this->setQueryParams($params);
-                $this->queryExecute();
-                $retVal = $this->queryGetData();
-                break;
-            
-            case self::AUTO_UID:
-                $this->setQuery('SELECT UID FROM Usuario WHERE Nombre = ?');
-                $this->setBindParam('s');
-                $this->setQueryParams($params);
-                $this->queryExecute();
-                $retVal = $this->queryGetData();
-                break;
-            
-            default:
-                $retVal = FALSE;
-                break;
-        }
-        
-        return $retVal;
-    }
-    // --
 }
