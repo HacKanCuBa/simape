@@ -41,7 +41,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.62
+ * @version 0.66
  */
 class Fingerprint
 {
@@ -57,6 +57,12 @@ class Fingerprint
      */
     protected $fingerprintToken;
     
+    /**
+     *
+     * @var int ID de la tabla Token en la DB
+     */
+    protected $TokenId;
+
     /**
      *
      * @var boolean TRUE para generar Fingerprint Token teniendo en cuenta la
@@ -79,13 +85,30 @@ class Fingerprint
     /**
      * Verifica si el Token de Fingerprint es válido.
      * 
-     * @param type $fingerprintToken Token a validar.
+     * @param string $fingerprintToken Token a validar.
      * @return boolean TRUE si es válido, FALSE si no.
      */
     protected static function isValid_fingerprintToken($fingerprintToken)
     {
 	if (!empty($fingerprintToken) 
             && is_string($fingerprintToken)
+        ) {
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Verifica si el TokenId es válido (entero no vacío).
+     * 
+     * @param int $TokenId TokenId a validar.
+     * @return boolean TRUE si es válido, FALSE si no.
+     */
+    protected static function isValid_TokenId($TokenId)
+    {
+	if (!empty($TokenId) 
+            && is_int($TokenId)
         ) {
             return TRUE;
         }
@@ -136,18 +159,6 @@ class Fingerprint
     }
     
     /**
-     * Devuelve un Token que representa al usuario (navegador, IP, etc...).<br />
-     * Debe fijarse el modo primero.  Por defecto: <i>MODE_USEIP</i>.
-     * 
-     * @see mode
-     * @return string Fingerprint Token.
-     */ 
-    public function getToken()
-    {
-        return self::tokenMake($this->mode);
-    }
-    
-    /**
      * Fija el valor del Token de Fingerprint que será autenticado.
      * 
      * @param string $fingerprintToken Token de Fingerprint.
@@ -164,14 +175,112 @@ class Fingerprint
     }
     
     /**
-     * Autentica un Token de Figerprint.
+     * Fija el valor del identificador de tabla Token de la DB.
      * 
+     * @param int $TokenId
+     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
+     */
+    public function setTokenId($TokenId) 
+    {
+        if (self::isValid_TokenId($TokenId)) {
+            $this->TokenId = $TokenId;
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Devuelve el Fingerprint Token almacenado en el objeto.
+     * @return string Fingerprint Token.
+     */
+    public function getToken()
+    {
+        return $this->fingerprintToken;
+    }
+    
+    /**
+     * Genera un Token que representa al usuario (navegador, IP, etc...).<br />
+     * Debe fijarse el modo primero.  Por defecto el modo es 
+     * <i>MODE_USEIP</i>.<br />
+     * Para obtenerlo, usar getToken.
+     * 
+     * @see mode
+     * @see getToken
+     * @return string Fingerprint Token.
+     */ 
+    public function generateToken()
+    {
+        $this->fingerprintToken = self::tokenMake($this->mode);
+    }
+    
+    /**
+     * Devuelve el Fingerprint Token almacenado en la DB.
+     * 
+     * @return boolean|string Fingerprint Token si existe, NULL si no existe
+     * o FALSE en caso de error.
+     */
+    public function retrieve_fromDB() 
+    {
+        if (!empty($this->TokenId)) {
+            $db = new DB;
+            $db->setQuery('SELECT Fingerprint_Token FROM Token '
+                        . 'WHERE TokenId = ?');
+            $db->setBindParam('i');
+            $db->setQueryParams($this->TokenId);
+            $db->queryExecute();
+            $result = $db->getQueryData();
+            if (is_array($result)) {
+                if ($this->setToken()) {
+                   return $this->fingerprintToken;
+                }
+            }
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Almacena en la DB el Fingerprint Token guardado en el objeto.<br />
+     * Debe fijarse primero el identificador de tabla Token y el valor del 
+     * Token (mediante setToken o generateToken).
+     * 
+     * @see setTokenId
+     * @see setToken
+     * @see generateToken
+     * @return boolean TRUE si se almacenó en la DB exitosamente, 
+     * FALSE en caso contrario.
+     */
+    public function store_inDB() 
+    {
+        if (!empty($this->TokenId) && !empty($this->fingerprintToken)) {
+            $db = new DB(TRUE);
+            $db->setQuery('UPDATE Token SET Fingerprint_Token = ? '
+                        . 'WHERE TokenId = ?');
+            $db->setBindParam('si');
+            $db->setQueryParams($this->TokenId);
+            //// atenti porque la func devuelve tb nro de error
+            // ToDo: procesar nro de error
+            $retval = $db->queryExecute();
+            if (is_bool($retval)) {
+                return $retval;
+            }
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Autentica el Token de Figerprint almacenado en el objeto contra uno 
+     * generado nuevo.
+     * 
+     * @see setToken
      * @return boolean TRUE si el Token de Fingerprint es auténtico, 
      * FALSE si no.<br />
      */
     public function authenticateToken() 
     {      
-        if ($this->fingerprintToken === $this->tokenMake()) {
+        if ($this->fingerprintToken === $this->tokenMake($this->mode)) {
             return TRUE;
         }
 
