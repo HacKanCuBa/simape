@@ -19,6 +19,7 @@ Luego, se autentica comparando el valor del Token con el generado luego de usar 
 Los Tokens se almacenan en la DB luego de que el usuario se loggea satisfactoriamente.
 
 == Form Token ==
+
 El Random Token y Timestamp se almacenan en _SESSION_.  El Form Token se pasa a través de un campo oculto en el formulario.  Se autentica por el método apropiado.
 
 == Session Token ==
@@ -29,7 +30,7 @@ Para autenticar, se lee de la DB los datos, se almacenan en el objeto y se emple
 
 == Page Token ==
 
-El Random Token y Timestamp se almacenan en _SESSION_.  El Page Token se pasa a través de la url (por GET).  Se autentica por el método apropiado.
+El Random Token y Timestamp se almacenan en _SESSION_.  También se emplea un identificador de la página para generar el token, que puede ser su nombre o url.  El Page Token se pasa a través de la url (por GET).  Se autentica por el método apropiado.
 
 == Password Restore Token ==
 
