@@ -31,7 +31,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.2
+ * @version 1.3
  */
 
 require_once 'load.php';
@@ -39,11 +39,14 @@ require_once 'load.php';
 // Iniciar o continuar sesion
 Session::initiate();
 
-// Realizar navegacion...  
-
 $action = Sanitizar::glGET(SMP_NAV_ACTION);
+
+// Inicializo variables de redireccion
 $params = NULL;
 $redirect = NULL;
+$intLink = NULL;
+
+$page = new Page;
 
 switch($action) {
     case 'logout':
@@ -59,10 +62,12 @@ switch($action) {
         // $redirect=NULL lleva a index.php
         break;
 
+    case SMP_LOC_MSGS:
+        $intLink = "tabR";
+        // no uso break para que ejecute default
     default:
-        if (Page::isValid($action)) {
-            $page = new Page;
-            
+        // si la página no existe, $redirect quedará NULL y dirigirá a root.
+        if (Page::pageExists($action)) {
             // Si el usuario está loggeado, dirigirse a la pag solicitada con un
             // page token.
             $session = new Session;
@@ -79,6 +84,8 @@ switch($action) {
             $fingerprint->setRandomToken($session->retrieveEnc(SMP_FINGERPRINT_RANDOMTOKEN));
             $fingerprint->setToken($session->retrieveEnc(SMP_FINGERPRINT_TOKEN));
             
+            $redirect = $action;
+            
             if ($fingerprint->authenticateToken() 
                 && $session->authenticateToken()) 
             {
@@ -87,19 +94,14 @@ switch($action) {
                                     $page->getRandomToken());
                 $session->storeEnc(SMP_PAGE_TIMESTAMP, 
                                     $page->getTimestamp());
-
+                $page->setLocation($redirect);
+                
                 $params = "pagetkn=" . $page->getToken();
-
-                // Parche para la página de mensajes
-                if ($action == SMP_LOC_MSGS) {
-                    $params .= "#tabR";
-                }
             }
-            
-            $redirect = $action;
         }
         break;
 }
 
-Page::go_to($redirect, $params);
+$page->setLocation($redirect);
+$page->go($params, $intLink);
 exit();

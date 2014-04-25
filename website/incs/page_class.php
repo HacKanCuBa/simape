@@ -42,9 +42,10 @@
  * $page = new Page;
  * $randToken = $page->getRandomToken();
  * $timestamp = $page->getTimestamp();
+ * $page->setLocation('url/to/this/page.php');
  * $pageToken = $page->getToken();
  * ...
- * $otherpage = new Page($randToken, $timestamp, $pageToken);
+ * $otherpage = new Page('url/to/this/page.php', $randToken, $timestamp, $pageToken);
  * if ($otherpage->authenticateToken()) {
  *      echo "Token de página auténtico!";
  * } else {
@@ -55,7 +56,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.0
+ * @version 1.2
  */
 class Page
 {  
@@ -113,6 +114,13 @@ class Page
      */
     protected $title;
     
+    /**
+     * URL relativa de la página que esta siendo cargada, incluido nombre y 
+     * extensión, p. e.: incs/page_class.php.  NULL por defecto.
+     * @var string
+     */
+    protected $pageLoc = NULL;
+
     protected $pageToken;
     
     protected $indentLevel = 0;
@@ -120,14 +128,18 @@ class Page
     // __ SPECIALS
     /**
      * Fija los valores de el Token aleatorio y el Token de Página.
-     * @param string $randToken Token aleatorio.
-     * @param float $timestamp Timestamp.
-     * @param string $pageToken Token de Página.
+     * 
+     * @param string $pageLoc <i>[Opcional]</i> Ruta de la página.
+     * @param string $randToken <i>[Opcional]</i> Token aleatorio.
+     * @param float $timestamp <i>[Opcional]</i> Timestamp.
+     * @param string $pageToken <i>[Opcional]</i> Token de Página.
      */
-    public function __construct($randToken = NULL, 
-                                 $timestamp = NULL, 
-                                 $pageToken = NULL) 
+    public function __construct($pageLoc = NULL,
+                                $randToken = NULL, 
+                                $timestamp = NULL, 
+                                $pageToken = NULL) 
     {
+        $this->setLocation($pageLoc);
         $this->setRandomToken($randToken);
         $this->setTimestamp($timestamp);
         $this->setToken($pageToken);
@@ -155,8 +167,9 @@ class Page
      * Solo puede contener letras mayúsculas y minúsculas del alfabeto inglés,
      * números y los símbolos '/', '-' y '_'.<br />
      * Solo puede contener un único '.' para la extensión.<br />
-     * El primer caracter debe ser una letra o un número.<br />
-     * La longitud máxima la determina LOC_MAXLEN.
+     * El primer caracter debe ser una letra o un número (ruta relativa).<br />
+     * La longitud máxima la determina LOC_MAXLEN.<br />
+     * P. e.: incs/page_class.php
      * 
      * @param string $loc Ruta a validar
      * @return boolean TRUE si la ruta es válida, FALSE si no.
@@ -220,7 +233,8 @@ class Page
 
     /**
      * Recibe la ruta relativa a una página y los parámetros que le serán
-     * pasados, y devuelve un string armado con la ruta y los parámetros.<br />
+     * pasados, y devuelve un string armado con la ruta completa 
+     * y los parámetros.<br />
      * Si $loc es NULL (por defecto), dará como resultado la raíz del sitio.<br />
      * Si $params es NULL (por defecto), no enviará ningún parámetro.<br />
      * NOTA: NO determina si la página existe!
@@ -228,15 +242,19 @@ class Page
      * @param string $loc Ruta relativa desde '/' a la página deseada.<br />
      * Solo puede contener letras mayúsculas y minúsculas del alfabeto inglés,
      * números y los símbolos '/', '-' y '_'.
-     * El primer caracter debe ser una letra o un número.
+     * El primer caracter debe ser una letra o un número.<br />
+     * P. e.: incs/page_class.php
      * @param mixed $params Parámetros en la forma:
      * <ul>
      * <li>Como string: <i>nombre=valor&nombre2=valor2,...</i></li>
      * <li>Como array: <i>['nombre'=>'valor', 'nombre2'=>'valor2',...]</li>
      * </ul>
+     * @param string $intLink Enlace interno (<i>#link</i>).
      * @return string Ruta relativa a la página con los parámetros incluidos.
      */
-    protected static function urlMake($loc = NULL, $params = NULL) 
+    protected static function urlMake(string $loc = NULL,
+                                      $params = NULL,
+                                      string $intLink = NULL) 
     {
         $strParams = '';
         if (!empty($params)) {
@@ -256,7 +274,47 @@ class Page
             $pathPage = $loc; 
         }
         
-        return $pathPage . $strParams;
+        if (!empty($intLink)) {
+            $strParams .= '#' . $intLink;
+        }
+        return SMP_WEB_ROOT . $pathPage . $strParams;
+    }
+    
+    /**
+     * Envía los headers necesarios para ir a la página indicada, envíando
+     * también los parámetros requeridos.
+     * Si $loc es NULL (por defecto), irá a la raíz del sitio SMP_WEB_ROOT.<br />
+     * Si $params es NULL (por defecto), no enviará ningún parámetro.
+     * Idem para $intLink.<br />
+     * NOTA: Primero verifica que la página solicitada exista en el servidor.<br />
+     * <b>IMPORTANTE</b>: Es conveniente llamar a exit() 
+     * <i>inmediatamente después</i> de este método.
+     * 
+     * @param string $loc Ruta relativa desde '/' a la página deseada.<br />
+     * Solo puede contener letras mayúsculas y minúsculas del alfabeto inglés,
+     * números y los símbolos '/', '-' y '_'.
+     * El primer caracter debe ser una letra o un número.<br />
+     * P. e.: incs/page_class.php
+     * @param mixed $params Parámetros en la forma:
+     * <ul>
+     * <li>Como string: <i>nombre=valor&nombre2=valor2,...</i></li>
+     * <li>Como array: <i>['nombre'=>'valor', 'nombre2'=>'valor2',...]</li>
+     * </ul>
+     * @param string $intLink Enlace interno (<i>#link</i>).
+     * @return boolean TRUE si se enviaron correctamente los headers, 
+     * FALSE si no.
+     */
+    protected static function go_to(string $loc = NULL,
+                                 $params = NULL,
+                                 string $intLink = NULL) 
+    {
+        if (empty($loc) || self::pageExists($loc)) {
+            header("Location: "
+                    . self::urlMake($loc, $params, $intLink));
+            return TRUE;
+        }
+        
+        return FALSE;
     }
     
     /**
@@ -264,12 +322,16 @@ class Page
      * 
      * @param string $randToken Token aleatorio.
      * @param float $timestamp Timestamp.
+     * @param string $pageID Identificador de la página para la cual se 
+     * generará el token.  Puede ser su nombre, título o URL, cualquier valor 
+     * que la identifique.
      * @return mixed Token de página o FALSE en caso de error.
      */
-    protected static function tokenMake($randToken, $timestamp) 
+    protected static function tokenMake($randToken, $timestamp, string $pageID) 
     {
         if (self::isValid_token($randToken) 
             && self::isValid_timestamp($timestamp)
+            && !empty($pageID)
         ) {
             // Para forzar una vida util durante sólo el mismo dia.
             // Si cambia el dia, el valor de la operacion cambiara.
@@ -279,6 +341,7 @@ class Page
                                     self::TOKEN_LIFETIME) 
                                     . $randToken
                                     . $time
+                                    . $pageID
                                     . SMP_PAGE_TKN);
         }
         
@@ -566,13 +629,14 @@ class Page
     }
 
     /**
-     * Devuelve un Token de página.  Debe llamarse primero a getRandomToken()<br />
-     * y getTimestamp().  NO emplearse con parámetros externos vía <br />
-     * setRandomToken() y setTimestamp() dado que esto es inseguro.<br />
+     * Devuelve un Token de página.  Debe llamarse primero a getRandomToken<br />
+     * , getTimestamp y setLocation.  NO emplearse con parámetros externos vía <br />
+     * setRandomToken y setTimestamp dado que esto es inseguro.<br />
      * Por defecto, dará error en esta situación, a menos que $notStrict = TRUE.
      * 
      * @see getRandomToken()
      * @see getTimestamp()
+     * @see setLocation()
      * @param boolean $notStrict Si es TRUE, permite usar valores externos vía<br />
      * getRandomToken() y getTimestamp() para generar el Token de página.<br />
      * FALSE por defecto.
@@ -584,16 +648,40 @@ class Page
             && isset($this->timestamp)
         ) {
             if ($notStrict) {
-                return $this->tokenMake($this->randToken, $this->timestamp);
+                return $this->tokenMake($this->randToken, $this->timestamp, 
+                                        $this->pageLoc);
             } else {
                 if (isset($this->ownrandToken) 
                     && $this->ownrandToken
                     && isset($this->ownTimestamp)
                     && $this->ownTimestamp
                 ) {
-                    return $this->tokenMake($this->randToken, $this->timestamp);
+                    return $this->tokenMake($this->randToken, $this->timestamp, 
+                                            $this->pageLoc);
                 } 
             }
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Fija el valor de ubicación de la página que será cargada, 
+     * o de la cual se generará un token de página.
+     * 
+     * @param string $loc Ruta relativa desde '/' a la página deseada.<br />
+     * Solo puede contener letras mayúsculas y minúsculas del alfabeto inglés,
+     * números y los símbolos '/', '-' y '_'.
+     * El primer caracter debe ser una letra o un número.<br />
+     * P. e.: incs/page_class.php
+     * @return boolean TRUE si se guardó correctamente en el objeto, 
+     * FALSE en caso contrario.
+     */
+    public function setLocation($loc)
+    {
+        if (self::isValid_loc($loc)) {
+            $this->pageLoc = $loc;
+            return TRUE;
         }
         
         return FALSE;
@@ -678,39 +766,40 @@ class Page
     
     /**
      * Envía los headers necesarios para ir a la página indicada, envíando
-     * también los parámetros requeridos.
-     * Si $loc es NULL (por defecto), dará como resultado la raíz del sitio.<br />
-     * Si $params es NULL (por defecto), no enviará ningún parámetro.<br />
-     * NOTA: Primero verifica que la página solicitada exista.<br />
+     * también los parámetros requeridos.<br />
+     * <i>Debe llamarse primero a setLocation para fijar la ubicación</i>.
+     * De no hacerlo así, dará como resultado la raíz del sitio (SMP_WEB_ROOT) 
+     * por defecto.<br />
+     * Si $params es NULL (por defecto), no enviará ningún parámetro.
+     * Idem para $intLink.<br />
+     * NOTA: Primero verifica que la página solicitada exista en el servidor.<br />
      * <b>IMPORTANTE</b>: Es conveniente llamar a exit() 
      * <i>inmediatamente después</i> de este método.
      * 
-     * @param string $loc Ruta relativa desde '/' a la página deseada.<br />
-     * Solo puede contener letras mayúsculas y minúsculas del alfabeto inglés,
-     * números y los símbolos '/', '-' y '_'.
-     * El primer caracter debe ser una letra o un número.
      * @param mixed $params Parámetros en la forma:
      * <ul>
      * <li>Como string: <i>nombre=valor&nombre2=valor2,...</i></li>
      * <li>Como array: <i>['nombre'=>'valor', 'nombre2'=>'valor2',...]</li>
      * </ul>
+     * @param string $intLink Enlace interno (<i>#link</i>).
      * @return boolean TRUE si se enviaron correctamente los headers, 
      * FALSE si no.
+     * @see setLocation
      */
-    public static function go_to($loc = NULL, $params = NULL) 
+    public function go($params = NULL, $intlink = NULL)
     {
-        if (file_exists(SMP_INC_ROOT . self::urlMake($loc))) {
-            header("Location: " . SMP_WEB_ROOT . self::urlMake($loc, $params));
-            return TRUE;
-        }
-        
-        return FALSE;
+        return self::go_to($this->pageLoc, $params, $intlink);
     }
     
-    public static function nav($params = NULL)
+    /**
+     * Método empleado para navegar en el sitio.
+     * Llama a la página nav.php y le pasa la acción a ejecutar mediante GET.
+     * 
+     * @param string $accion Acción a ejecutar por nav.php.
+     */
+    public static function nav($accion = NULL)
     {
-        $action = [ SMP_NAV_ACTION => $params ];
-        self::go_to(SMP_LOC_NAV, $action);
+        self::go_to(SMP_LOC_NAV, [ SMP_NAV_ACTION => $accion ]);
     }
 
     /**
@@ -729,12 +818,13 @@ class Page
     }
     
     /**
-     * Determina si una URL relativa a la raíz del sitio es válida o no.
+     * Determina si una URL relativa a la raíz del sitio existe o no.
      * 
-     * @param string $relativeURL URL a validar.
+     * @param string $relativeURL Ruta relativa a la página, 
+     * p. e.: incs/page_class.php
      * @return boolean TRUE si es una URL válida, FALSE si no.
      */
-    public static function isValid($relativeURL)
+    public static function pageExists($relativeURL)
     {
         if (self::isValid_loc($relativeURL)
             && file_exists(SMP_INC_ROOT . $relativeURL)) {
