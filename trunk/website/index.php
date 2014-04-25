@@ -28,11 +28,6 @@
 require_once 'load.php';
 
 Session::terminate();
-Session::initiate();
-
-$fingerprint = new Fingerprint();
-Session::store(SMP_FINGERPRINT_RANDOMTOKEN, $fingerprint->getRandomToken());
-Session::store(SMP_FINGERPRINT_TOKEN, $fingerprint->getToken());
 
 if(!empty(Sanitizar::glPOST('frm_buttonLogin')))
 {
@@ -87,6 +82,8 @@ echo "\n\t\t\t\t<li>Acceso únicamente en la red CSJN: solo local, no hay "
      . "acceso remoto fuera de la red CSJN</li>";
 echo "\n\t\t\t\t<li>Registro de acciones: toda acción realizada queda "
      . "registrada en el sistema</li>";
+echo "\n\t\t\t\t<li>Manejo de biblioteca: permite administrar completamente una "
+     . "biblioteca</li>";
 echo "\n\t\t\t\t<li>Multiplataforma: desarrollado como aplicación web, "
      . "funciona en todas las plataformas que dispongan de un navegador web "
      . "(Windows, Linux, Mac OS, iOS, Android, FirefoxOS, etc)</li>";
