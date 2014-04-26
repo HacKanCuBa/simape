@@ -28,9 +28,9 @@ http://manual.phpdoc.org/HTMLSmartyConverter/HandS/phpDocumentor/tutorial_tags.p
 
   * En lugar de escribir funciones, puede que sea conveniente usar una clase de métodos estáticos.  Salvo que se justifique lo contrario, éste debería ser el procedimiento.
 
-=== Acuerdo codeando ===
+=== Convenciones codeando ===
 
-Para las clases (y traits) los seters y geters no deben hacer orra cosa que afectar a propiedades de dicha clase (o trait).  Para indicar que se almacena un valor en otro lugar, nombrar al método como _store_inX_.  Asimismo, para indicar que se recupera un valor, _retrieve_fromX_.  Donde X podría ser la DB o $_SESSION...
+Para las clases (y traits) los seters y geters no deben hacer otra cosa que afectar a propiedades de dicha clase (o trait).  Para indicar que se almacena un valor en otro lugar, nombrar al método como _store_inX_.  Asimismo, para indicar que se recupera un valor, _retrieve_fromX_.  Donde X podría ser la DB o $_SESSION...
 
 === Otras ===
 
