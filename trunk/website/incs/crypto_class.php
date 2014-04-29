@@ -30,7 +30,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.95
+ * @version 0.96
  */
 
 class Crypto
@@ -301,6 +301,7 @@ class Crypto
      * 
      * @param mixed $data Datos a encriptar.
      * @param string $password Contraseña.
+     * @param string $salt Sal criptográfica para la contraseña.
      * @param string $iv Vector de inicialización.  Debe ser de 16 Bytes.<br />
      * Conviene emplear el método getRandomIV(). <br />
      * Si no se define ninguno, se asignará uno aleatorio (recomendado).
@@ -309,7 +310,7 @@ class Crypto
      * @see getRandomIV()
      * @see decypt()
      */
-    public static function encrypt($data, $password, $iv = '')
+    public static function encrypt($data, $password, $salt = NULL, $iv = NULL)
     {
         if (isset($data) 
             && isset($password)

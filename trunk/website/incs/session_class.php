@@ -45,7 +45,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.03
+ * @version 1.05
  */
 class Session
 {
@@ -102,7 +102,7 @@ class Session
         $domain = empty($domain) ? Sanitizar::glSERVER('SERVER_NAME') : $domain;
 
         // Configurar HTTP o HTTPS
-        $secure = empty($https) ? isset($_SERVER['HTTPS']) : $https;
+        $secure = empty($https) ? isset(Sanitizar::glSERVER('HTTPS')) : $https;
         
         // Configurar path
         $path = empty($path) ? SMP_WEB_ROOT : $path;
