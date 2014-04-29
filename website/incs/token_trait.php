@@ -27,15 +27,41 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.32 untested
+ * @version 0.36
  */
 
 trait Token
 {
-    protected $randToken, $timestamp, $uid;
-    protected $ownrandToken = FALSE, $ownTimestamp = FALSE;
+    /**
+     * Random Token.
+     * @var string
+     */
+    protected $randToken;
+    
+    /**
+     * Timestamp.
+     * @var float
+     */
+    protected $timestamp;
+    
+    /**
+     * Objeto UID.
+     * @var UID
+     */
+    protected $uid;
+    
+    /**
+     * Token especial de clase.
+     * @var string
+     */
+    protected $token;
     
     // __ PRIV
+    /**
+     * Fuerza la implementación de un método para armar el Token
+     * especial.
+     */
+    abstract private static function makeToken();
     
     // __ PROT
     /**
@@ -75,53 +101,95 @@ trait Token
     /**
      * Determina si un valor es un tipo UID válido.
      * 
-     * @param UID $uid UID a validar.
+     * @param string|UID $uid UID a validar, como string o como objeto.
      * @return boolean TRUE si es un UID válido, FALSE si no.
      */
-    protected static function isValid_UID(UID $uid)
+    protected static function isValid_UID($uid)
     {
-        if (!empty($uid) && is_a($uid, 'UID') && !empty($uid->get())) {
+        if (!empty($uid) && 
+            ((is_a($uid, 'UID') && !empty($uid->get())) || is_string($uid))
+        ) {
             return TRUE;
         }
         
         return FALSE;
     }
     
+    // __PUB
+    
     /**
-     * Devuelve un Token aleatorio
-     * 
-     * @return string Token aleatorio.
+     * Genera un nuevo token aleatorio y lo almacena en el objeto.
      */
-    protected function t_getRandomToken()
+    public function generateRandomToken()
     {
         $this->randToken = Crypto::getRandomTkn();
-        $this->ownrandToken = TRUE;
-        return $this->randToken;
     }
     
     /**
-     * Devuelve el timestamp
-     * 
-     * @return float Timestamp.
+     * Genera un nuevo timestamp y lo almacena en el objeto.
      */
-    protected function t_getTimestamp()
+    public function generateTimestamp()
     {
         $this->timestamp = microtime(TRUE);
-        $this->ownTimestamp = TRUE;
-        return $this->timestamp;
+    }
+    
+    /**
+     * Estructura del método para generar y almacenar el token especial.
+     */
+    abstract public function generateToken();
+
+    /**
+     * Devuelve el Token aleatorio almacenado, si existe.
+     * 
+     * @return string Token aleatorio o string vacío.
+     */
+    public function getRandomToken()
+    {
+        if (isset($this->randToken)) {
+            return $this->randToken;
+        }
+        
+        return '';
+    }
+    
+    /**
+     * Devuelve el timestamp almacenado o (float) 0 si no hay ninguno.
+     * 
+     * @return float Timestamp o (float) 0.
+     */
+    public function getTimestamp()
+    {
+        if (isset($this->timestamp)) {
+            return $this->timestamp;
+        }
+        
+        return 0.0;
+    }
+    
+    /**
+     * Devuelve el token almacenado o string vacío si no hay ninguno.
+     * 
+     * @return string Token.
+     */
+    public function getToken()
+    {
+        if(isset($this->token)) {
+            return $this->token;
+        }
+        return '';
     }
 	
     /**
-     * Fija un Token aleatorio.
+     * Almacena en el objeto un Token aleatorio.  Emplearlo para la función
+     * de autenticación.
      * 
      * @param string $randToken Token aleatorio.
      * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
      */
-    protected function t_setRandomToken($randToken)
+    public function setRandomToken($randToken)
     {
         if (self::isValid_token($randToken)) {
             $this->randToken = $randToken;
-            $this->ownrandToken = FALSE;
             return TRUE;
         }
         
@@ -129,16 +197,16 @@ trait Token
     }
     
     /**
-     * Fija el valor de Timestamp.
+     * Almacena en el objeto el valor de Timestamp.  Emplearlo para la función
+     * de autenticación.
      * 
      * @param float $timestamp Timestamp.
      * @return boolean TRUE si se almacenó correctamente, FALSE si no.
      */
-    protected function t_setTimestamp($timestamp)
+    public function setTimestamp($timestamp)
     {
         if (self::isValid_timestamp($timestamp)) {
             $this->timestamp = $timestamp;
-            $this->ownTimestamp = FALSE;
             return TRUE;
         }
         
@@ -146,71 +214,42 @@ trait Token
     }
     
     /**
-     * Almacena el UID del usuario, pasado como objeto UID.<br />
+     * Almacena el UID del usuario.  Puede recibirlo como string o como objeto.
      * 
-     * @param UID $uid UID del usuario
+     * @param string|UID $uid UID del usuario, como string o como objeto.
      * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
      */
-    protected function t_setUID($uid)
+    public function setUID($uid)
     {
         if (self::isValid_UID($uid)) {
-            $this->uid = $uid;
+            if(is_string($uid)) {
+                $this->uid = new UID();
+                return $this->uid->set($uid);
+            } else {
+                $this->uid = $uid;
+                return TRUE;
+            }
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Almacena un Token especial en el objeto.  Emplearlo para la función
+     * de autenticación.
+     * 
+     * @param string $token Token.
+     * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
+     */
+    public function setToken($token)
+    {
+        if(self::isValid_token($token)) {
+            $this->token = $token;
             return TRUE;
         }
         
         return FALSE;
     }
-
-    /**
-     * Fuerza la implementación de un método para obtener el Token
-     * especial armado.
-     */
-    abstract protected function tokenMake();
-	
-    // __ PUB
-    /**
-     * Fuerza la implementación de un método para obtener el Token
-     * aleatorio donde esté documentado el procedimiento.
-     */
-    abstract public function getRandomToken();
-    
-    /**
-     * Fuerza la implementación de un método para obtener el Timestamp
-     * donde esté documentado el procedimiento.
-     */
-    //abstract public function getTimestamp();
-    
-    /**
-     * Fuerza la implementación de un método para obtener el Token
-     * especial de la clase implementadora.
-     * 
-     * @param boolean $notStrict Si es TRUE, permite usar valores externos vía<br />
-     * getRandomToken() y getTimestamp() para generar el Token especial.<br />
-     * FALSE por defecto.
-     */
-     abstract public function getToken($notStrict = FALSE);
-	
-    /**
-     * Fuerza la implementación de un método para fijar el Token
-     * aleatorio donde esté documentado el procedimiento.
-     * 
-     * @param string $randToken Token aleatorio.
-     */
-    abstract public function setRandomToken($randToken);
-    
-    /**
-     * Fuerza la implementación de un método para fijar el Timestamp
-     * donde esté documentado el procedimiento.
-     * 
-     * @param float $timestamp Timestamp.
-     */
-    //abstract public function setTimestamp($timestamp);
-	
-    /**
-    * Fuerza la implementación de un método para fijar el Token
-    * especial de la clase implementadora.
-    */
-    abstract public function setToken();
 
     /**
     * Fuerza la implementación de un método para autenticar el Token
