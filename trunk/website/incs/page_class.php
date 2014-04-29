@@ -56,7 +56,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.2
+ * @version 1.3
  */
 class Page
 {  
@@ -120,8 +120,6 @@ class Page
      * @var string
      */
     protected $pageLoc = NULL;
-
-    protected $pageToken;
     
     protected $indentLevel = 0;
 
@@ -218,17 +216,6 @@ class Page
         }
         
         return FALSE;
-    }
-    
-    /**
-     * Determina si el Token de página indicado es válido.
-     * @param string $pageToken Token de página a validar.
-     * @return boolean TRUE si es un Token de página válido, FALSE si no.
-     */
-    protected static function isValid_pageToken($pageToken)
-    {
-        // No difiere de un token estandard
-        return self::isValid_token($pageToken);
     }
 
     /**
@@ -605,60 +592,25 @@ class Page
     {
         return $this->indentLevel;
     }
-
-        /**
-     * Devuelve un Token aleatorio, que es el mismo que se emplea para armar
-     * el token de página.
-     * 
-     * @see getToken()
-     * @return string Token aleatorio.
-     */
-    public function getRandomToken()
-    {
-        return $this->t_getRandomToken();
-    }
     
     /**
-     * Devuelve el timestamp empleado para crear el Token de página.
+     * Genera y almacena en el objeto un nuevo Page Token.  Requiere previamente
+     * del Random Token, Timestamp y Location.
      * 
-     * @return float Timestamp.
+     * @return boolean TRUE si tuvo éxito, FALSE si no.
      */
-    public function getTimestamp()
+    public function generateToken()
     {
-        return $this->t_getTimestamp();
-    }
-
-    /**
-     * Devuelve un Token de página.  Debe llamarse primero a getRandomToken<br />
-     * , getTimestamp y setLocation.  NO emplearse con parámetros externos vía <br />
-     * setRandomToken y setTimestamp dado que esto es inseguro.<br />
-     * Por defecto, dará error en esta situación, a menos que $notStrict = TRUE.
-     * 
-     * @see getRandomToken()
-     * @see getTimestamp()
-     * @see setLocation()
-     * @param boolean $notStrict Si es TRUE, permite usar valores externos vía<br />
-     * getRandomToken() y getTimestamp() para generar el Token de página.<br />
-     * FALSE por defecto.
-     * @return mixed Token de página o FALSE en caso de error.
-     */
-    public function getToken($notStrict = FALSE)
-    {
-        if (isset($this->randToken) 
-            && isset($this->timestamp)
-        ) {
-            if ($notStrict) {
-                return $this->tokenMake($this->randToken, $this->timestamp, 
-                                        $this->pageLoc);
-            } else {
-                if (isset($this->ownrandToken) 
-                    && $this->ownrandToken
-                    && isset($this->ownTimestamp)
-                    && $this->ownTimestamp
-                ) {
-                    return $this->tokenMake($this->randToken, $this->timestamp, 
-                                            $this->pageLoc);
-                } 
+        if(isset($this->randToken)
+           && isset($this->timestamp)
+           && isset($this->pageLoc)
+        ){
+            $token = self::tokenMake($this->randToken, 
+                                     $this->timestamp, 
+                                     $this->pageLoc);
+            if(self::isValid_pageToken($token)) {
+                $this->token = $token;
+                return TRUE;
             }
         }
         
@@ -687,50 +639,6 @@ class Page
         return FALSE;
     }
     
-    /**
-     * Fija un Token aleatorio.  Se emplea en la función de autenticación.<br />
-     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de página nuevo!<br /> 
-     * Usar el método getRandomToken() a este fin.
-     * 
-     * @see getRandomToken()
-     * @param string $randToken Token aleatorio.
-     * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
-     */
-    public function setRandomToken($randToken)
-    {
-        return $this->t_setRandomToken($randToken);
-    }
-    
-    /**
-     * Fija el valor de Timestamp para la función de autenticación.<br />
-     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de página nuevo!<br />
-     * Usar el método getTimestamp() a este fin.
-     * 
-     * @see getTimestamp()
-     * @param float $timestamp Timestamp.
-     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
-     */
-    public function setTimestamp($timestamp)
-    {
-        return $this->t_setTimestamp($timestamp);
-    }
-    
-    /**
-     * Fija el valor del Token de página que será autenticado.
-     * 
-     * @param string $pageToken Token de página.
-     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
-     */
-    public function setToken($pageToken)
-    {
-        if (self::isValid_pageToken($pageToken)) {
-            $this->pageToken = $pageToken;
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
-
     /**
      * Autentica un Token de página.  Deben fijarse primero los valores:
      * <ul>
@@ -832,5 +740,16 @@ class Page
         }
         
         return FALSE;
+    }
+    
+    /**
+     * Determina si el Token de página indicado es válido.
+     * @param string $pageToken Token de página a validar.
+     * @return boolean TRUE si es un Token de página válido, FALSE si no.
+     */
+    public static function isValid_pageToken($pageToken)
+    {
+        // No difiere de un token estandard
+        return self::isValid_token($pageToken);
     }
 }

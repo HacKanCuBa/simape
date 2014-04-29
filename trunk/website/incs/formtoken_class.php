@@ -27,33 +27,40 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.2
+ * @version 0.3
  */
 
 class FormToken 
 {
     use Token;
     
+    /**
+     * Tiempo de vida de un Form Token.
+     */
     const SMP_FORMTOKEN_LIFETIME = 1800;
-    
-    protected $formToken;
 
     // __ SPECIALS
+    /**
+     * Objeto Form Token.  Recibe los valores para emplearlos en el método
+     * de autenticación.
+     * 
+     * @param string $token Form Token.
+     * @param string $randToken Random Token.
+     * @param float $timestamp Timestamp.
+     * @see authenticateToken
+     */
+    public function __construct($token = NULL,
+                                $randToken = NULL, 
+                                $timestamp = NULL
+    ){
+        $this->setToken($token);
+        $this->setRandomToken($randToken);
+        $this->setTimestamp($timestamp);
+    }
     
     // __ PRIV
     
     // __ PROT
-    /**
-     * Determina si el string indicado es un Token de Formulario válido.
-     * 
-     * @param string $formToken Token de Formulario a validar.
-     * @return boolean TRUE si es válido, FALSE si no.
-     */
-    protected static function isValid_formToken($formToken)
-    {
-        return self::isValid_token($formToken);
-    }
-
     /**
      * Devuelve un Token de Formulario armado.
      * 
@@ -82,109 +89,26 @@ class FormToken
     
     // __ PUB
     /**
-     * Fija un Token aleatorio.  Se emplea en la función de autenticación.<br />
-     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de 
-     * Formulario nuevo!<br /> 
-     * Usar el método getRandomToken() a este fin.
+     * Genera y almacena en el objeto un nuevo Form Token.  Requiere previamente
+     * del Random Token y Timestamp.
      * 
-     * @see getRandomToken()
-     * @param string $randToken Token aleatorio.
-     * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
+     * @return boolean TRUE si tuvo éxito, FALSE si no.
      */
-    public function setRandomToken($randToken)
+    public function generateToken()
     {
-        return $this->t_setRandomToken($randToken);
-    }
-    
-    /**
-     * Fija el valor de Timestamp para la función de autenticación.<br />
-     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de 
-     * Formulario nuevo!<br />
-     * Usar el método getTimestamp() a este fin.
-     * 
-     * @see getTimestamp()
-     * @param float $timestamp Timestamp.
-     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
-     */
-    public function setTimestamp($timestamp)
-    {
-        return $this->t_setTimestamp($timestamp);
-    }
-    
-    /**
-     * Fija el valor del Token de Formulario que será autenticado.
-     * 
-     * @param string $formToken Token de Fromulario.
-     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
-     */
-    public function setToken($formToken)
-    {
-        if ($this->isValid_formToken($formToken)) {
-            $this->formToken = $formToken;
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
-    
-    /**
-     * Devuelve un Token aleatorio, que es el mismo que se emplea para armar
-     * el Token de Formulario.
-     * 
-     * @see getToken()
-     * @return string Token aleatorio.
-     */
-    public function getRandomToken()
-    {
-        return $this->t_getRandomToken();
-    }
-    
-    /**
-     * Devuelve el timestamp empleado para crear el Token de Formulario.
-     * 
-     * @return float Timestamp.
-     */
-    public function getTimestamp()
-    {
-        return $this->t_getTimestamp();
-    }
-    
-    /**
-     * Devuelve un Token de Formulario.
-     * Debe llamarse primero a getRandomToken() y getTimestamp().
-     * 
-     * @see getRandomToken()
-     * @see getTimestamp()
-     * @param boolean $notStrict Si es TRUE, permite usar valores 
-     * externos<br />
-     * vía setRandomToken() y setTimestamp() para generar el Token de 
-     * Formulario.<br />
-     * FALSE por defecto.
-     * @return mixed Token de Formulario, o FALSE en caso de error.
-     */ 
-    public function getToken($notStrict = FALSE)
-    {
-        if (isset($this->randToken) 
+        if (isset($this->randToken)
             && isset($this->timestamp)
         ) {
-            if ($notStrict) {
-                return self::tokenMake($this->randToken, 
-                                        $this->timestamp);
-            } else {
-                if (isset($this->ownrandToken) 
-                    && $this->ownrandToken
-                    && isset($this->ownTimestamp)
-                    && $this->ownTimestamp 
-                ) {
-                    return self::tokenMake($this->randToken, 
-                                            $this->timestamp);
-                } 
+            $token = self::tokenMake($this->randToken, $this->timestamp);
+            if(self::isValid_formToken($token)) {
+                $this->token = $token;
+                return TRUE;
             }
         }
         
         return FALSE;
     }
-    
+
     /**
      * Autentica el Token de Sesión.  Devuelve TRUE si es auténtico, 
      * FALSE en cualquier otro caso.
@@ -195,18 +119,30 @@ class FormToken
     {
         $now = microtime(TRUE);
 
-        if (isset($this->timestamp)
+        if (isset($this->randToken)
+            && isset($this->token)
+            && isset($this->timestamp)
             && ($now >= $this->timestamp) 
             && ($now < ($this->timestamp + self::SMP_FORMTOKEN_LIFETIME))
-            && isset($this->formToken)
         ) {
             // Verifico que getToken no sea FALSE.
-            $formToken = $this->getToken(TRUE);
+            $formToken = self::tokenMake($this->randToken, $this->timestamp);
             if ($formToken && ($this->formToken === $formToken)) {
                 return TRUE;
             }
         }
 
         return FALSE;  
+    }
+    
+    /**
+     * Determina si el string indicado es un Token de Formulario válido.
+     * 
+     * @param string $formToken Token de Formulario a validar.
+     * @return boolean TRUE si es válido, FALSE si no.
+     */
+    public static function isValid_formToken($formToken)
+    {
+        return self::isValid_token($formToken);
     }
 }
