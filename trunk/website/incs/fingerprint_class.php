@@ -52,17 +52,11 @@ class Fingerprint
      */
     const MODE_USEIP = TRUE;
     const MODE_DONTUSEIP = FALSE;
-    
-    /**
-     *
-     * @var int ID de la tabla Token en la DB
-     */
-    protected $TokenId;
 
     /**
-     *
-     * @var boolean TRUE para generar Fingerprint Token teniendo en cuenta la
+     * TRUE para generar Fingerprint Token teniendo en cuenta la
      * IP del usuario (por defecto), FALSE para no emplear la IP.
+     * @var boolean
      */
     protected $mode = self::MODE_USEIP;
 
@@ -77,24 +71,7 @@ class Fingerprint
     }
     // __ PRIV
     
-    // __ PROT    
-    /**
-     * Verifica si el TokenId es válido (entero no vacío).
-     * 
-     * @param int $TokenId TokenId a validar.
-     * @return boolean TRUE si es válido, FALSE si no.
-     */
-    protected static function isValid_TokenId($TokenId)
-    {
-	if (!empty($TokenId) 
-            && is_int($TokenId)
-        ) {
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
-    
+    // __ PROT        
     /**
      * Devuelve un Token de Fingerprint armado.
      * 
@@ -136,23 +113,7 @@ class Fingerprint
     {
         $this->mode = boolval($mode);
     }
-    
-    /**
-     * Fija el valor del identificador de tabla Token de la DB.
-     * 
-     * @param int $TokenId
-     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
-     */
-    public function setTokenId($TokenId) 
-    {
-        if (self::isValid_TokenId($TokenId)) {
-            $this->TokenId = $TokenId;
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
-    
+      
     /**
      * Genera un Token que representa al usuario (navegador, IP, etc...).<br />
      * Debe fijarse el modo primero.  Por defecto el modo es 
