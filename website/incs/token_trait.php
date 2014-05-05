@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.36
+ * @version 0.4
  */
 
 trait Token
@@ -56,12 +56,18 @@ trait Token
      */
     protected $token;
     
+    /**
+     * ID de la tabla Token en la DB.
+     * @var int
+     */
+    protected $TokenId;
+    
     // __ PRIV
     /**
      * Fuerza la implementación de un método para armar el Token
      * especial.
      */
-    abstract private static function makeToken();
+    abstract protected function tokenMake();
     
     // __ PROT
     /**
@@ -108,6 +114,23 @@ trait Token
     {
         if (!empty($uid) && 
             ((is_a($uid, 'UID') && !empty($uid->get())) || is_string($uid))
+        ) {
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Verifica si el TokenId es válido (entero no vacío).
+     * 
+     * @param int $TokenId TokenId a validar.
+     * @return boolean TRUE si es válido, FALSE si no.
+     */
+    protected static function isValid_TokenId($TokenId)
+    {
+	if (!empty($TokenId) 
+            && is_int($TokenId)
         ) {
             return TRUE;
         }
@@ -245,6 +268,22 @@ trait Token
     {
         if(self::isValid_token($token)) {
             $this->token = $token;
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Fija el valor del identificador de tabla Token de la DB.
+     * 
+     * @param int $TokenId
+     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
+     */
+    public function setTokenId($TokenId) 
+    {
+        if (self::isValid_TokenId($TokenId)) {
+            $this->TokenId = $TokenId;
             return TRUE;
         }
         

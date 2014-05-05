@@ -45,19 +45,29 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.05
+ * @version 1.1
  */
 class Session
 {
     use SessionToken;
     
-    private $password;
+    /**
+     * Contraseña empleada por la función de encriptación.
+     * @var string
+     */
+    private $password = NULL;
+    
+    /**
+     * Sal criptográfica para la contraseña.
+     * @var string
+     */
+    private $password_salt = NULL;
 
     /**
      * Determina el tiempo de vida de la cookie.  0 implica 'hasta el
      * cierre del navegador'.
      */
-    const SMP_SESSION_COOKIE_LIFETIME = 0;
+    const COOKIE_LIFETIME = 0;
     
     // __ SPECIALS
     /**
@@ -102,13 +112,13 @@ class Session
         $domain = empty($domain) ? Sanitizar::glSERVER('SERVER_NAME') : $domain;
 
         // Configurar HTTP o HTTPS
-        $secure = empty($https) ? isset(Sanitizar::glSERVER('HTTPS')) : $https;
+        $secure = empty($https) ? Sanitizar::glSERVER('HTTPS') : $https;
         
         // Configurar path
         $path = empty($path) ? SMP_WEB_ROOT : $path;
         
         // Configurar cookie lifetime
-        $lifetime = empty($lifetime) ? self::SMP_SESSION_COOKIE_LIFETIME : $lifetime;
+        $lifetime = empty($lifetime) ? self::COOKIE_LIFETIME : $lifetime;
 
         // Setear cookie e iniciar sesion
         session_set_cookie_params($lifetime, $path, $domain, $secure, true);
@@ -147,7 +157,8 @@ class Session
     
     /**
      * Guarda un valor en la sesión: $_SESSION[$key] = $value.<br />
-     * Si $password es asignado, encripta el valor.<br />
+     * Si $password es asignado, encripta el valor (puede además asignarse
+     * la sal criptográfica).<br />
      * Si la sesión no está iniciada, devuelve FALSE.
      * 
      * @param mixed $key Índice, puede ser un string o un entero.
@@ -155,13 +166,17 @@ class Session
      * (se recomienta emplear valores escalares o arrays, y evitar objetos).
      * @param boolean $dontSanitize Si es TRUE, NO sanitiza el valor antes de 
      * almacenarlo (FALSE por defecto).
-     * @param string $password Contraseña.
+     * @param string $password Contraseña de encriptación.
+     * @param string $salt Sal criptográfica para la contraseña.
      * @return boolean TRUE si se almacenó el valor satisfactoriamente, 
      * FALSE si no.
      * @see setPassword().
      */
-    public static function store($key, $value = NULL, 
-                                  $dontSanitize = FALSE, $password = NULL)
+    public static function store($key,
+                                 $value = NULL, 
+                                 $dontSanitize = FALSE, 
+                                 $password = NULL, 
+                                 $salt = NULL)
     {
         if (self::status() == PHP_SESSION_ACTIVE) {
             if (isset($key) 
@@ -172,7 +187,7 @@ class Session
                 }
                 
                 if (!empty($password)) {
-                    $value = Crypto::encrypt($value, $password);
+                    $value = Crypto::encrypt($value, $password, $salt);
                     if (empty($value)) {
                         return FALSE;
                     }
@@ -188,7 +203,7 @@ class Session
     
     /**
      * Idem store(), pero siempre guarda el valor encriptado usando la contraseña 
-     * proveída por setPassword().
+     * proveída por setPassword() y la sal criptográfica por setPasswordSalt().
      * 
      * @param mixed $key Índice, puede ser un string o un entero.
      * @param mixed $value Valor, puede ser cualquier elemento serializable
@@ -198,11 +213,13 @@ class Session
      * @return boolean TRUE si se almacenó el valor satisfactoriamente, 
      * FALSE si no.
      * @see setPassword()
+     * @see setPasswordSalt()
      */
     public function storeEnc($key, $value = NULL, $sanitize = FALSE)
     {
-        if (isset($this->password)) {
-            return self::store($key, $value, $sanitize, $this->password);
+        if (isset($key)) {
+            return self::store($key, $value, $sanitize, $this->password, 
+                               $this->password_salt);
         }
         
         return FALSE;
@@ -223,13 +240,17 @@ class Session
      * @param mixed $key Índice, string o int.
      * @param boolean $sanitize TRUE para sanitizar el valor antes de 
      * devolverlo, FALSE para devolverlo sin sanitizar (por defecto).
-     * @param string $password Contraseña.
+     * @param string $password Contraseña de encriptación.
+     * @param string $salt Sal criptográfica para la contraseña.
      * @return mixed Valor almacenado en $_SESSION[$key] o NULL si dicho valor
      * no existe.<br />
      * En caso de error, realiza una llamada del sistema para 
      * notificarlo.  Usar error_get_last() u otra para determinarlo.
      */
-    public static function retrieve($key, $sanitize = FALSE, $password = NULL)
+    public static function retrieve($key, 
+                                    $sanitize = FALSE, 
+                                    $password = NULL, 
+                                    $salt = NULL)
     {
         if (self::status() == PHP_SESSION_ACTIVE) {
             if (isset($key) 
@@ -239,7 +260,7 @@ class Session
                     $retVal = $_SESSION[$key];
                     if (Crypto::isEncrypted($retVal)) {
                         if (!empty($password)) {
-                            $retVal = Crypto::decrypt($retVal, $password);
+                            $retVal = Crypto::decrypt($retVal, $password, $salt);
                             if (empty($retVal)) {
                                 trigger_error(__METHOD__ . '(): Ha ocurrido un '
                                     . 'error al tratar de desencriptar el '
@@ -367,6 +388,23 @@ class Session
     {
         if (!empty($password) && is_string($password)) {
             $this->password = $password;
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Almacena la Sal criptográfica para la contraseña empleada para encriptar
+     * los valores solicitados.
+     * 
+     * @param string $salt Sal criptográfica para la contraseña.
+     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
+     */
+    public function setPasswordSalt($salt)
+    {
+        if (!empty($salt) && is_string($salt)) {
+            $this->password_salt = $salt;
             return TRUE;
         }
         

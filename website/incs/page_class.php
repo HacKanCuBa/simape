@@ -56,7 +56,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.3
+ * @version 1.31
  */
 class Page
 {  
@@ -239,9 +239,9 @@ class Page
      * @param string $intLink Enlace interno (<i>#link</i>).
      * @return string Ruta relativa a la página con los parámetros incluidos.
      */
-    protected static function urlMake(string $loc = NULL,
+    protected static function urlMake($loc = NULL,
                                       $params = NULL,
-                                      string $intLink = NULL) 
+                                      $intLink = NULL) 
     {
         $strParams = '';
         if (!empty($params)) {
@@ -291,7 +291,7 @@ class Page
      * @return boolean TRUE si se enviaron correctamente los headers, 
      * FALSE si no.
      */
-    protected static function go_to(string $loc = NULL,
+    protected static function go_to($loc = NULL,
                                  $params = NULL,
                                  string $intLink = NULL) 
     {

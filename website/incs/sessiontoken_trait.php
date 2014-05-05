@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.51
+ * @version 0.6
  */
 trait SessionToken 
 {
@@ -126,5 +126,68 @@ trait SessionToken
     public static function isValid_sessiontoken($sessionToken)
     {
         return self::isValid_token($sessionToken);
+    }
+    
+    /**
+     * Recupera el Random Token y el Timestamp almacenado en la DB y lo guarda 
+     * en el objeto.  Usar los respectivos get... para obtener los valores.
+     * 
+     * @return boolean TRUE si tuvo exito, FALSE si no.
+     */
+    public function retrieve_fromDB() 
+    {
+        if (!empty($this->TokenId)) {
+            $db = new DB;
+            $db->setQuery('SELECT Session_RandomToken, Session_Timestamp '
+                        . 'FROM Token WHERE TokenId = ?');
+            $db->setBindParam('i');
+            $db->setQueryParams($this->TokenId);
+            if ($db->queryExecute()) {
+                $tokens = $db->getQueryData();
+                $this->setRandomToken($tokens[Session_RandomToken]);
+                $this->setTimestamp($tokens[Session_Timestamp]);
+                
+                return TRUE;
+            }            
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Almacena en la DB el Random Token y el Timestamp guardados en el objeto.
+     * <br />
+     * Debe fijarse primero el identificador de tabla Token y los valores 
+     * respectivos.
+     * 
+     * @see setTokenId
+     * @see setRandomToken
+     * @see generateToken
+     * @see setTimestamp
+     * @see generateTimestamp
+     * @return boolean TRUE si se almacenó en la DB exitosamente, 
+     * FALSE en caso contrario.
+     */
+    public function store_inDB() 
+    {
+        if (!empty($this->TokenId) 
+            && !empty($this->randToken)
+            && !empty($this->timestamp)
+        ) {
+            $db = new DB(TRUE);
+            $db->setQuery('UPDATE Token '
+                        . 'SET Session_RandomToken = ?, Session_Timestamp = ? '
+                        . 'WHERE TokenId = ?');
+            $db->setBindParam('ssi');
+            $db->setQueryParams([$this->randToken, $this->timestamp, $this->TokenId]);
+            //// atenti porque la func devuelve tb nro de error
+            // ToDo: procesar nro de error
+            $retval = $db->queryExecute();
+            if (is_bool($retval)) {
+                return $retval;
+            }
+        }
+        
+        return FALSE;
     }
 }

@@ -30,7 +30,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.96
+ * @version 1.0
  */
 
 class Crypto
@@ -57,7 +57,7 @@ class Crypto
     const IV_LEN = 16;
     
     /**
-     * Algoritmo de hashing.
+     * Algoritmo de hashing por defecto.
      */
     const HASH_ALGO = 'sha512';
 
@@ -195,21 +195,75 @@ class Crypto
         
         return FALSE;
     }
+    
+    /**
+     * Codifica los datos recibidos y devuelve un string plano.
+     * 
+     * @param mixed $data Datos a codificar.
+     * @return boolean|string String codificado, o FALSE en caso de error.
+     */
+    protected static function encodeData($data)
+    {
+        return base64_encode(serialize($data));
+    }
+    
+    /**
+     * Recibe un string codificado y devuelve los datos decodificados.
+     * 
+     * @param string $data Datos codificados.
+     * @return booblean|mixed Datos decodificados, o FALSE en caso de error.
+     */
+    protected static function decodeData($data)
+    {
+        if(is_string($data)) {
+            $decodedData = base64_decode($data, TRUE);
+            if ($decodedData) {
+                return unserialize($decodedData);
+            }
+        }
+        return FALSE;
+    }
+    
+    /**
+     * Devuelve un string armado de contraseña con sal criptográfica.
+     * 
+     * @param string $password Contraseña.
+     * @param string $salt Sal criptográfica para la contraseña.
+     * @return boolean|string String de contraseña con sal o FALSE en caso de 
+     * error.
+     */
+    protected static function makePasswdSalt($password, $salt)
+    {
+        return self::getHash($password . $salt);
+    }
 
     // __ PUB
     /**
-     * Devuelve el hash de un string
+     * Devuelve un array conteniendo los algoritmos de hashing soportados.
      * 
-     * @param string $string String
-     * @return string El hash del string indicado, o FALSE en caso de error.
+     * @return array De indice numerado conteniendo los algoritmos de hashing 
+     * soportados.
      */
-    public static function getHash($string) 
+    public static function getHashAlgos()
     {
-        if (is_string($string)) {
-            return hash(self::HASH_ALGO, $string, FALSE);
-        } else {
-            return FALSE;
+        return hash_algos();
+    }
+
+    /**
+     * Devuelve el hash de un string.
+     * 
+     * @param string $string String.
+     * @param string $hash_algo Algoritmo de hashing seleccionado.
+     * @return boolean|string El hash del string indicado, o FALSE en caso de 
+     * error.
+     */
+    public static function getHash($string, $hash_algo = self::HASH_ALGO) 
+    {
+        if (is_string($string) && is_string($hash_algo)) {
+            return hash($hash_algo, $string, FALSE);
         }
+        
+        return FALSE;
     }
 
     /**
@@ -302,28 +356,23 @@ class Crypto
      * @param mixed $data Datos a encriptar.
      * @param string $password Contraseña.
      * @param string $salt Sal criptográfica para la contraseña.
-     * @param string $iv Vector de inicialización.  Debe ser de 16 Bytes.<br />
-     * Conviene emplear el método getRandomIV(). <br />
-     * Si no se define ninguno, se asignará uno aleatorio (recomendado).
      * @return mixed String con los datos encriptados
      * o bien FALSE en caso de error.
      * @see getRandomIV()
      * @see decypt()
      */
-    public static function encrypt($data, $password, $salt = NULL, $iv = NULL)
+    public static function encrypt($data, $password, $salt = NULL)
     {
         if (isset($data) 
             && isset($password)
             && is_string($password)
-            && is_string($iv)
+            && is_string($salt)
         ) {
-            $password = self::getHash($password);
+            $password = self::makePasswdSalt($password, $salt);
             
-            if (empty($iv)) {
-                $iv = self::getRandomIV();
-            }
+            $iv = self::getRandomIV();
             
-            $codedData = base64_encode(serialize($data));
+            $codedData = self::encodeData($data);
             if ($codedData) {
                 $encString = self::encryptStr($codedData, $password, $iv);
                 if ($encString) {
@@ -340,27 +389,26 @@ class Crypto
      * 
      * @param string $encString String a desencriptar.
      * @param string $password Contraseña.
+     * @param string $salt Sal criptográfica para la contraseña.
      * @return mixed Elemento desencriptado (string, número, array, objeto, ...)
      * o bien FALSE en caso de error.
      */
-    public static function decrypt($encString, $password)
+    public static function decrypt($encString, $password, $salt = NULL)
     {
         if (isset($encString) && isset($password)
             && is_string($password)
+            && is_string($salt)
             && self::isEncrypted($encString)
         ) {
             $iv = self::getIV_fromEncParts(self::getEncParts($encString));
             $encStr = self::getENC_fromEncParts(self::getEncParts($encString));
-            $password = self::getHash($password);
+            $password = self::makePasswdSalt($password, $salt);
             
             $decData = self::decryptStr($encStr, 
                                          $password, 
                                          $iv);
             if ($decData) {
-                $decodedData = base64_decode($decData, TRUE);
-                if ($decodedData) {
-                    return unserialize($decodedData);
-                }
+                return self::decodeData($decData);
             }
             
             return FALSE;
