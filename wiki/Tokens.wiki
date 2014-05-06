@@ -31,6 +31,7 @@ Para autenticar, se lee de la DB los datos, se almacenan en el objeto y se emple
 == Page Token ==
 
 El Random Token y Timestamp se almacenan en _SESSION_.  También se emplea un identificador de la página para generar el token, que puede ser su nombre o url.  El Page Token se pasa a través de la url (por GET).  Se autentica por el método apropiado.
+_nav.php_ se encarga de generarlo.
 
 == Password Restore Token ==
 
@@ -39,3 +40,4 @@ El Random Token y Timestamp se almacenan en la DB.  El Token se pasa a través d
 == Fingerprint Token ==
 
 El Token se almacena en la DB.  Se emplean identificadores únicos del navegador del usuario y la IP (esto último dependiendo del modo _MODE_DONTUSEIP_ o _MODE_USEIP_).  Se autentica tomando el Token de la DB, y contrastando con el método apropiado.  El mismo debería mantenerse durante toda la sesión, si cambia implica un error (intento de hackeo?).
+_nav.php_ se encarga de generarlo.
