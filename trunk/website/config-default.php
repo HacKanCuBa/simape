@@ -32,7 +32,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.83
+ * @version 0.9
  */
 
 // << Config
@@ -78,15 +78,15 @@ const SMP_FILE_MAXIMGSIZE = 3145728;        // 3MB
 // -- Crypto config
 // Cambiar estos valores de tanto en tanto
 // Usar: https://www.grc.com/passwords.htm
-const SMP_FINGERPRINT_TKN = 
+const SMP_TKN_FINGERPRINT = 
         'RANDOM_STRING';
-const SMP_SESSIONKEY_TKN = 
+const SMP_TKN_SESSIONKEY = 
         'RANDOM_STRING';
-const SMP_PAGE_TKN = 
+const SMP_TKN_PAGE = 
         'RANDOM_STRING';
-const SMP_FORM_TKN = 
+const SMP_TKN_FORM = 
         'RANDOM_STRING';
-const SMP_PWDRESTORE_TKN = 
+const SMP_TKN_PWDRESTORE = 
         'RANDOM_STRING';
 // --
 // 
@@ -126,6 +126,8 @@ const SMP_LOC_UPLOAD_FOTOS = 'fotos/';
 
 const SMP_LOC_LOGIN = 'login.php';
 const SMP_LOC_NAV = 'nav.php';
+const SMP_LOC_404 = '404.php';
+const SMP_LOC_403 = '403.php';
 
 define('SMP_LOC_MSGS', SMP_LOC_PAGS . 'mensajes.php');
 define('SMP_LOC_USUARIO', SMP_LOC_PAGS . 'usuario.php');
@@ -179,21 +181,19 @@ const SMP_MGS_MAXLEN = 140;
 const SMP_FILE_MAXSTORESIZE = 15728640;    // 15MB
 // --
 // 
-// -- Constantes internas
-const SMP_SESSIONKEY_TOKEN = 'sessionkeyToken';
-const SMP_SESSIONKEY_TIMESTAMP = 'sessionkeyTimestamp';
-const SMP_SESSIONKEY_RANDOMTOKEN = 'sessionkeyRandomToken';
-const SMP_FINGERPRINT_TOKEN = 'fingerprintToken';
-const SMP_FINGERPRINT_RANDOMTOKEN = 'fingerprintRandomToken';
-const SMP_FORM_TOKEN = 'formToken';
-const SMP_FORM_TIMESTAMP = 'formTimestamp';
-const SMP_FORM_RANDOMTOKEN = 'formRandomToken';
-const SMP_PAGE_TOKEN = 'pageToken';
-const SMP_PAGE_TIMESTAMP = 'pageTimestamp';
-const SMP_PAGE_RANDOMTOKEN = 'pageRandomToken';
-const SMP_NOTIF_ERR = 'notifErr';
-const SMP_NOTIF_MSG = 'notifMsg';
-const SMP_USERNAME = 'username';
+// -- Constantes internas de índice de $_SESSION[]
+const SMP_SESSINDEX_SESSIONKEY_TOKEN = 'sessionkeyToken';
+const SMP_SESSINDEX_FORM_TOKEN = 'formToken';
+const SMP_SESSINDEX_FORM_TIMESTAMP = 'formTimestamp';
+const SMP_SESSINDEX_FORM_RANDOMTOKEN = 'formRandomToken';
+const SMP_SESSINDEX_PAGE_TOKEN = 'pageToken';
+const SMP_SESSINDEX_PAGE_TIMESTAMP = 'pageTimestamp';
+const SMP_SESSINDEX_PAGE_RANDOMTOKEN = 'pageRandomToken';
+const SMP_SESSINDEX_NOTIF_ERR = 'notifErr';
+const SMP_SESSINDEX_NOTIF_MSG = 'notifMsg';
+const SMP_SESSINDEX_USERNAME = 'username';
+// --
+// Otras constantes internas
 const SMP_NAV_ACTION = 'accion';
 const SMP_LOGOUT = 'logout';
 // --

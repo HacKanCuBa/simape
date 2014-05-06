@@ -149,7 +149,7 @@ class Password
             return Crypto::getHash(Crypto::getHash($timestamp
                         . $randToken 
                         . $uid->getHash()
-                        . constant('SMP_PWDRESTORE_TKN')));
+                        . constant('SMP_TKN_PWDRESTORE')));
         } else {
             return FALSE;
         }        
@@ -453,9 +453,9 @@ class Password
      * @return boolean TRUE si se encontró y almacenó correctamente, 
      * FALSE si no.
      */
-    public function retrieve_fromDB(string $username)
+    public function retrieve_fromDB($username)
     {
-        if (!empty($username)) {
+        if (!empty($username) && is_string($username)) {
             $db = new DB;
             $db->setQuery('SELECT PasswordSalted FROM Usuario WHERE Nombre = ?');
             $db->setBindParam('s');

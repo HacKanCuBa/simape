@@ -45,7 +45,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.1
+ * @version 1.2
  */
 class Session
 {
@@ -62,6 +62,18 @@ class Session
      * @var string
      */
     private $password_salt = NULL;
+    
+    /**
+     * ID previo de la sesión de PHP.
+     * @var string 
+     */
+    private $session_id_old;
+    
+    /**
+     * Nombre previo de la sesión.
+     * @var string
+     */
+    private $session_name_old;
 
     /**
      * Determina el tiempo de vida de la cookie.  0 implica 'hasta el
@@ -71,11 +83,16 @@ class Session
     
     // __ SPECIALS
     /**
-     * Inicia una sesión si no estaba iniciada.
+     * Inicia una sesión si no estaba iniciada.<br />
+     * Guarda el ID de la sesión si estaba iniciada, y luego lo regenera.
+     * @see getID
+     * @see getID_old
      */
     public function __construct() 
     {
-        $this->initiate();
+        $this->session_id_old = self::getID();
+        $this->session_name_old = self::getName();
+        self::initiate();
     }
     // __ PRIV
     
@@ -83,15 +100,22 @@ class Session
     /**
      * Crea una nueva sesion y devuelve el nombre de la misma.
      * 
-     * @param int $lifetime Duracion de la sesion, en segundos (0 implica hasta
+     * @param boolean $dontChangeID [opcional] <br />
+     * Si es TRUE, el ID de la sesión no será regenerado.  FALSE por defecto.
+     * @param int $lifetime [opcional] <br/>
+     * Duracion de la sesion, en segundos (0 implica hasta
      * que se cierre el navegador).
-     * @param string $path Ruta en el dominio a la que tendra alcance la sesion.
-     * @param string $domain Dominio del sitio.
-     * @param bool $https Inidica si se usara https (TRUE) o no (FALSE).
-     * @return string Devuelve el nombre de la sesion creada.
+     * @param string $path [opcional] <br/>
+     * Ruta en el dominio a la que tendra alcance la sesion.
+     * @param string $domain [opcional] <br/>
+     * Dominio del sitio.
+     * @param bool $https [opcional] <br/>
+     * Inidica si se usará https (TRUE) o no (FALSE).
+     * @return string Devuelve el nombre de la sesion creada (NO IMPLEMENTADO).
      * 
      */
-    protected static function begin($lifetime = NULL, 
+    protected static function begin($dontChangeID = FALSE, 
+                                     $lifetime = NULL, 
                                      $path = NULL, 
                                      $domain = NULL, $https = NULL)
     {
@@ -102,11 +126,12 @@ class Session
         
         // Crear una cookie con nombre unico
         // El nombre debe empezar obligatoriamente con una letra minúscula
-        $length = 9;
-        $letters = range('a', 'z');
-        $name = $letters[mt_rand(0, count($letters) - 1)];
-        $name .= substr(str_shuffle(md5(mt_rand()) . md5(mt_rand())), 0, $length);
-        //session_name($name);
+//        $length = 9;
+//        $letters = range('a', 'z');
+//        $name = $letters[mt_rand(0, count($letters) - 1)];
+//        $name = 's';
+//        $name .= substr(str_shuffle(md5(mt_rand()) . md5(mt_rand())), 0, $length);
+//        session_name($name);
 
         // Configurar domain
         $domain = empty($domain) ? Sanitizar::glSERVER('SERVER_NAME') : $domain;
@@ -122,10 +147,12 @@ class Session
 
         // Setear cookie e iniciar sesion
         session_set_cookie_params($lifetime, $path, $domain, $secure, true);
-        session_regenerate_id(TRUE);
-        session_start();
+        if (!$dontChangeID) {
+            session_regenerate_id(TRUE);
+        }
+        return session_start();
 
-        return $name;
+        //return $name;
     }
     
     // __ PUB
@@ -133,9 +160,8 @@ class Session
      * Inicia o continúa una sesión.  Ante cada inicio, regenera el ID 
      * de la misma salvo que se especifique lo contrario.
      * 
-     * @param boolean $dontChangeID Si es TRUE, el ID de la sesión no será 
-     * regenerado.<br />
-     * FALSE por defecto.
+     * @param boolean $dontChangeID [opcional] <br />
+     * Si es TRUE, el ID de la sesión no será regenerado.  FALSE por defecto.
      * @return mixed TRUE si no ocurrió ningún error, FALSE si ocurrió.<br />
      * Si se inició una nueva sesión, se devuelve el nombre de ésta.<br />
      * <i>NOTA: el nombre de sesión no está aún implementado, se usa el nombre 
@@ -144,12 +170,7 @@ class Session
     public static function initiate($dontChangeID = FALSE)
     {
         if (session_status() == PHP_SESSION_NONE) {
-            if(self::begin()) {
-                if (!$dontChangeID) {
-                    session_regenerate_id(TRUE);
-                }
-                return TRUE;
-            }
+            return self::begin($dontChangeID);
         }
         
         return FALSE;
@@ -162,12 +183,16 @@ class Session
      * Si la sesión no está iniciada, devuelve FALSE.
      * 
      * @param mixed $key Índice, puede ser un string o un entero.
-     * @param mixed $value Valor, puede ser cualquier elemento serializable
+     * @param mixed $value [opcional] <br/>
+     * Valor, puede ser cualquier elemento serializable
      * (se recomienta emplear valores escalares o arrays, y evitar objetos).
-     * @param boolean $dontSanitize Si es TRUE, NO sanitiza el valor antes de 
+     * @param boolean $dontSanitize [opcional] <br/>
+     * Si es TRUE, NO sanitiza el valor antes de 
      * almacenarlo (FALSE por defecto).
-     * @param string $password Contraseña de encriptación.
-     * @param string $salt Sal criptográfica para la contraseña.
+     * @param string $password [opcional] <br/>
+     * Contraseña de encriptación.
+     * @param string $salt [opcional] <br/>
+     * Sal criptográfica para la contraseña.
      * @return boolean TRUE si se almacenó el valor satisfactoriamente, 
      * FALSE si no.
      * @see setPassword().
@@ -176,8 +201,8 @@ class Session
                                  $value = NULL, 
                                  $dontSanitize = FALSE, 
                                  $password = NULL, 
-                                 $salt = NULL)
-    {
+                                 $salt = NULL
+    ) {
         if (self::status() == PHP_SESSION_ACTIVE) {
             if (isset($key) 
                 && (is_string($key) || is_integer($key))
@@ -206,9 +231,11 @@ class Session
      * proveída por setPassword() y la sal criptográfica por setPasswordSalt().
      * 
      * @param mixed $key Índice, puede ser un string o un entero.
-     * @param mixed $value Valor, puede ser cualquier elemento serializable
+     * @param mixed $value [opcional] <br/>
+     * Valor, puede ser cualquier elemento serializable
      * (se recomienta emplear valores escalares o arrays, y evitar objetos).
-     * @param boolean $sanitize Si es TRUE, sanitiza el valor antes de 
+     * @param boolean $sanitize [opcional] <br/>
+     * Si es TRUE, sanitiza el valor antes de 
      * almacenarlo (FALSE por defecto).
      * @return boolean TRUE si se almacenó el valor satisfactoriamente, 
      * FALSE si no.
@@ -238,10 +265,13 @@ class Session
      * para notificarlo.<br />
      * 
      * @param mixed $key Índice, string o int.
-     * @param boolean $sanitize TRUE para sanitizar el valor antes de 
+     * @param boolean $sanitize [opcional] <br/>
+     * TRUE para sanitizar el valor antes de 
      * devolverlo, FALSE para devolverlo sin sanitizar (por defecto).
-     * @param string $password Contraseña de encriptación.
-     * @param string $salt Sal criptográfica para la contraseña.
+     * @param string $password [opcional] <br/>
+     * Contraseña de encriptación.
+     * @param string $salt [opcional] <br/>
+     * Sal criptográfica para la contraseña.
      * @return mixed Valor almacenado en $_SESSION[$key] o NULL si dicho valor
      * no existe.<br />
      * En caso de error, realiza una llamada del sistema para 
@@ -295,7 +325,8 @@ class Session
      * (si estaba encriptado) usando la contraseña proveída por setPassword().
      * 
      * @param mixed $key Índice, string o int.
-     * @param boolean $sanitize TRUE para sanitizar el valor antes de 
+     * @param boolean $sanitize [opcional]<br />
+     * TRUE para sanitizar el valor antes de 
      * devolverlo, FALSE para devolverlo sin sanitizar (por defecto).
      * @return mixed Valor almacenado en $_SESSION[$key] o NULL si dicho valor
      * no existe.<br />
@@ -319,18 +350,6 @@ class Session
     public static function remove($key)
     {
         unset($_SESSION[$key]);
-    }
-
-    /**
-     * Devuelve el ID de la sesión actual.  Tener en cuenta que cada llamada<br />
-     * a initiate() podría cambiar este ID.
-     * 
-     * @see initiate()
-     * @return string ID de la sesión actual.
-     */
-    public static function ID()
-    {
-        return session_id();
     }
 
     /**
@@ -377,6 +396,63 @@ class Session
         session_destroy();
     }
     
+    /**
+     * Devuelve el nombre actual de la sesión.  
+     * Tener en cuenta que cada llamada<br />
+     * a initiate() podría cambiarlo.
+     * 
+     * @see initiate()
+     * @return string Nombre actual de la sesión.
+     */
+    public static function getName()
+    {
+        return session_name();
+    }
+    
+    /**
+     * Devuelve el nombre anterior de la sesión. Tener en cuenta que 
+     * initiate() NO almacena el nombre anterior, solo el constructor del objeto
+     * lo hace.
+     * 
+     * @return string Nombre anterior de la sesión.
+     */
+    public function getName_old()
+    {
+        if (isset($this->session_name_old)) {
+            return $this->session_name_old;
+        }
+        
+        return '';
+    }
+
+    /**
+     * Devuelve el ID actual de la sesión.  Tener en cuenta que cada llamada<br />
+     * a initiate() podría cambiar este ID.
+     * 
+     * @see initiate()
+     * @return string ID actual de la sesión.
+     */
+    public static function getID()
+    {
+        return session_id();
+    }
+    
+    /**
+     * Devuelve el ID de la sesión anterior si hay.  Tener en cuenta que 
+     * initiate() NO almacena el ID anterior, solo el constructor del objeto lo 
+     * hace.
+     * 
+     * @return string ID de sesión anterior.
+     */
+    public function geID_old()
+    {
+        if (isset($this->session_id_old)) {
+            return $this->session_id_old;
+        }
+        
+        return '';
+    }
+
     /**
      * Almacena una contraseña que se emplea para encriptar los valores 
      * solicitados (solo hasta que el objeto se destruya).

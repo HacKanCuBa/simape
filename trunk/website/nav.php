@@ -43,65 +43,76 @@ $action = Sanitizar::glGET(SMP_NAV_ACTION);
 
 // Inicializo variables de redireccion
 $params = NULL;
-$redirect = NULL;
 $intLink = NULL;
 
 $page = new Page;
 
 switch($action) {
-    case 'logout':
-        Session::remove(SMP_SESSIONKEY_RANDOMTOKEN);
-        Session::remove(SMP_SESSIONKEY_TIMESTAMP);
-        Session::remove(SMP_SESSIONKEY_TOKEN);      
-        // $redirect=NULL lleva a index.php
-        break;
-
+    case SMP_LOGOUT:
     case NULL:
     case '':
     case SMP_WEB_ROOT:
-        // $redirect=NULL lleva a index.php
+        Session::remove(SMP_SESSINDEX_SESSIONKEY_TOKEN);
+        $page->setLocation(SMP_WEB_ROOT);
+        // Ya se que da FALSE, es para que se entienda.
+        // Location=NULL lleva a WEBROOT
         break;
-
+    
+    case SMP_LOC_LOGIN:
+        $page->setLocation(SMP_LOC_LOGIN);
+        break;
+    
     case SMP_LOC_MSGS:
-        $intLink = "tabR";
-        // no uso break para que ejecute default
+        $intLink = "tabR"; // no uso break para que ejecute default
     default:
-        // si la página no existe, $redirect quedará NULL y dirigirá a root.
+        // si la página no existe, 404...
         if (Page::pageExists($action)) {
             // Si el usuario está loggeado, dirigirse a la pag solicitada con un
             // page token.
-            $session = new Session;
-            $uid = new UID;
-            $uid->retrieveFromDB($session->retrieve(SMP_USERNAME));
-            $session->setPassword($uid->get());
+            // Si no esta loggeado, darán error las comprobaciones
+            $username = Session::retrieve(SMP_SESSINDEX_USERNAME);
             
-            $session->setRandomToken($session->retrieveEnc(SMP_SESSIONKEY_RANDOMTOKEN));
-            $session->setTimestamp($session->retrieveEnc(SMP_SESSIONKEY_TIMESTAMP));
+            $uid = new UID;
+            $uid->retrieve_fromDB($username);
+            
+            $session = new Session;
             $session->setUID($uid);
-            $session->setToken($session->retrieveEnc(SMP_SESSIONKEY_TOKEN));
+            $session->retrieve_fromDB_TokenID($username);
+            $session->retrieve_fromDB();
+            $session->setToken(Session::retrieve(SMP_SESSINDEX_SESSIONKEY_TOKEN));
             
             $fingerprint = new Fingerprint;
-            $fingerprint->setRandomToken($session->retrieveEnc(SMP_FINGERPRINT_RANDOMTOKEN));
-            $fingerprint->setToken($session->retrieveEnc(SMP_FINGERPRINT_TOKEN));
-            
-            $redirect = $action;
+            $fingerprint->retrieve_fromDB_TokenID($username);
+            $fingerprint->retrieve_fromDB();
             
             if ($fingerprint->authenticateToken() 
-                && $session->authenticateToken()) 
-            {
-                //Login OK
-                $session->storeEnc(SMP_PAGE_RANDOMTOKEN, 
-                                    $page->getRandomToken());
-                $session->storeEnc(SMP_PAGE_TIMESTAMP, 
-                                    $page->getTimestamp());
-                $page->setLocation($redirect);
+                && $session->authenticateToken()
+            ) {
+                // Login OK
+                // Page Token
+                $page->generateRandomToken();
+                $page->generateTimestamp();
+                $page->setLocation($action);
+                $page->generateToken();
                 
+                // Guardo Page RandTkn y Timestamp en SESSION encriptado
+                $session->setPassword($uid->getHash());
+                $session->setPasswordSalt($session->getRandomToken());
+                
+                $session->storeEnc(SMP_SESSINDEX_PAGE_RANDOMTOKEN, 
+                                    $page->getRandomToken());
+                $session->storeEnc(SMP_SESSINDEX_PAGE_TIMESTAMP, 
+                                    $page->getTimestamp());
+                
+                // Paso por GET el Page Token
                 $params = "pagetkn=" . $page->getToken();
             }
+        } else {
+            // No existe la pagina
+            $page->setLocation(SMP_LOC_404);
         }
         break;
 }
 
-$page->setLocation($redirect);
 $page->go($params, $intLink);
 exit();

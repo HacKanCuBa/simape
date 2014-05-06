@@ -60,7 +60,7 @@ trait SessionToken
                         . $randToken 
                         . Timestamp::getThisSeconds(SMP_SESSIONKEY_LIFETIME) 
                         . $uid->getHash()
-                        . constant('SMP_SESSIONKEY_TKN')));
+                        . constant('SMP_TKN_SESSIONKEY')));
         } else {
             return FALSE;
         }        
@@ -133,6 +133,7 @@ trait SessionToken
      * en el objeto.  Usar los respectivos get... para obtener los valores.
      * 
      * @return boolean TRUE si tuvo exito, FALSE si no.
+     * @see setTokenID
      */
     public function retrieve_fromDB() 
     {
