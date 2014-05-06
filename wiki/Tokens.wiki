@@ -40,4 +40,4 @@ El Random Token y Timestamp se almacenan en la DB.  El Token se pasa a través d
 == Fingerprint Token ==
 
 El Token se almacena en la DB.  Se emplean identificadores únicos del navegador del usuario y la IP (esto último dependiendo del modo _MODE_DONTUSEIP_ o _MODE_USEIP_).  Se autentica tomando el Token de la DB, y contrastando con el método apropiado.  El mismo debería mantenerse durante toda la sesión, si cambia implica un error (intento de hackeo?).
-_nav.php_ se encarga de generarlo.
+_login.php_ se encarga de generarlo.
