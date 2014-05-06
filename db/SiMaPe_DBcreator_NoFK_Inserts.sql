@@ -78,10 +78,6 @@ CREATE UNIQUE INDEX `Nombre_UNIQUE` ON `SiMaPe`.`Usuario` (`Nombre` ASC) ;
 
 CREATE UNIQUE INDEX `UID_UNIQUE` ON `SiMaPe`.`Usuario` (`UID` ASC) ;
 
-CREATE UNIQUE INDEX `PrivKey_UNIQUE` ON `SiMaPe`.`Usuario` (`PrivKey` ASC) ;
-
-CREATE UNIQUE INDEX `PubKey_UNIQUE` ON `SiMaPe`.`Usuario` (`PubKey` ASC) ;
-
 
 -- -----------------------------------------------------
 -- Table `SiMaPe`.`Fichero`
