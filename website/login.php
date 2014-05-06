@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.95
+ * @version 1.0
  */
 
 /*
@@ -64,17 +64,10 @@ const LOGIN_CAPTCHA = 'CAPTCHA';
 Session::initiate();
 
 // Cerrar sesión si estaba abierta
-Session::remove(SMP_SESSIONKEY_RANDOMTOKEN);
-Session::remove(SMP_SESSIONKEY_TIMESTAMP);
-Session::remove(SMP_SESSIONKEY_TOKEN);
+Session::remove(SMP_SESSINDEX_SESSIONKEY_TOKEN);
 
 // Inicializaciones
-$fingerprint = new Fingerprint;
-if (!empty(Session::retrieve(SMP_FINGERPRINT_TOKEN))) {
-    
-}
 $formToken = new FormToken;
-$db = new DB;
 
 // Recuperar el nombre de usuario
 $username = Sanitizar::glPOST('frm_txtLogin');
@@ -91,60 +84,50 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
         $password = new Password(Sanitizar::glPOST('frm_pwdLogin'));
         $password->retrieve_fromDB($username);
             
-        $formToken->setRandomToken(Session::retrieve(SMP_FORM_RANDOMTOKEN));
-        $formToken->setTimestamp(Session::retrieve(SMP_FORM_TIMESTAMP));
-        $formToken->setToken(Sanitizar::glPOST(SMP_FORM_TOKEN));
+        $formToken->setRandomToken(Session::retrieve(SMP_SESSINDEX_FORM_RANDOMTOKEN));
+        $formToken->setTimestamp(Session::retrieve(SMP_SESSINDEX_FORM_TIMESTAMP));
+        $formToken->setToken(Sanitizar::glPOST(SMP_SESSINDEX_FORM_TOKEN));
         
-        /*
-        // Crear token de fingerprint si no existen
-        if (!$fingerprint->setRandomToken($db->auto(DB::DB_AUTO_GET_FINGEPRINT_RANDTKN, 
-                                          $username))
-        ) {
-            $fingerprint->getRandomToken();
-        }
-        $fingerprint->setToken(Session::retrieve(SMP_FINGERPRINT_TOKEN));
-        if (empty(Session::retrieve(SMP_FINGERPRINT_RANDOMTOKEN))
-            || empty(Session::retrieve(SMP_FINGERPRINT_TOKEN))
-        ) {
-            // Almacenar token de identificacion del usario
-            Session::store(SMP_FINGERPRINT_RANDOMTOKEN, $fingerprint->getRandomToken());
-            Session::store(SMP_FINGERPRINT_TOKEN, $fingerprint->getToken());
-        }
-        */
         // Ejecuto la autenticación de la contraseña aún si el form
         // token no valida, para evitar Timing Oracle.
         if($password->authenticatePassword() 
            && $formToken->authenticateToken()
         ) {
-            // Login OK          
+            // Login OK 
+            // ToDo: verificaciones (guardo ok? leyo ok?)
             $uid = new UID;
             $uid->retrieve_fromDB($username);
-
+            // Iniciar sesion...
             $session = new Session;
-            $session->setPassword($uid->get());
+            $session->generateRandomToken();
+            $session->generateTimestamp();
             $session->setUID($uid);
-            // ToDo: almacenar tokens en DB
-            $session->storeEnc(SMP_SESSIONKEY_RANDOMTOKEN, 
-                           $session->getRandomToken());
-            $session->storeEnc(SMP_SESSIONKEY_TIMESTAMP, 
-                           $session->getTimestamp());
-            $session->storeEnc(SMP_SESSIONKEY_TOKEN, 
-                           $session->getToken());
-
-            $session->storeEnc(SMP_FINGERPRINT_RANDOMTOKEN, 
-                           $fingerprint->getRandomToken());
-            $session->storeEnc(SMP_FINGERPRINT_TOKEN, 
-                           $fingerprint->getToken());
-
-            $session->store(SMP_USERNAME, $username);
+            $session->generateToken();
+            // Guardar RandToken y Timestamp de sesion en DB
+            $session->retrieve_fromDB_TokenID($username);
+            $session->store_inDB();
+            // Guardar Token de sesion en SESSION
+            $session->store(SMP_SESSINDEX_SESSIONKEY_TOKEN, $session->getToken());
+            
+            // Fingerprint
+            $fingerprint = new Fingerprint;
+            $fingerprint->setMode(Fingerprint::MODE_USEIP);
+            $fingerprint->generateToken();
+            // Guardarlo en DB
+            $fingerprint->retrieve_fromDB_TokenID($username);
+            $fingerprint->store_inDB();
+            
+            // Guardar nombre de usuario en SESSION
+            $session->store(SMP_SESSINDEX_USERNAME, $username);
 
             // elimino el captcha, si existiese
             Session::remove(LOGIN_CAPTCHA);
             
+            // Sesion iniciada, ir a la pagina de inicio del usuario
             $nav = SMP_LOC_MSGS;
         } else {
             // Enviar mensaje user pass incorrecto       
-            Session::store(SMP_NOTIF_ERR, SMP_ERR_AUTHFAIL);
+            Session::store(SMP_SESSINDEX_NOTIF_ERR, SMP_ERR_AUTHFAIL);
 
             // Almacenar cant de reintentos de login
             Session::store(LOGIN_RETRY_COUNT, 
@@ -153,7 +136,7 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
     } else {
         // captcha ERR
         // Enviar mensaje captcha incorrecto       
-        Session::store(SMP_NOTIF_ERR, LOGIN_ERR_CAPTCHA);
+        Session::store(SMP_SESSINDEX_NOTIF_ERR, LOGIN_ERR_CAPTCHA);
 
         // Almacenar cant de reintentos de login
         Session::store(LOGIN_RETRY_COUNT, 
@@ -184,9 +167,16 @@ if (isset($nav)) {
     exit();
 }
 
-Session::store(SMP_FORM_RANDOMTOKEN, $formToken->getRandomToken());
-Session::store(SMP_FORM_TIMESTAMP, $formToken->getTimestamp());
+// Token de formulario
+$formToken->generateRandomToken();
+$formToken->generateTimestamp();
+$formToken->generateToken();
+Session::store(SMP_SESSINDEX_FORM_RANDOMTOKEN, $formToken->getRandomToken());
+Session::store(SMP_SESSINDEX_FORM_TIMESTAMP, $formToken->getTimestamp());
 
+// -- --
+//
+// Mostrar página
 echo Page::getHead('SiMaPe - Iniciar Sesi&oacute;n');
 echo Page::getBody();
 echo Page::getHeader();
@@ -201,12 +191,12 @@ if (empty($pwdRestoreSent)) {
     echo "\n\t\t\t<br />";
     echo "\n\t\t\t<table style='text-align: left; margin: auto; with: auto;' >";
     echo "\n\t\t\t\t<tbody>";
-    if (!empty(Session::retrieve(SMP_NOTIF_ERR))) {
+    if (!empty(Session::retrieve(SMP_SESSINDEX_NOTIF_ERR))) {
         echo "\n\t\t\t\t\t<tr>";
         echo "\n\t\t\t\t\t\t<td colspan='2' style='text-align:center;'>";
         echo "\n\t\t\t\t\t\t\t<address class='fadeout' "
              . "style='color:red; text-align: center;' >" 
-             . Session::retrieve(SMP_NOTIF_ERR) . "</address>";
+             . Session::retrieve(SMP_SESSINDEX_NOTIF_ERR) . "</address>";
         echo "\n\t\t\t\t\t\t</td>";
         echo "\n\t\t\t\t\t</tr>";
         $retry_count = Session::retrieve(LOGIN_RETRY_COUNT);
@@ -237,7 +227,7 @@ if (empty($pwdRestoreSent)) {
             echo "\n\t\t\t\t\t\t</td>";
             echo "\n\t\t\t\t\t</tr>";
         }
-        Session::remove(SMP_NOTIF_ERR);
+        Session::remove(SMP_SESSINDEX_NOTIF_ERR);
     }     
     echo "\n\t\t\t\t\t<tr>";
     echo "\n\t\t\t\t\t\t<td style='text-align: left;'>";

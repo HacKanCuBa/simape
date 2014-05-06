@@ -329,7 +329,7 @@ class Page
                                     . $randToken
                                     . $time
                                     . $pageID
-                                    . SMP_PAGE_TKN);
+                                    . SMP_TKN_PAGE);
         }
         
         return FALSE;
@@ -440,7 +440,7 @@ class Page
         $navbar = new Navbar;
         $navbar->setIndent(1);
         $btns = array ('&iexcl;Bienvenido <i>' 
-                       . Session::retrieve(SMP_USERNAME) . '</i>!',
+                       . Session::retrieve(SMP_SESSINDEX_USERNAME) . '</i>!',
                        'Mensajes',
                        'Mi perfil de empleado',
                        'Mi perfil de usuario',
@@ -481,7 +481,7 @@ class Page
         /*return "\n\t<div class='nav_vertbox'>"
                 . "\n\t\t<ul class='nav_vert'>"
                 . "\n\t\t\t<li class='category'><a>&iexcl;Bienvenido <i>" 
-                . Session::retrieve(SMP_USERNAME) . "</i>!</a></li>"
+                . Session::retrieve(SMP_SESSINDEX_USERNAME) . "</i>!</a></li>"
                 . "\n\t\t\t<li><a href='" . self::urlMake(SMP_LOC_NAV, 
                 [ SMP_NAV_ACTION => SMP_LOC_MSGS ])
                 . "'>Mensajes</a></li>"

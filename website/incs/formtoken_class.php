@@ -81,7 +81,7 @@ class FormToken
             return Crypto::getHash(Crypto::getHash($time 
                         . $randToken 
                         . Timestamp::getThisSeconds(self::SMP_FORMTOKEN_LIFETIME) 
-                        . SMP_FORM_TKN));
+                        . SMP_TKN_FORM));
         } else {
             return FALSE;
         }        

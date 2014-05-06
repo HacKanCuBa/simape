@@ -88,14 +88,14 @@ class Fingerprint
                                 . Sanitizar::glSERVER('HTTP_X_HTTP_PROTO')
                                 . Sanitizar::glSERVER('HTTP_X_REAL_IP')
                                 . Sanitizar::glSERVER('SERVER_PROTOCOL')
-                                . SMP_FINGERPRINT_TKN
+                                . SMP_TKN_FINGERPRINT
                                 ;
         } else {
             $tokenContent = Sanitizar::glSERVER('HTTP_USER_AGENT')
                                 . Sanitizar::glSERVER('HTTP_HOST')
                                 . Sanitizar::glSERVER('HTTP_X_HTTP_PROTO')
                                 . Sanitizar::glSERVER('SERVER_PROTOCOL')
-                                . SMP_FINGERPRINT_TKN
+                                . SMP_TKN_FINGERPRINT
                                 ;
         }
         return Crypto::getHash($tokenContent);

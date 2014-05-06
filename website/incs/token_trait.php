@@ -60,7 +60,7 @@ trait Token
      * ID de la tabla Token en la DB.
      * @var int
      */
-    protected $TokenId;
+    protected $TokenID;
     
     // __ PRIV
     /**
@@ -122,15 +122,15 @@ trait Token
     }
     
     /**
-     * Verifica si el TokenId es válido (entero no vacío).
+     * Verifica si el TokenID es válido (entero no vacío).
      * 
-     * @param int $TokenId TokenId a validar.
+     * @param int $TokenID TokenID a validar.
      * @return boolean TRUE si es válido, FALSE si no.
      */
-    protected static function isValid_TokenId($TokenId)
+    protected static function isValid_TokenID($TokenID)
     {
-	if (!empty($TokenId) 
-            && is_int($TokenId)
+	if (!empty($TokenID) 
+            && is_int($TokenID)
         ) {
             return TRUE;
         }
@@ -201,7 +201,18 @@ trait Token
         }
         return '';
     }
-	
+    
+    public function retrieve_fromDB_TokenID($username)
+    {
+        $db = new DB;
+        $db->setQuery('SELECT TokenID FROM Usuario WHERE Nombre = ?');
+        $db->setBindParam('s');
+        $db->setQueryParams($username);
+        $db->queryExecute();
+
+        return $this->setTokenID($db->getQueryData());
+    }
+
     /**
      * Almacena en el objeto un Token aleatorio.  Emplearlo para la función
      * de autenticación.
@@ -277,13 +288,13 @@ trait Token
     /**
      * Fija el valor del identificador de tabla Token de la DB.
      * 
-     * @param int $TokenId
+     * @param int $TokenID Identificador de la tabla Token.
      * @return boolean TRUE si se almacenó correctamente, FALSE si no.
      */
-    public function setTokenId($TokenId) 
+    public function setTokenID($TokenID) 
     {
-        if (self::isValid_TokenId($TokenId)) {
-            $this->TokenId = $TokenId;
+        if (self::isValid_TokenID($TokenID)) {
+            $this->TokenID = $TokenID;
             return TRUE;
         }
         
