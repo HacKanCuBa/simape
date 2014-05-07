@@ -37,7 +37,7 @@ class FormToken
     /**
      * Tiempo de vida de un Form Token.
      */
-    const SMP_FORMTOKEN_LIFETIME = 1800;
+    const FORMTOKEN_LIFETIME = 1800;
 
     // __ SPECIALS
     /**
@@ -73,15 +73,15 @@ class FormToken
         if (self::isValid_token($randToken) 
             && self::isValid_timestamp($timestamp)
         ) {        
-            // Para forzar una vida util durante sólo el mismo dia.
-            // Si cambia el dia, el valor de la operacion cambiara.
-            $time = $timestamp - (float) Timestamp::getToday();
-
-            // Se utiliza Timestamp::getThisSeconds para fozar la vida útil máxima
-            return Crypto::getHash(Crypto::getHash($time 
-                        . $randToken 
-                        . Timestamp::getThisSeconds(self::SMP_FORMTOKEN_LIFETIME) 
-                        . SMP_TKN_FORM));
+            // Esta operación siempre dará -1 cuando 
+            // $timestamp < microtime < $timestamp + lifetime
+            // Devolverá cualquier otro valor en otro caso.
+            $time = intval(($timestamp - microtime(TRUE) 
+                                - self::FORMTOKEN_LIFETIME) 
+                                    / self::FORMTOKEN_LIFETIME);
+            return Crypto::getHash($time
+                                    . $randToken  
+                                    . SMP_TKN_FORM);
         } else {
             return FALSE;
         }        
@@ -123,11 +123,11 @@ class FormToken
             && isset($this->token)
             && isset($this->timestamp)
             && ($now >= $this->timestamp) 
-            && ($now < ($this->timestamp + self::SMP_FORMTOKEN_LIFETIME))
+            && ($now < ($this->timestamp + self::FORMTOKEN_LIFETIME))
         ) {
             // Verifico que getToken no sea FALSE.
             $formToken = self::tokenMake($this->randToken, $this->timestamp);
-            if ($formToken && ($this->formToken === $formToken)) {
+            if ($formToken && ($this->token === $formToken)) {
                 return TRUE;
             }
         }

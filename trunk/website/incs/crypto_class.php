@@ -253,14 +253,27 @@ class Crypto
      * Devuelve el hash de un string.
      * 
      * @param string $string String.
-     * @param string $hash_algo Algoritmo de hashing seleccionado.
+     * @param integer $repeat [opcional]<br />
+     * Repetir el hash sobre sí mismo (2 veces por defecto).
+     * @param string $hash_algo [opcional]<br />
+     * Algoritmo de hashing seleccionado.
      * @return boolean|string El hash del string indicado, o FALSE en caso de 
      * error.
      */
-    public static function getHash($string, $hash_algo = self::HASH_ALGO) 
-    {
-        if (is_string($string) && is_string($hash_algo)) {
-            return hash($hash_algo, $string, FALSE);
+    public static function getHash($string, 
+                                   $repeat = 2, 
+                                   $hash_algo = self::HASH_ALGO
+    ) {
+        if (is_string($string) 
+            && is_string($hash_algo) 
+            && is_integer($repeat)
+        ) {
+            $count = 0;
+            do {
+                $string = hash($hash_algo, $string, FALSE);
+                $count++;
+            } while ($count < $repeat);
+            return $string;
         }
         
         return FALSE;

@@ -32,7 +32,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.9
+ * @version 0.95
  */
 
 // << Config
@@ -48,11 +48,19 @@ const SMP_DB_USER_RW = 'apprw';
 const SMP_DB_PASS_RW = 'SECURE_PASS';
 
 // ATENCION
-// Verificar la configuracion de apache (y .htaccess) y la funcion
-// page_get_head()
-// al cambiar el charset!
+// Verificar la configuracion de apache (y .htaccess) y el método
+// Page::getHead al cambiar el charset!
 // (NO RECOMENDADO)
 const SMP_DB_CHARSET = 'utf8';
+// --
+// 
+// -- Email
+const SMP_EMAIL_SMTP_HOST = 'smtp.yourserver.com';
+const SMP_EMAIL_SMTP_PORT = 0;
+const SMP_EMAIL_SMTP_PROTO = ''; // "", "ssl", "tls"
+const SMP_EMAIL_USER = 'usuario@yourserver.com';
+const SMP_EMAIL_PSWD = 'secret_password';
+const SMP_EMAIL_FROM = 'simape@yourserver.com';
 // --
 // 
 // -- Idioma, localización
@@ -92,7 +100,7 @@ const SMP_TKN_PWDRESTORE =
 // 
 // -- Sessionkey
 // Tiempo de vida, en segundos
-const SMP_SESSIONKEY_LIFETIME = 21600; // 6hs
+const SMP_SESSIONKEY_LIFETIME = 28800; // 8hs
 // --
 // 
 // >>
@@ -123,16 +131,6 @@ const SMP_LOC_INCS = 'incs/';
 const SMP_LOC_TMPS = 'tmps/';
 const SMP_LOC_UPLOAD = 'upload/';
 const SMP_LOC_UPLOAD_FOTOS = 'fotos/';
-
-const SMP_LOC_LOGIN = 'login.php';
-const SMP_LOC_NAV = 'nav.php';
-const SMP_LOC_404 = '404.php';
-const SMP_LOC_403 = '403.php';
-
-define('SMP_LOC_MSGS', SMP_LOC_PAGS . 'mensajes.php');
-define('SMP_LOC_USUARIO', SMP_LOC_PAGS . 'usuario.php');
-define('SMP_LOC_EMPLEADO', SMP_LOC_PAGS . 'empleado.php');
-define('SMP_LOC_FICHAJE', SMP_LOC_PAGS . 'fichaje.php');
 // --
 //
 // -- Errores
@@ -196,6 +194,8 @@ const SMP_SESSINDEX_USERNAME = 'username';
 // Otras constantes internas
 const SMP_NAV_ACTION = 'accion';
 const SMP_LOGOUT = 'logout';
+const SMP_LOGIN = 'login';
+const SMP_HOME = 'home';
 // --
 // 
 // >>

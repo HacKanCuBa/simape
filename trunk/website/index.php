@@ -31,7 +31,7 @@ Session::terminate();
 
 if(!empty(Sanitizar::glPOST('frm_buttonLogin')))
 {
-    Page::nav(SMP_LOC_LOGIN);
+    Page::nav(SMP_LOGIN);
     exit();
 }
 
