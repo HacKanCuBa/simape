@@ -44,7 +44,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.4
+ * @version 1.41
  */
 class Password
 {
@@ -141,10 +141,17 @@ class Password
             && self::isValid_timestamp($timestamp)
             && self::isValid_UID($uid)
         ) {        
-            return Crypto::getHash(Crypto::getHash($timestamp
-                        . $randToken 
-                        . $uid->getHash()
-                        . constant('SMP_TKN_PWDRESTORE')));
+            // Esta operación siempre dará -1 cuando 
+            // $timestamp < microtime < $timestamp + lifetime
+            // Devolverá cualquier otro valor en otro caso.
+            $time = intval(($timestamp - microtime(TRUE) 
+                                - SMP_PASSWORD_RESTORETIME) 
+                                    / SMP_PASSWORD_RESTORETIME);
+
+            return Crypto::getHash($time 
+                                    . $randToken 
+                                    . $uid->getHash()
+                                    . constant('SMP_TKN_PWDRESTORE'));
         } else {
             return FALSE;
         }        
