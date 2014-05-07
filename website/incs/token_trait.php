@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.4
+ * @version 0.41
  */
 
 trait Token
@@ -202,6 +202,13 @@ trait Token
         return '';
     }
     
+    /**
+     * Recupera de la DB el ID de la tabla Token para el usuario dado, 
+     * y lo almacena en el objeto.
+     * 
+     * @param string $username Nombre de usuario.
+     * @return boolean TRUE si tuvo éxito, FALSE si no.
+     */
     public function retrieve_fromDB_TokenID($username)
     {
         $db = new DB;

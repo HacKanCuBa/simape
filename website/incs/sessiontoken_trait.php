@@ -51,23 +51,24 @@ trait SessionToken
             && self::isValid_timestamp($timestamp)
             && self::isValid_UID($uid)
         ) {        
-            // Para forzar una vida util durante sólo el mismo dia.
-            // Si cambia el dia, el valor de la operacion cambiara.
-            $time = $timestamp - (float) Timestamp::getToday();
+            // Esta operación siempre dará -1 cuando 
+            // $timestamp < microtime < $timestamp + lifetime
+            // Devolverá cualquier otro valor en otro caso.
+            $time = intval(($timestamp - microtime(TRUE) 
+                                - SMP_SESSIONKEY_LIFETIME) 
+                                    / SMP_SESSIONKEY_LIFETIME);
 
-            // Se utiliza Timestamp::getThisSeconds para fozar la vida útil máxima
-            return Crypto::getHash(Crypto::getHash($time 
-                        . $randToken 
-                        . Timestamp::getThisSeconds(SMP_SESSIONKEY_LIFETIME) 
-                        . $uid->getHash()
-                        . constant('SMP_TKN_SESSIONKEY')));
+            return Crypto::getHash($time 
+                                    . $randToken 
+                                    . $uid->getHash()
+                                    . constant('SMP_TKN_SESSIONKEY'));
         } else {
             return FALSE;
         }        
     }
     // __ PUB
     /**
-     * Genera y almacena un nuevo token de sesión.  Requiere previamente del
+     * Genera y almacena un nuevo Token.  Requiere previamente del
      * Random Token, Timestamp y UID.
      * 
      * @return boolean TRUE si tuvo éxito, FALSE si no.

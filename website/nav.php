@@ -58,11 +58,12 @@ switch($action) {
         // Location=NULL lleva a WEBROOT
         break;
     
-    case SMP_LOC_LOGIN:
-        $page->setLocation(SMP_LOC_LOGIN);
+    case SMP_LOGIN:
+        $page->setLocation('login.php');
         break;
     
-    case SMP_LOC_MSGS:
+    case SMP_HOME:  // por ahora, mensajes.php
+    case SMP_LOC_PAGS . 'mensajes.php':
         $intLink = "tabR"; // no uso break para que ejecute default
     default:
         // si la página no existe, 404...

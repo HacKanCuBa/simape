@@ -39,26 +39,21 @@
  * } else {
  *      echo "Contraseña incorrecta";
  * }
- * // Reestablecimiento de contraseña
- * $randToken = $pass->getRandomToken();
- * $timestamp = $pass->getTimestamp();
- * $restToken = $pass->getToken();
  * </code></pre>
  * 
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.27
+ * @version 1.4
  */
 class Password
 {
     use SessionToken {
-        getToken as sesst_getToken;
-        isValid_sessiontoken as isValid_restoreToken;
+        store_inDB as sesst_store_inDB;
     }
     
-    protected $plaintextPassword, $encryptedPassword, $PasswordCost, 
-              $PasswordTimestamp, $passRestoreToken;
+    protected $passwordPT, $passwordEC, $passwordCost, 
+              $passwordModificationTimestamp;
 
     // Metodos
     // __ SPECIALS
@@ -69,22 +64,22 @@ class Password
      * Llamar a encryptPassword() para encriptarla.
      * 
      * @see encryptPassword()
-     * @param string $plaintextPassword Contraseña en texto plano
-     * @param string $saltedPassword Contraseña encriptada.
+     * @param string $passwordPT Contraseña en texto plano
+     * @param string $passwordEC Contraseña encriptada.
      */
-    public function __construct($plaintextPassword = NULL, 
-                                 $saltedPassword = NULL)
+    public function __construct($passwordPT = NULL, 
+                                 $passwordEC = NULL)
     {
         if (((int) constant('SMP_PASSWORD_COST')) < 10) {
-            $this->PasswordCost = 10;
+            $this->passwordCost = 10;
         } elseif (((int) constant('SMP_PASSWORD_COST')) > 31) {
-            $this->PasswordCost = 31;
+            $this->passwordCost = 31;
         } else {
-            $this->PasswordCost = SMP_PASSWORD_COST;
+            $this->passwordCost = SMP_PASSWORD_COST;
         }
         
-        $this->setPlaintext($plaintextPassword);
-        $this->setEncrypted($saltedPassword);
+        $this->setPlaintext($passwordPT);
+        $this->setEncrypted($passwordEC);
     }
     // __ PRIV
     
@@ -159,20 +154,20 @@ class Password
     /**
      * Determina si una contraseña en texto plano es fuerte (criptográficamente 
      * segura).
-     * @param string $plaintextPassword Contraseña.
+     * @param string $passwordPT Contraseña.
      * @return boolean TRUE si es una contraseña segura, FALSe si no.
      */
-    public static function isStrong($plaintextPassword)
+    public static function isStrong($passwordPT)
     {
         // Al menos una letra mayus y minus, y un nro, y puede contener letras, 
         // nros, y determinados simbolos.
         // http://stackoverflow.com/a/11874336
-        if (self::isValid_ptPassword($plaintextPassword)
+        if (self::isValid_ptPassword($passwordPT)
             && preg_match('/^(?=.*\d)(?=.*[A-Z])(?=.*[a-z])' 
                           . '[\x{20}-\x{af}\p{L}]'
                           . '{' . constant('SMP_PWD_MINLEN') . ','
                           . constant('SMP_PWD_MAXLEN') . '}$/u', 
-                          $plaintextPassword)
+                          $passwordPT)
         ) {
             return TRUE;
         }
@@ -184,22 +179,22 @@ class Password
      * Almacena una contraseña en texto plano, si la misma cumple las 
      * restricciones (es decir, es válida), y prepara para encriptarla.
      * 
-     * @param string $plaintextPassword Contraseña en texto plano
+     * @param string $passwordPT Contraseña en texto plano
      * @param boolean $requireStrong Si es TRUE, requiere que la contraseña 
      * sea <i>fuerte</i>; FALSE por defecto.
      * @return boolean TRUE si la contraseña es válida y fue almacenada, 
      * FALSE si no.
      */
-    public function setPlaintext($plaintextPassword, $requireStrong = FALSE)
+    public function setPlaintext($passwordPT, $requireStrong = FALSE)
     {
-        if ($this->isValid_ptPassword($plaintextPassword)) {
+        if ($this->isValid_ptPassword($passwordPT)) {
             if ($requireStrong) {
-                if (self::isStrong($plaintextPassword)) {
-                    $this->plaintextPassword = $plaintextPassword;
+                if (self::isStrong($passwordPT)) {
+                    $this->passwordPT = $passwordPT;
                     return TRUE;
                 }
             } else {
-                $this->plaintextPassword = $plaintextPassword;
+                $this->passwordPT = $passwordPT;
                 return TRUE;
             }
             
@@ -212,14 +207,14 @@ class Password
      * Almacena una contraseña encriptada, si la misma cumple las 
      * restricciones (es decir, es válida).
      * 
-     * @param string $encryptedPassword Contraseña encriptada.
+     * @param string $passwordEC Contraseña encriptada.
      * @return boolean TRUE si la contraseña es válida y fue almacenada, 
      * FALSE si no.
      */
-    public function setEncrypted($encryptedPassword)
+    public function setEncrypted($passwordEC)
     {
-        if ($this->isValid_encPassword($encryptedPassword)) {
-            $this->encryptedPassword = $encryptedPassword;
+        if ($this->isValid_encPassword($passwordEC)) {
+            $this->passwordEC = $passwordEC;
             return TRUE;
         }
         
@@ -230,80 +225,19 @@ class Password
      * Almacena el valor de la última vez que fue modificada la contraseña
      * (Password Timestamp).
      * 
-     * @param int $passwordTimestamp
+     * @param int $password_modification_time Timestamp.
      * @return boolean TRUE si se almacenó correctamente, FALSE si no.
      */
-    public function setPasswordTimestamp($passwordTimestamp)
+    public function setModificationTimestamp($password_modification_time)
     {
-        if (!empty($passwordTimestamp) && is_int($passwordTimestamp)) {
-            $this->PasswordTimestamp = $passwordTimestamp;
+        if (!empty($password_modification_time)
+            && is_int($password_modification_time)
+        ) {
+            $this->passwordModificationTimestamp = $password_modification_time;
             return TRUE;
         }
         
         return FALSE;
-    }
-    
-    /**
-     * Almacena el Token aleatorio para la autenticación del Token de 
-     * reestablecimiento de contraseña.<br />
-     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de 
-     * reestablecimiento nuevo!<br /> 
-     * Usar el método getRandomToken() a este fin.
-     * 
-     * @see getRandomToken()
-     * @param string $randToken Token aleatorio.
-     * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
-     */
-    public function setRandomToken($randToken)
-    {
-        return $this->t_setRandomToken($randToken);
-    }
-    
-    /**
-     * Fija el valor de Timestamp para la función de autenticación del Token de 
-     * reestablecimiento de contraseña.<br />
-     * <b>IMPORTANTE</b>: NO emplearlo para generar un Token de 
-     * reestablecimiento nuevo!<br />
-     * Usar el método getTimestamp() a este fin.
-     * 
-     * @see getTimestamp()
-     * @param float $timestamp Timestamp.
-     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
-     */
-    public function setTimestamp($timestamp)
-    {
-        return $this->t_setTimestamp($timestamp);
-    }
-    
-    /**
-     * Fija el valor del Token de reestablecimiento de contraseña que será 
-     * autenticado.
-     * 
-     * @param string $passRestoreToken Token de reestablecimiento de 
-     * contraseña.
-     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
-     */
-    public function setToken($passRestoreToken)
-    {
-        if ($this->isValid_restoreToken($passRestoreToken)) {
-            $this->passRestoreToken = $passRestoreToken;
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
-    
-    /**
-     * Almacena el UID del usuario, pasado como objeto UID.<br />
-     * Se emplea tanto en la función de autenticación del Token de <br />
-     * reestablecimiento de contraseña como en la de generación del mismo.
-     * 
-     * @param UID $uid UID del usuario
-     * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
-     */
-    public function setUID(UID $newUID) 
-    {
-        return $this->t_setUID($newUID);
     }
     
     /**
@@ -314,14 +248,17 @@ class Password
      * @return boolean TRUE si se almacenó en la DB exitosamente, 
      * FALSE en caso contrario.
      */
-    public function store_inDB(string $username) 
+    public function store_inDB($username) 
     {
-        if (!empty($this->encryptedPassword) && !empty($username)) {
+        if (!empty($this->passwordEC) 
+            && !empty($username) 
+            && is_string($username)
+        ) {
             $db = new DB(TRUE);
             $db->setQuery('UPDATE Usuario SET PasswordSalted = ? '
                         . 'WHERE Nombre = ?');
             $db->setBindParam('ss');
-            $db->setQueryParams([$this->encryptedPassword, $username]);
+            $db->setQueryParams([$this->passwordEC, $username]);
             //// atenti porque la func devuelve tb nro de error
             // ToDo: procesar nro de error
             $retval = $db->queryExecute();
@@ -334,6 +271,25 @@ class Password
     }
 
     /**
+     * Almacena en la DB el Random Token y el Timestamp guardados en el objeto.
+     * <br />
+     * Debe fijarse primero el identificador de tabla Token y los valores 
+     * respectivos.
+     * 
+     * @see setTokenId
+     * @see setRandomToken
+     * @see generateToken
+     * @see setTimestamp
+     * @see generateTimestamp
+     * @return boolean TRUE si se almacenó en la DB exitosamente, 
+     * FALSE en caso contrario.
+     */
+    public function store_inDB_PwdRestore($username)
+    {
+        return $this->sesst_store_inDB($username);
+    }
+
+    /**
      * Devuelve la contraseña encriptada.  Debe haberse llamado primero a 
      * encryptPassword() o en su defecto setEncrypted().
      * 
@@ -342,8 +298,8 @@ class Password
      */
     public function getEncrypted()
     {
-        if (isset($this->encryptedPassword)) {
-            return $this->encryptedPassword;
+        if (isset($this->passwordEC)) {
+            return $this->passwordEC;
         } else {
             return FALSE;
         }
@@ -357,8 +313,8 @@ class Password
      */
     public function getPlaintext()
     {
-        if (isset($this->plaintextPassword)) {
-            return $this->plaintextPassword;
+        if (isset($this->passwordPT)) {
+            return $this->passwordPT;
         } else {
             return FALSE;
         }
@@ -368,12 +324,12 @@ class Password
      * Devuelve el timestamp de la contraseña almacenado, o FALSE si no hay 
      * ninguno.
      * 
-     * @return int|FALSE Timestamp.
+     * @return int|boolean Timestamp de modificación de contraseña o FALSE.
      */
-    public function getPasswordTimestamp()
+    public function getModificationTimestamp()
     {
-        if (isset($this->PasswordTimestamp)) {
-            return $this->PasswordTimestamp;
+        if (isset($this->passwordModificationTimestamp)) {
+            return $this->passwordModificationTimestamp;
         } else {
             return FALSE;
         }
@@ -402,49 +358,7 @@ class Password
 
         return $cost;
     }
-    
-    /**
-     * Devuelve un Token aleatorio, que es el mismo que se emplea para armar
-     * el Token de restablecimiento de contraseña.
-     * 
-     * @see getToken()
-     * @return string Token aleatorio.
-     */
-    public function getRandomToken()
-    {
-        return $this->t_getRandomToken();
-    }
-    
-    /**
-     * Devuelve el timestamp empleado para crear el Token de restablecimiento 
-     * de contraseña.
-     * 
-     * @return float Timestamp.
-     */
-    public function getTimestamp()
-    {
-        return $this->t_getTimestamp();
-    }
-    
-    /**
-     * Devuelve un Token de restablecimiento de contraseña.<br />
-     * Debe llamarse primero a getRandomToken(), getTimestamp() y setUID().
-     * 
-     * @see getRandomToken()
-     * @see getTimestamp()
-     * @see setUID()
-     * @param boolean $notStrict Si es TRUE, permite usar valores externos<br />
-     * vía setRandomToken() y setTimestamp() para generar el Token de 
-     * restablecimiento de contraseña.<br />
-     * FALSE por defecto.
-     * @return mixed Token de restablecimiento de contraseña, 
-     * o FALSE en caso de error.
-     */ 
-    public function getToken($notStrict = FALSE)
-    {
-        return $this->sesst_getToken($notStrict);
-    }
-    
+        
     /**
      * Recupera de la DB la contraseña encriptada del usuario indicado y la 
      * almacena en el objeto.
@@ -476,13 +390,13 @@ class Password
      */
     public function encryptPassword() 
     {
-        if (!empty($this->plaintextPassword)) {
-            $options = array('cost' => $this->PasswordCost);
-            $encryptedPassword = password_hash($this->plaintextPassword, 
+        if (!empty($this->passwordPT)) {
+            $options = array('cost' => $this->passwordCost);
+            $passwordEC = password_hash($this->passwordPT, 
                                                PASSWORD_DEFAULT, 
                                                $options);
-            if ($encryptedPassword) {
-                $this->encryptedPassword = $encryptedPassword;
+            if ($passwordEC) {
+                $this->passwordEC = $passwordEC;
                 return TRUE;
             }
         }
@@ -493,7 +407,7 @@ class Password
     /** 
      * Autentica la contraseña en texto plano contra la contraseña encriptada.
      * NOTA: A fin de evitar en cierta medida un ataque de timing oracle,
-     * esta función implementa un restraso cuando encryptedPassword es nulo.
+     * esta función implementa un restraso cuando passwordEC es nulo.
      * 
      * @see setPlaintext()
      * @see setEncrypted()
@@ -502,23 +416,23 @@ class Password
      */
     public function authenticatePassword() 
     {
-        if (empty($this->encryptedPassword) 
-            || empty($this->plaintextPassword)
+        if (empty($this->passwordEC) 
+            || empty($this->passwordPT)
         ) {
             // Lamentablemente, password_verify se detiene si
-            // encryptedPassword no es un hash válido, retornando con NULL y 
+            // passwordEC no es un hash válido, retornando con NULL y 
             // habilitando un timing oracle...
             // Fuerzo entonces la verificación con un hash válido cualquiera
             password_verify('simape', '$2y$' 
-                                      . $this->PasswordCost 
+                                      . $this->passwordCost 
                                       . '$olndK9yRKbD9q3mK3SQE'
                                       . 'qeWqTDCIgwzKcw.fSDx6k'
                                       . 'f44Vyjngvf3a');
             
             return FALSE;
         } else {
-            return (boolean) password_verify($this->plaintextPassword, 
-                                             $this->encryptedPassword);
+            return (boolean) password_verify($this->passwordPT, 
+                                             $this->passwordEC);
         }
     }
     
@@ -550,16 +464,16 @@ class Password
      * Determina si la contraseña ya ha expirado o no.<br />
      * Debe fijarse el valor de Password Timestamp.
      * 
-     * @see setPasswordTimestamp()
+     * @see setModificationTimestamp()
      * @return boolean|null TRUE si la contraseña expiró, FALSE si no.<br />
      * Si no se puede determinar, devuelve NULL.
      */
     public function isExpired()
     {
         if (SMP_PASSWORD_MAXDAYS > 0) {
-            if (empty($this->PasswordTimestamp)) {
+            if (empty($this->passwordModificationTimestamp)) {
                 return NULL;
-            } elseif (($this->PasswordTimestamp + 
+            } elseif (($this->passwordModificationTimestamp + 
                        (SMP_PASSWORD_MAXDAYS * 86400)) < time()) {
                 return TRUE;
             }

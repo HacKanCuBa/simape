@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.0
+ * @version 1.1
  */
 
 /*
@@ -43,7 +43,7 @@ require_once 'load.php';
  * Nombre de indice de _SESSION donde se almacena la cuenta de reintentos de
  * inicio de sesión.
  */
-const LOGIN_RETRY_COUNT = 'RETRY_COUNT';
+const LOGIN_SESSINDEX_RETRY_COUNT = 'RETRY_COUNT';
 
 /**
  * Valor que indica cantidad máxima de reintentos de login sin captcha.
@@ -53,12 +53,12 @@ const LOGIN_RETRY_MAX = 2;
 /**
  * Texto de error que se mostrará cuando el captcha no sea superado.
  */
-const LOGIN_ERR_CAPTCHA = 'El captcha no ha sido resuelto correctamente';
+const LOGIN_ERR_CAPTCHA = 'La operación de verificación no ha sido resuelta correctamente';
 
 /**
  * Nombre de indice de _SESSION donde se almacena el valor del captcha.
  */
-const LOGIN_CAPTCHA = 'CAPTCHA';
+const LOGIN_SESSINDEX_CAPTCHA = 'CAPTCHA';
 
 // Iniciar o continuar sesion
 Session::initiate();
@@ -78,7 +78,7 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
 
     // Pruebo captcha primero
     // si aun no hay captcha, ambos seran equivalentes (NULL y STRING NULL)
-    if (Session::retrieve(LOGIN_CAPTCHA) == Sanitizar::glPOST('frm_txtCaptcha'))
+    if (Session::retrieve(LOGIN_SESSINDEX_CAPTCHA) == Sanitizar::glPOST('frm_txtCaptcha'))
     {
         // captcha OK
         $password = new Password(Sanitizar::glPOST('frm_pwdLogin'));
@@ -121,26 +121,20 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
             $session->store(SMP_SESSINDEX_USERNAME, $username);
 
             // elimino el captcha, si existiese
-            Session::remove(LOGIN_CAPTCHA);
+            Session::remove(LOGIN_SESSINDEX_CAPTCHA);
             
             // Sesion iniciada, ir a la pagina de inicio del usuario
-            $nav = SMP_LOC_MSGS;
+            $nav = SMP_HOME;
         } else {
             // Enviar mensaje user pass incorrecto       
             Session::store(SMP_SESSINDEX_NOTIF_ERR, SMP_ERR_AUTHFAIL);
 
-            // Almacenar cant de reintentos de login
-            Session::store(LOGIN_RETRY_COUNT, 
-                Session::retrieve(LOGIN_RETRY_COUNT) + 1);
+            $login_atempt = TRUE;
         }  
     } else {
-        // captcha ERR
         // Enviar mensaje captcha incorrecto       
         Session::store(SMP_SESSINDEX_NOTIF_ERR, LOGIN_ERR_CAPTCHA);
-
-        // Almacenar cant de reintentos de login
-        Session::store(LOGIN_RETRY_COUNT, 
-            Session::retrieve(LOGIN_RETRY_COUNT) + 1);
+        $login_atempt = TRUE;
     }
     //$end = microtime(TRUE);
 } elseif (!empty(Sanitizar::glPOST('frm_btnCancelLogin'))) {
@@ -152,11 +146,47 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
     // Cargar form de reestablecimiento de contraseña
     $pwdRestore = TRUE;
 } elseif (!empty(Sanitizar::glPOST('frm_btnRestore'))) {
+    // Crear tokens de reestablecimiento de pwd
+    $password = new Password;
+    $password->generateRandomToken();
+    $password->generateTimestamp();
+    
+    $uid = new UID();
+    $uid->retrieve_fromDB($username);
+    
+    $password->setUID($uid);
+    $password->generateToken();
+    
+    // Guardar RandTkn y Timestamp en la DB
+    $password->retrieve_fromDB_TokenID($username);
+    $password->store_inDB_PwdRestore($username);
+    
     // Enviar email
-    /**
-     * TODO
-     */
-    $pwdRestoreSent = TRUE;
+    // Cargar clase PHPMailer
+    require SMP_INC_ROOT . SMP_LOC_INCS . 'phpmailer/PHPMailerAutoload.php';
+    
+    $mail = new PHPMailer(FALSE);
+    $mail->CharSet = SMP_PAGE_CHARSET;
+    $mail->Debugoutput = 'error_log';
+    $mail->IsSMTP();
+    $mail->SMTPDebug = 0;
+    $mail->SMTPAuth = TRUE;
+    $mail->SMTPSecure = SMP_EMAIL_SMTP_PROTO;
+    $mail->Host = SMP_EMAIL_SMTP_HOST;
+    $mail->Port = SMP_EMAIL_SMTP_PORT;
+    $mail->Username = SMP_EMAIL_USER;
+    $mail->Password = SMP_EMAIL_PSWD;
+    $mail->From = SMP_EMAIL_FROM;
+    $mail->FromName = "SiMaPe";
+    $mail->IsHTML(TRUE);
+    
+    $mail->AddAddress("hackan@gmail.com");
+    
+    $mail->Subject = "Test PHPMailer Message";
+    $mail->msgHTML("Hi! \n\n This was sent with phpMailer_example3.php.\nPass restore: " . $password->getToken());
+    $mail->AltBody = "This is the body in plain text for non-HTML mail clients";
+    
+    $pwdRestoreSent = $mail->send();
 } elseif (!empty(Sanitizar::glGET('passRestoreToken'))) {
     $password = new Password();
     $password->setToken(Sanitizar::glGET('passRestoreToken'));
@@ -165,6 +195,12 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
 if (isset($nav)) {
     Page::nav($nav);
     exit();
+}
+
+if (isset($login_atempt)) {
+    // Almacenar cant de reintentos de login
+    Session::store(LOGIN_SESSINDEX_RETRY_COUNT, 
+        Session::retrieve(LOGIN_SESSINDEX_RETRY_COUNT) + 1);
 }
 
 // Token de formulario
@@ -186,7 +222,17 @@ echo Page::getMain();
 echo "\n\t\t<h2 style='text-align: center;'>Sistema Integrado de Manejo de Personal</h2>";
 echo "\n\t\t<form style='text-align: center; margin: 0 auto; width: 100%;' "
      . "name='loginform' id='loginform' method='post' >";
-if (empty($pwdRestoreSent)) {
+if (isset($pwdRestoreSent)) {
+    // email enviado?
+    if ($pwdRestoreSent) {
+        // TODO: mostrar casilla de email enmascarada
+        echo "\n\t\t\tSe ha enviado un email a su casilla con instrucciones "
+             . "para continuar.<br />Puede cerrar &eacute;sta p&aacute;gina.";
+    } else {
+        echo "\n\t\t\tNo se ha podido enviar el email correctamente por razones "
+            . "desconocidas.<br />Por favor, <i>contacte con un administrador</i>.";
+    }
+} else {
     echo "\n\t\t\t<address>Por favor, identif&iacute;quese para continuar</address>";
     echo "\n\t\t\t<br />";
     echo "\n\t\t\t<table style='text-align: left; margin: auto; with: auto;' >";
@@ -199,7 +245,11 @@ if (empty($pwdRestoreSent)) {
              . Session::retrieve(SMP_SESSINDEX_NOTIF_ERR) . "</address>";
         echo "\n\t\t\t\t\t\t</td>";
         echo "\n\t\t\t\t\t</tr>";
-        $retry_count = Session::retrieve(LOGIN_RETRY_COUNT);
+        Session::remove(SMP_SESSINDEX_NOTIF_ERR);
+    }
+    // captcha? solo si no tengo q mostrar form de reestablecimiento de pwd
+    if (empty($pwdRestore)) {
+        $retry_count = Session::retrieve(LOGIN_SESSINDEX_RETRY_COUNT);
         if ($retry_count > LOGIN_RETRY_MAX) {
             // mostrar captcha
             echo "\n\t\t\t\t\t<tr>";
@@ -214,7 +264,7 @@ if (empty($pwdRestoreSent)) {
                 $captcha += $value;
                 $captcha_string .= $value . " + ";
             }
-            Session::store(LOGIN_CAPTCHA, $captcha);
+            Session::store(LOGIN_SESSINDEX_CAPTCHA, $captcha);
             $captcha_string = substr($captcha_string, 0, 
                                 strlen($captcha_string) - 3);
             echo $captcha_string . "?";
@@ -223,12 +273,11 @@ if (empty($pwdRestoreSent)) {
             echo "\n\t\t\t\t\t\t<td style='text-align:left;'>";
             echo "\n\t\t\t\t\t\t\t<br />";
             echo "\n\t\t\t\t\t\t\t<input name='frm_txtCaptcha' type='number' "
-                    . "title='Ingrese el resultado del captcha' maxlength='3' />";
+                    . "title='Ingrese el resultado de la operación' maxlength='3' />";
             echo "\n\t\t\t\t\t\t</td>";
             echo "\n\t\t\t\t\t</tr>";
         }
-        Session::remove(SMP_SESSINDEX_NOTIF_ERR);
-    }     
+    }
     echo "\n\t\t\t\t\t<tr>";
     echo "\n\t\t\t\t\t\t<td style='text-align: left;'>";
     echo "\n\t\t\t\t\t\t\t<br />";
@@ -244,6 +293,7 @@ if (empty($pwdRestoreSent)) {
     echo "\n\t\t\t\t\t\t</td>";
     echo "\n\t\t\t\t\t</tr>";
     if (empty($pwdRestore)) {
+        // Fomulario de login
         echo "\n\t\t\t\t\t<tr>";
         echo "\n\t\t\t\t\t\t<td style='text-align: left;' >";
         echo "\n\t\t\t\t\t\t\t<br />";
@@ -270,6 +320,7 @@ if (empty($pwdRestoreSent)) {
         echo "\n\t\t\t\t\t\t</td>";
         echo "\n\t\t\t\t\t</tr>";
     } else {
+        // Fromulario de reestablecimiento de pwd
         echo "\n\t\t\t\t\t<tr>";
         echo "\n\t\t\t\t\t\t<td colspan='2' style='text-align: center;' >";
         echo "\n\t\t\t\t\t\t\t<br />";
@@ -288,10 +339,6 @@ if (empty($pwdRestoreSent)) {
     }
     echo "\n\t\t\t\t</tbody>";
     echo "\n\t\t\t</table>";
-} else {
-    // TODO: casilla de email enmascarada
-    echo "\n\t\t\tSe ha enviado un email a su casilla con instrucciones "
-         . "para continuar.<br />Puede cerrar &eacute;sta p&aacute;gina.";
 }
 echo "\n\t\t\t<input type='hidden' name='formToken' value='"
      . $formToken->getToken() . "' />";

@@ -459,13 +459,13 @@ class Page
                        'Cerrar sesi&oacute;n'
                       );
         $urls = array('', 
-                      self::urlMake(SMP_LOC_NAV, 
-                                    [ SMP_NAV_ACTION => SMP_LOC_MSGS ]),
-                      self::urlMake(SMP_LOC_NAV, 
-                                    [ SMP_NAV_ACTION => SMP_LOC_EMPLEADO ]),
-                      self::urlMake(SMP_LOC_NAV, 
-                                    [ SMP_NAV_ACTION => SMP_LOC_USUARIO ]),
-                      16 => self::urlMake(SMP_LOC_NAV, 
+                      self::urlMake('nav.php', 
+                                    [ SMP_NAV_ACTION => SMP_LOC_PAGS . 'mensajes.php' ]),
+                      self::urlMake('nav.php', 
+                                    [ SMP_NAV_ACTION => SMP_LOC_PAGS . 'empleado.php' ]),
+                      self::urlMake('nav.php', 
+                                    [ SMP_NAV_ACTION => SMP_LOC_PAGS . 'usuario.php' ]),
+                      16 => self::urlMake('nav.php', 
                                     [ SMP_NAV_ACTION => SMP_LOGOUT ])
                      );
         $classes = array(Navbar::BTN_CLASS_CATEGORY,
@@ -482,13 +482,13 @@ class Page
                 . "\n\t\t<ul class='nav_vert'>"
                 . "\n\t\t\t<li class='category'><a>&iexcl;Bienvenido <i>" 
                 . Session::retrieve(SMP_SESSINDEX_USERNAME) . "</i>!</a></li>"
-                . "\n\t\t\t<li><a href='" . self::urlMake(SMP_LOC_NAV, 
+                . "\n\t\t\t<li><a href='" . self::urlMake('nav.php', 
                 [ SMP_NAV_ACTION => SMP_LOC_MSGS ])
                 . "'>Mensajes</a></li>"
-                . "\n\t\t\t<li><a href='" . self::urlMake(SMP_LOC_NAV, 
+                . "\n\t\t\t<li><a href='" . self::urlMake('nav.php', 
                 [ SMP_NAV_ACTION => SMP_LOC_EMPLEADO ]) 
                 . "'>Mi perfil de empleado</a></li>"
-                . "\n\t\t\t<li><a href='" . self::urlMake(SMP_LOC_NAV, 
+                . "\n\t\t\t<li><a href='" . self::urlMake('nav.php', 
                 [ SMP_NAV_ACTION => SMP_LOC_USUARIO ]) 
                 . "'>Mi perfil de usuario</a></li>"            
                 . "\n\t\t\t<li class='category'><a>"
@@ -507,7 +507,7 @@ class Page
                 . "\n\t\t\t<li><a href='#'>Ver por fecha</a></li>"
                 . "\n\t\t\t<li><a href='#'>Ver por empleado</a></li>"
                 . "\n\t\t\t<li class='category'><a href='" 
-                . self::urlMake(SMP_LOC_NAV, [ SMP_NAV_ACTION => SMP_LOGOUT ])  
+                . self::urlMake('nav.php', [ SMP_NAV_ACTION => SMP_LOGOUT ])  
                 . "'>Cerrar sesi&oacute;n</a></li>"
                 . "\n\t\t</ul>"
                 . "\n\t</div>";*/
@@ -537,10 +537,10 @@ class Page
 
         return '<div style="text-align: center; margin-top: auto; top: auto; height: auto;">
             <ul id="nav">
-                <li' . $msgs . '><a href="' . page_get_url(SMP_LOC_NAV, "accion=mensajes") . '">&iexcl;Bienvenido <i>' . session_get_username() . '</i>!</a></li>
-                <li' . $perfilusr . '><a href="' . page_get_url(SMP_LOC_NAV, "accion=perfilusr") . '">Mi perfil de usuario</a>
-                <li' . $perfilemp . '><a href="' . page_get_url(SMP_LOC_NAV, 'accion=perfilemp') . '">Mi perfil de empleado</a></li>
-                <li><a href="' . page_get_url(SMP_LOC_NAV, 'accion=logout') . '">Cerrar sesi&oacute;n</a></li>
+                <li' . $msgs . '><a href="' . page_get_url('nav.php', "accion=mensajes") . '">&iexcl;Bienvenido <i>' . session_get_username() . '</i>!</a></li>
+                <li' . $perfilusr . '><a href="' . page_get_url('nav.php', "accion=perfilusr") . '">Mi perfil de usuario</a>
+                <li' . $perfilemp . '><a href="' . page_get_url('nav.php', 'accion=perfilemp') . '">Mi perfil de empleado</a></li>
+                <li><a href="' . page_get_url('nav.php', 'accion=logout') . '">Cerrar sesi&oacute;n</a></li>
             </ul>
         </div>';
     }*/
@@ -664,7 +664,7 @@ class Page
         ) {
             // Verifico que getToken no sea FALSE.
             $pageToken = $this->getToken(TRUE);
-            if ($pageToken && ($this->pageToken === $pageToken)) {
+            if ($pageToken && ($this->token === $pageToken)) {
                 return TRUE;
             }
         }
@@ -700,14 +700,15 @@ class Page
     }
     
     /**
-     * Método empleado para navegar en el sitio.
-     * Llama a la página nav.php y le pasa la acción a ejecutar mediante GET.
+     * Método empleado para navegar en el sitio.<br />
+     * Deben emplearse rutas relativas a la raíz del sitio.<br />
+     * También acepta acciones o comandos predefinidos en lugar de rutas.
      * 
-     * @param string $accion Acción a ejecutar por nav.php.
+     * @param string $accion Acción a ejecutar o ruta de la página a cargar.
      */
     public static function nav($accion = NULL)
     {
-        self::go_to(SMP_LOC_NAV, [ SMP_NAV_ACTION => $accion ]);
+        self::go_to('nav.php', [ SMP_NAV_ACTION => $accion ]);
     }
 
     /**
