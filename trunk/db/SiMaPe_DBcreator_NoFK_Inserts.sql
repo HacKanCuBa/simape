@@ -44,9 +44,9 @@ COMMENT = 'Tabla con perfiles de permisos';
 CREATE  TABLE IF NOT EXISTS `SiMaPe`.`Token` (
   `TokenId` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
   `Session_RandomToken` VARCHAR(255) NULL ,
-  `Session_Timestamp` VARCHAR(255) NULL ,
+  `Session_Timestamp` INT UNSIGNED NULL ,
   `PasswordRestore_RandomToken` VARCHAR(255) NULL ,
-  `PasswordRestore_Timestamp` VARCHAR(255) NULL ,
+  `PasswordRestore_Timestamp` INT UNSIGNED NULL ,
   `Fingerprint_Token` VARCHAR(255) NULL ,
   PRIMARY KEY (`TokenId`) )
 ENGINE = InnoDB
