@@ -27,11 +27,11 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.6
+ * @version 0.7
  */
 trait SessionToken 
 {
-    use Token;
+    use Token, UIDt;
     // __ SPECIALS
     
     // __ PRIV
@@ -41,15 +41,15 @@ trait SessionToken
      * Devuelve un Token de Sesión armado.
      * 
      * @param string $randToken Token aleatorio.
-     * @param float $timestamp Timestamp.
-     * @param UID $uid UID del usuario.
+     * @param int $timestamp Timestamp.
+     * @param string $uid UID del usuario.
      * @return mixed Token de Sesión o FALSE en caso de error.
      */
-    protected static function tokenMake($randToken, $timestamp, UID $uid)
+    protected static function tokenMake($randToken, $timestamp, $uid)
     {
         if (self::isValid_token($randToken) 
             && self::isValid_timestamp($timestamp)
-            && self::isValid_UID($uid)
+            && self::isValid_uuid($uid)
         ) {        
             // Esta operación siempre dará -1 cuando 
             // $timestamp < microtime < $timestamp + lifetime
@@ -60,13 +60,24 @@ trait SessionToken
 
             return Crypto::getHash($time 
                                     . $randToken 
-                                    . $uid->getHash()
+                                    . $uid
                                     . constant('SMP_TKN_SESSIONKEY'));
         } else {
             return FALSE;
         }        
     }
     // __ PUB
+    /**
+     * Almacena el UID del usuario.
+     * 
+     * @param string $uid UID del usuario
+     * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
+     */
+    public function setUID($uid)
+    {
+        return $this->set($uid);
+    }
+    
     /**
      * Genera y almacena un nuevo Token.  Requiere previamente del
      * Random Token, Timestamp y UID.
@@ -106,6 +117,7 @@ trait SessionToken
             && ($now < ($this->timestamp + SMP_SESSIONKEY_LIFETIME))
             && isset($this->token)
             && isset($this->randToken)
+            && isset($this->uid)
         ) {
             // Verifico que tokenMake no sea false
             $sessToken = self::tokenMake($this->randToken,
