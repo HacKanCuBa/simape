@@ -76,7 +76,7 @@ class FormToken
             // Esta operación siempre dará -1 cuando 
             // $timestamp < microtime < $timestamp + lifetime
             // Devolverá cualquier otro valor en otro caso.
-            $time = intval(($timestamp - microtime(TRUE) 
+            $time = intval(($timestamp - time() 
                                 - self::FORMTOKEN_LIFETIME) 
                                     / self::FORMTOKEN_LIFETIME);
             return Crypto::getHash($time
@@ -117,7 +117,7 @@ class FormToken
      */
     public function authenticateToken() 
     {
-        $now = microtime(TRUE);
+        $now = time();
 
         if (isset($this->randToken)
             && isset($this->token)
@@ -125,7 +125,7 @@ class FormToken
             && ($now >= $this->timestamp) 
             && ($now < ($this->timestamp + self::FORMTOKEN_LIFETIME))
         ) {
-            // Verifico que getToken no sea FALSE.
+            // Verifico que tokenMake no sea FALSE.
             $formToken = self::tokenMake($this->randToken, $this->timestamp);
             if ($formToken && ($this->token === $formToken)) {
                 return TRUE;

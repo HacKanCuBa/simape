@@ -54,7 +54,7 @@ trait SessionToken
             // Esta operación siempre dará -1 cuando 
             // $timestamp < microtime < $timestamp + lifetime
             // Devolverá cualquier otro valor en otro caso.
-            $time = intval(($timestamp - microtime(TRUE) 
+            $time = intval(($timestamp - time() 
                                 - SMP_SESSIONKEY_LIFETIME) 
                                     / SMP_SESSIONKEY_LIFETIME);
 
@@ -99,7 +99,7 @@ trait SessionToken
      */
     public function authenticateToken() 
     {
-        $now = microtime(TRUE);
+        $now = time();
 
         if (isset($this->timestamp)
             && ($now >= $this->timestamp) 
@@ -180,7 +180,7 @@ trait SessionToken
             $db->setQuery('UPDATE Token '
                         . 'SET Session_RandomToken = ?, Session_Timestamp = ? '
                         . 'WHERE TokenId = ?');
-            $db->setBindParam('ssi');
+            $db->setBindParam('sii');
             $db->setQueryParams([$this->randToken, $this->timestamp, $this->TokenId]);
             //// atenti porque la func devuelve tb nro de error
             // ToDo: procesar nro de error

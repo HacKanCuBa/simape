@@ -37,7 +37,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.73
+ * @version 0.8
  */
 class Sanitizar
 {
@@ -141,9 +141,8 @@ class Sanitizar
     public static function glPOST($POSTkey) 
     {
         try {
-            if (isset($POSTkey)) {
-                return filter_input(INPUT_POST, $POSTkey, FILTER_SANITIZE_STRING, 
-                                    FILTER_FLAG_STRIP_LOW);
+            if (isset($POSTkey) && isset($_POST[$POSTkey])) {
+                return self::value($_POST[$POSTkey]);
             }
             
             return '';
