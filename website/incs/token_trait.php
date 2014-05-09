@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.41
+ * @version 0.43
  */
 
 trait Token
@@ -60,7 +60,7 @@ trait Token
      * ID de la tabla Token en la DB.
      * @var int
      */
-    protected $TokenID;
+    protected $TokenId;
     
     // __ PRIV
     /**
@@ -96,7 +96,7 @@ trait Token
     protected static function isValid_timestamp($timestamp)
     {
         if (!empty($timestamp)
-            && (is_float($timestamp))
+            && (is_int($timestamp))
         ) {
             return TRUE;
         }
@@ -122,15 +122,15 @@ trait Token
     }
     
     /**
-     * Verifica si el TokenID es válido (entero no vacío).
+     * Verifica si el TokenId es válido (entero no vacío).
      * 
-     * @param int $TokenID TokenID a validar.
+     * @param int $TokenId TokenId a validar.
      * @return boolean TRUE si es válido, FALSE si no.
      */
-    protected static function isValid_TokenID($TokenID)
+    protected static function isValid_TokenID($TokenId)
     {
-	if (!empty($TokenID) 
-            && is_int($TokenID)
+	if (!empty($TokenId) 
+            && is_int($TokenId)
         ) {
             return TRUE;
         }
@@ -153,7 +153,7 @@ trait Token
      */
     public function generateTimestamp()
     {
-        $this->timestamp = microtime(TRUE);
+        $this->timestamp = time();
     }
     
     /**
@@ -178,7 +178,7 @@ trait Token
     /**
      * Devuelve el timestamp almacenado o (float) 0 si no hay ninguno.
      * 
-     * @return float Timestamp o (float) 0.
+     * @return int Timestamp o (float) 0.
      */
     public function getTimestamp()
     {
@@ -186,7 +186,7 @@ trait Token
             return $this->timestamp;
         }
         
-        return 0.0;
+        return 0;
     }
     
     /**
@@ -212,7 +212,7 @@ trait Token
     public function retrieve_fromDB_TokenID($username)
     {
         $db = new DB;
-        $db->setQuery('SELECT TokenID FROM Usuario WHERE Nombre = ?');
+        $db->setQuery('SELECT TokenId FROM Usuario WHERE Nombre = ?');
         $db->setBindParam('s');
         $db->setQueryParams($username);
         $db->queryExecute();
@@ -295,13 +295,13 @@ trait Token
     /**
      * Fija el valor del identificador de tabla Token de la DB.
      * 
-     * @param int $TokenID Identificador de la tabla Token.
+     * @param int $TokenId Identificador de la tabla Token.
      * @return boolean TRUE si se almacenó correctamente, FALSE si no.
      */
-    public function setTokenID($TokenID) 
+    public function setTokenID($TokenId) 
     {
-        if (self::isValid_TokenID($TokenID)) {
-            $this->TokenID = $TokenID;
+        if (self::isValid_TokenID($TokenId)) {
+            $this->TokenId = $TokenId;
             return TRUE;
         }
         

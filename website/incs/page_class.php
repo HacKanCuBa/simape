@@ -293,7 +293,7 @@ class Page
      */
     protected static function go_to($loc = NULL,
                                  $params = NULL,
-                                 string $intLink = NULL) 
+                                 $intLink = NULL) 
     {
         if (empty($loc) || self::pageExists($loc)) {
             header("Location: "
@@ -654,7 +654,7 @@ class Page
      */
     public function authenticateToken() 
     {
-        $now = microtime(TRUE);
+        $now = time();
         
         if (!empty($this->pageToken) 
             && !empty($this->timestamp)

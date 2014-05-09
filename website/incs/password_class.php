@@ -44,13 +44,11 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.41
+ * @version 1.5
  */
 class Password
 {
-    use SessionToken {
-        store_inDB as sesst_store_inDB;
-    }
+    use SessionToken;
     
     protected $passwordPT, $passwordEC, $passwordCost, 
               $passwordModificationTimestamp;
@@ -144,7 +142,7 @@ class Password
             // Esta operación siempre dará -1 cuando 
             // $timestamp < microtime < $timestamp + lifetime
             // Devolverá cualquier otro valor en otro caso.
-            $time = intval(($timestamp - microtime(TRUE) 
+            $time = intval(($timestamp - time() 
                                 - SMP_PASSWORD_RESTORETIME) 
                                     / SMP_PASSWORD_RESTORETIME);
 
@@ -291,11 +289,30 @@ class Password
      * @return boolean TRUE si se almacenó en la DB exitosamente, 
      * FALSE en caso contrario.
      */
-    public function store_inDB_PwdRestore($username)
+    public function store_inDB_PwdRestore()
     {
-        return $this->sesst_store_inDB($username);
+        if (!empty($this->TokenId) 
+            && !empty($this->randToken)
+            && !empty($this->timestamp)
+        ) {
+            $db = new DB(TRUE);
+            $db->setQuery('UPDATE Token '
+                        . 'SET PasswordRestore_RandomToken = ?, '
+                        . 'PasswordRestore_Timestamp = ? '
+                        . 'WHERE TokenId = ?');
+            $db->setBindParam('sii');
+            $db->setQueryParams([$this->randToken, $this->timestamp, $this->TokenId]);
+            //// atenti porque la func devuelve tb nro de error
+            // ToDo: procesar nro de error
+            $retval = $db->queryExecute();
+            if (is_bool($retval)) {
+                return $retval;
+            }
+        }
+        
+        return FALSE;
     }
-
+    
     /**
      * Devuelve la contraseña encriptada.  Debe haberse llamado primero a 
      * encryptPassword() o en su defecto setEncrypted().
@@ -389,6 +406,35 @@ class Password
     }
     
     /**
+     * Recupera el Random Token y el Timestamp almacenado en la DB y lo guarda 
+     * en el objeto.  Usar los respectivos get... para obtener los valores.
+     * 
+     * @return boolean TRUE si tuvo exito, FALSE si no.
+     * @see setTokenID
+     */
+    public function retrieve_fromDB_PwdRestore() 
+    {
+        if (!empty($this->TokenId)) {
+            $db = new DB;
+            $db->setQuery('SELECT PasswordRestore_RandomToken, '
+                            . 'PasswordRestore_Timestamp '
+                            . 'FROM Token WHERE TokenId = ?');
+            $db->setBindParam('i');
+            $db->setQueryParams($this->TokenId);
+            if ($db->queryExecute()) {
+                $tokens = $db->getQueryData();
+                if ($this->setRandomToken($tokens['PasswordRestore_RandomToken'])
+                    && $this->setTimestamp($tokens['PasswordRestore_Timestamp'])
+                ) {
+                    return TRUE;
+                }
+            }            
+        }
+        
+        return FALSE;
+    }
+    
+    /**
      * Encripta la contraseña almacenada en texto plano.  Para obtener el 
      * resultado: getEncrypted().
      * NOTA: ¡puede demorar varios segundos!
@@ -452,15 +498,20 @@ class Password
      */
     public function authenticateToken() 
     {
-        $now = microtime(TRUE);
+        $now = time();
 
         if (isset($this->timestamp)
             && ($now >= $this->timestamp) 
             && ($now < ($this->timestamp + SMP_PASSWORD_RESTORETIME))
-            && isset($this->passRestoreToken)
-            && ($this->passRestoreToken === $this->getToken(TRUE))
+            && isset($this->token)
         ) {
-            return TRUE;            
+            // Verifico que tokenMake no sea FALSE.
+            $passtoken = self::tokenMake($this->randToken, 
+                                            $this->timestamp, 
+                                            $this->uid);
+            if ($passtoken && ($this->token === $passtoken)) {
+                return TRUE;
+            }  
         }
 
         return FALSE; 
