@@ -42,7 +42,7 @@ trait UsuarioPerfil
                                     );
     
     // __ SPECIALS
-    
+    function __construct();
     // __ PRIV
     
     // __ PROT

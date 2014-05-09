@@ -36,52 +36,58 @@
  */
 class Usuario extends Empleado 
 {    
-    use UsuarioPerfil {
-        getId as getUsuarioPerfilId;
-        getNombre as getUsuarioPerfilNombre;
-        getTimestamp as getUsuarioPerfilTimestamp;
+    use UsuarioPerfil, UIDt, Passwordt, SessionToken {
+        UsuarioPerfil::__construct as __construct_UsuarioPerfil;
+        UsuarioPerfil::getId as getUsuarioPerfilId;
+        UsuarioPerfil::getNombre as getUsuarioPerfilNombre;
+        UsuarioPerfil::getTimestamp as getUsuarioPerfilTimestamp;
+        
+        UID::__construct as __construct_UID;
+        UID::store_inDB as store_inDB_UID;
+        
+        Password::__construct as __construct_Password;
+        Password::store_inDB as store_inDB_Password;
+        
+        SessionToken::__construct as __construct_SessionToken;
     }
     
-    protected $Usuario = array ('UsuarioId' => '',
-                                'EmpleadoId' => '',
-                                'UsuarioPerfilId' => '',
+    protected $Usuario = array ('UsuarioId' => 0,
+                                'EmpleadoId' => 0,
+                                'UsuarioPerfilId' => 0,
+                                'TokenId' => 0,
                                 'Nombre' => '',
                                 'UID' => '',
                                 'PasswordSalted' => '',
-                                'Activo' => '',
-                                'CreacionTimestamp' => '',
-                                'ModificacionTimestamp' => ''
+                                'PasswordTimestamp' => 0,
+                                'Activo' => FALSE,
+                                'PrivKey' => '',
+                                'PubKey' => '',
+                                'CreacionTimestamp' => 0,
+                                'ModificacionTimestamp' => 0
                                 );
-    protected $password, $uid, $EsNuevoUsuario;
+    protected $esNuevoUsuario;
     
     // Metodos
     // __ SPECIALS
     /**
      * Busca en la DB si ya existe un usuario con los datos pasados:
-     * Nombre, UID o Empleado, en ese orden.
+     * Nombre, UID o Legajo de Empleado.<br />
      * Si lo encuentra, recupera todos los datos desde la DB.  Al mismo tiempo,
-     * considera que se estará actualizando dicho usuario con los nuevos datos
-     * pasados.
-     * Si no lo encuentra, considera que se esta creando un nuevo usuario.
+     * considera que se estará actualizando dicho usuario.<br />
+     * Si no lo encuentra, considera que se está creando un nuevo usuario.
      * 
      * @param string $Nombre Nombre de usuario.
-     * @param mixed $UID UID del usuario, como objeto o string.
-     * @param mixed $Password Nueva clave (como objeto) o bien se considerará 
-     * nueva clave en texto plano como string.
-     * @param boolean $Activo TRUE para indicar que el nuevo usario estará 
-     * activo (por defecto), FALSE para desactivarlo.
+     * @param string $UID UID del usuario.
+     * @param string $Legajo Legajo del Empleado.
      */
-    function __construct($Nombre = NULL, $UID = NULL, 
-                          $Password = NULL, $Activo = TRUE
-    ) {      
+    function __construct($Nombre = NULL, $UID = NULL, $Legajo = NULL) {      
+        parent::__construct($Legajo);
+        self::__construct_UsuarioPerfil();
+        self::__construct_UID($UID);
+        self::__construct_Password();
+        self::__construct_SessionToken();
         
-        if (!$this->setUID($UID)) {
-            $this->uid = new UID;
-        }
-        
-        if (!$this->setPassword($Password)) {
-            $this->password = new Password;
-        }       
+        $this->setNombre($Nombre);
         
         /* !!! */
         // Búsqueda
@@ -152,21 +158,6 @@ class Usuario extends Empleado
         }
     }
     
-    /**
-     * Valida y determina si se trata de un objeto UID.
-     * 
-     * @param mixed $uid
-     * @return boolean TRUE si se trata de un objeto UID, FALSE si no.
-     */
-    protected static function isValid_UID($uid)
-    {
-        if (!empty($uid) && is_a($uid, 'UID')) {
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
-
     /**
      * Valida y determina si se trata de un objeto Empleado.
      * 
@@ -241,7 +232,7 @@ class Usuario extends Empleado
      * @return mixed Todos los valores en un array, FALSE si se produjo
      * un error.
      */
-    protected static function getTblFromDB($searchParam) {
+    protected static function retrieve_fromDB_tbl($searchParam) {
         if (!empty($searchParam)) {
             $db = new DB;
             if (is_int($searchParam)) {
@@ -268,7 +259,7 @@ class Usuario extends Empleado
         return FALSE;
     }
         
-    protected function setUsuarioCreacionTimestamp($NuevoTimestamp)
+    protected function setCreacionTimestamp($NuevoTimestamp)
     {
         $this->Usuario['CreacionTimestamp'] = $NuevoTimestamp;
     }
@@ -278,36 +269,36 @@ class Usuario extends Empleado
     // Set
     public function setNombre($NuevoNombreUsuario) {
         if ($this->isValid_username($NuevoNombreUsuario)) {
-            $this->Usuario['Nombre'] = strtolower($NuevoNombreUsuario);
+            $this->Usuario['Nombre'] = strtolower(trim($NuevoNombreUsuario));
             return TRUE;
         }
         return FALSE;
     }
     
-    /**
-     * Almacena una nueva contraseña, como objeto o string.  El objeto debe 
-     * contener una contraseña en texto plano o encriptada.
-     * @param type $NuevoPassword
-     * @return boolean
-     */
-    public function setPassword($NuevoPassword) 
-    {
-        $retval = FALSE;
-        
-        if (self::isValid_Password($NuevoPassword) 
-            && (!empty($NuevoPassword->getPlaintext()) 
-                || !empty($NuevoPassword->getEncrypted()))
-        ) {
-            $this->password = $NuevoPassword;
-            $retval = TRUE;
-        } elseif (Password::isStrong($NuevoPassword)) {
-            $this->password = new Password;
-            $this->password->setPlaintext($NuevoPassword);
-            $retval = TRUE;
-        }
-        
-        return $retval;
-    }
+//    /**
+//     * Almacena una nueva contraseña, como objeto o string.  El objeto debe 
+//     * contener una contraseña en texto plano o encriptada.
+//     * @param type $NuevoPassword
+//     * @return boolean
+//     */
+//    public function setPassword($NuevoPassword) 
+//    {
+//        $retval = FALSE;
+//        
+//        if (self::isValid_Password($NuevoPassword) 
+//            && (!empty($NuevoPassword->getPlaintext()) 
+//                || !empty($NuevoPassword->getEncrypted()))
+//        ) {
+//            $this->password = $NuevoPassword;
+//            $retval = TRUE;
+//        } elseif (Password::isStrong($NuevoPassword)) {
+//            $this->password = new Password;
+//            $this->password->setPlaintext($NuevoPassword);
+//            $retval = TRUE;
+//        }
+//        
+//        return $retval;
+//    }
   
     public function setActivo($NuevoActivo) {
         if (!empty($NuevoActivo) 
@@ -319,86 +310,106 @@ class Usuario extends Empleado
         return FALSE;
     }
     
-    /**
-     * Almacena el UID indicado como nuevo UID del usuario.  Acepta objeto UID 
-     * o string.<br />
-     * El objeto debe contener un UID válido para ser aceptado.<br />
-     * Al crear un usuario nuevo, el sistema creará un nuevo UID si no se 
-     * almacenó uno previamente, por lo que no es necesario llamar a éste 
-     * método a tal fin.
-     * 
-     * @param mixed $NuevoUID (UID) o (string) Nuevo UID.
-     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
-     */
-    public function setUID($NuevoUID) 
-    {
-        $retval = FALSE;
-    
-        if (self::isValid_UID($NuevoUID) && !empty($NuevoUID->get())) {
-            $this->uid = $NuevoUID;
-            $retval = TRUE;
-        } elseif (UID::isValid($NuevoUID)) {
-            $this->uid = new UID;
-            $this->uid->set($NuevoUID);
-            $retval = TRUE;
-        }
-        
-        return $retval;
-    }
+//    /**
+//     * Almacena el UID indicado como nuevo UID del usuario.  Acepta objeto UID 
+//     * o string.<br />
+//     * El objeto debe contener un UID válido para ser aceptado.<br />
+//     * Al crear un usuario nuevo, el sistema creará un nuevo UID si no se 
+//     * almacenó uno previamente, por lo que no es necesario llamar a éste 
+//     * método a tal fin.
+//     * 
+//     * @param mixed $NuevoUID (UID) o (string) Nuevo UID.
+//     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
+//     */
+//    public function setUID($NuevoUID) 
+//    {
+//        $retval = FALSE;
+//    
+//        if (self::isValid_UID($NuevoUID) && !empty($NuevoUID->get())) {
+//            $this->uid = $NuevoUID;
+//            $retval = TRUE;
+//        } elseif (UID::isValid($NuevoUID)) {
+//            $this->uid = new UID;
+//            $this->uid->set($NuevoUID);
+//            $retval = TRUE;
+//        }
+//        
+//        return $retval;
+//    }
     // --
     // Get
     public function getUsuarioNombre() {
-        return (string) $this->Usuario['Nombre'];
+        return $this->Usuario['Nombre'];
     }
     
-    public function get() {
-        return (string) $this->Usuario['UID'];
+    public function getUID() {
+        return $this->Usuario['UID'];
     }
 
     public function getPasswordSalted() 
     {
-        return (string) $this->Usuario['PasswordSalted'];
+        return $this->Usuario['PasswordSalted'];
     }
     
     public function getActivo()
     {
-        return (bool) $this->Usuario['Activo'];
+        return $this->Usuario['Activo'];
     }
     
     public function getUsuarioId()
     {
-        return (int) $this->Usuario['UsuarioId'];
+        return $this->Usuario['UsuarioId'];
     }
     
     public function getUsuarioPerfilId()
     {
-        return (int) $this->Usuario['UsuarioPerfilId'];
+        return $this->Usuario['UsuarioPerfilId'];
     }
     
     public function getEmpleadoId()
     {
-        return (int) $this->Usuario['EmpleadoId'];
+        return $this->Usuario['EmpleadoId'];
     }
 
     public function getUsuarioCreacionTimestamp()
     {
-        return (int) $this->Usuario['CreacionTimestamp'];
+        return $this->Usuario['CreacionTimestamp'];
     }
     
     public function getUsuarioModificacionTimestamp()
     {
-        return (int) $this->Usuario['ModificacionTimestamp'];
+        return $this->Usuario['ModificacionTimestamp'];
     }
     // --
     // Otras
-    public function guardar() {
-        /**
-         * Guarda el usuario en la DB.  Devuelve TRUE si tuvo éxito, 
-         * FALSE si no.
-         * 
-         * @return boolean TRUE si tuvo éxito, FALSE si no.
-         */
-        
+    /**
+     * Recupera de la DB todos los datos del usuario, siempre y cuando se haya
+     * establecido previamente el ID, nombre o UID del mismo.
+     * 
+     * @return boolean TRUE si se recuperó correctamente, FALSE si no.
+     */
+    public function retrieve_fromDB_usuario()
+    {
+        if (isset($this->Usuario['UsuarioId'])) {
+            $this->Usuario = self::retrieve_fromDB_tbl($this->Usuario['UsuarioId']);
+            return TRUE;
+        } elseif (isset($this->Usuario['Nombre'])) {
+            $this->Usuario = self::retrieve_fromDB_tbl($this->Usuario['Nombre']);
+            return TRUE;
+        } elseif (isset($this->Usuario['UID'])) {
+            $this->Usuario = self::retrieve_fromDB_tbl($this->Usuario['UID']);
+            return TRUE;
+        }
+        return FALSE;
+    }
+    
+    /**
+     * Guarda el usuario en la DB.  Devuelve TRUE si tuvo éxito, 
+     * FALSE si no.
+     * 
+     * @return boolean TRUE si tuvo éxito, FALSE si no.
+     */
+    public function store_inDB() {
         if ($this->isDataReady()) {
             $ModificacionTimestamp = time();
             

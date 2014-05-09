@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.43
+ * @version 0.5
  */
 
 trait Token
@@ -43,13 +43,7 @@ trait Token
      * @var float
      */
     protected $timestamp;
-    
-    /**
-     * Objeto UID.
-     * @var UID
-     */
-    protected $uid;
-    
+        
     /**
      * Token especial de clase.
      * @var string
@@ -103,24 +97,7 @@ trait Token
         
         return FALSE;
     }
-    
-    /**
-     * Determina si un valor es un tipo UID válido.
-     * 
-     * @param string|UID $uid UID a validar, como string o como objeto.
-     * @return boolean TRUE si es un UID válido, FALSE si no.
-     */
-    protected static function isValid_UID($uid)
-    {
-        if (!empty($uid) && 
-            ((is_a($uid, 'UID') && !empty($uid->get())) || is_string($uid))
-        ) {
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
-    
+       
     /**
      * Verifica si el TokenId es válido (entero no vacío).
      * 
@@ -253,28 +230,7 @@ trait Token
         
         return FALSE;
     }
-    
-    /**
-     * Almacena el UID del usuario.  Puede recibirlo como string o como objeto.
-     * 
-     * @param string|UID $uid UID del usuario, como string o como objeto.
-     * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
-     */
-    public function setUID($uid)
-    {
-        if (self::isValid_UID($uid)) {
-            if(is_string($uid)) {
-                $this->uid = new UID();
-                return $this->uid->set($uid);
-            } else {
-                $this->uid = $uid;
-                return TRUE;
-            }
-        }
         
-        return FALSE;
-    }
-    
     /**
      * Almacena un Token especial en el objeto.  Emplearlo para la función
      * de autenticación.
