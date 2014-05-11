@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.3
+ * @version 0.31
  */
 
 class FormToken 
@@ -61,31 +61,6 @@ class FormToken
     // __ PRIV
     
     // __ PROT
-    /**
-     * Devuelve un Token de Formulario armado.
-     * 
-     * @param string $randToken Token aleatorio.
-     * @param float $timestamp Timestamp.
-     * @return mixed Token de Formulario o FALSE en caso de error.
-     */
-    protected static function tokenMake($randToken, $timestamp)
-    {
-        if (self::isValid_token($randToken) 
-            && self::isValid_timestamp($timestamp)
-        ) {        
-            // Esta operación siempre dará -1 cuando 
-            // $timestamp < microtime < $timestamp + lifetime
-            // Devolverá cualquier otro valor en otro caso.
-            $time = intval(($timestamp - time() 
-                                - self::FORMTOKEN_LIFETIME) 
-                                    / self::FORMTOKEN_LIFETIME);
-            return Crypto::getHash($time
-                                    . $randToken  
-                                    . SMP_TKN_FORM);
-        } else {
-            return FALSE;
-        }        
-    }
     
     // __ PUB
     /**
@@ -99,11 +74,11 @@ class FormToken
         if (isset($this->randToken)
             && isset($this->timestamp)
         ) {
-            $token = self::tokenMake($this->randToken, $this->timestamp);
-            if(self::isValid_formToken($token)) {
-                $this->token = $token;
-                return TRUE;
-            }
+            $token = self::tokenMake($this->randToken, 
+                                        SMP_TKN_FORM,
+                                        $this->timestamp,
+                                        self::FORMTOKEN_LIFETIME);
+            return $this->setToken($token);
         }
         
         return FALSE;
@@ -126,7 +101,10 @@ class FormToken
             && ($now < ($this->timestamp + self::FORMTOKEN_LIFETIME))
         ) {
             // Verifico que tokenMake no sea FALSE.
-            $formToken = self::tokenMake($this->randToken, $this->timestamp);
+            $formToken = self::tokenMake($this->randToken, 
+                                        SMP_TKN_FORM,
+                                        $this->timestamp,
+                                        self::FORMTOKEN_LIFETIME);
             if ($formToken && ($this->token === $formToken)) {
                 return TRUE;
             }

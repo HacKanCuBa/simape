@@ -98,7 +98,7 @@ class Fingerprint
                                 . SMP_TKN_FINGERPRINT
                                 ;
         }
-        return Crypto::getHash($tokenContent);
+        return Crypto::getHash($tokenContent, 1);
     }
 
     // __ PUB

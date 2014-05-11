@@ -27,13 +27,13 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.6
+ * @version 1.61
  */
 class Password
 {
     use Passwordt, SessionToken {
-        Passwordt::authenticateToken insteadof authenticateToken;
-        Passwordt::tokenMake insteadof tokenMake;
+        Passwordt::authenticateToken insteadof SessionToken;
+        Passwordt::generateToken insteadof SessionToken;
     }
     
     // Metodos

@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.8
+ * @version 0.81
  */
 trait SessionToken 
 {
@@ -48,35 +48,6 @@ trait SessionToken
         return self::isValid_token($sessionToken);
     }
     
-    /**
-     * Devuelve un Token de Sesión armado.
-     * 
-     * @param string $randToken Token aleatorio.
-     * @param int $timestamp Timestamp.
-     * @param string $uid UID del usuario.
-     * @return mixed Token de Sesión o FALSE en caso de error.
-     */
-    protected static function tokenMake($randToken, $timestamp, $uid)
-    {
-        if (self::isValid_token($randToken) 
-            && self::isValid_timestamp($timestamp)
-            && Usuario::isValid_UID($uid)
-        ) {        
-            // Esta operación siempre dará -1 cuando 
-            // $timestamp < time < $timestamp + lifetime
-            // Devolverá cualquier otro valor en otro caso.
-            $time = intval(($timestamp - time() 
-                                - SMP_SESSIONKEY_LIFETIME) 
-                                    / SMP_SESSIONKEY_LIFETIME);
-
-            return Crypto::getHash($time 
-                                    . $randToken 
-                                    . $uid
-                                    . constant('SMP_TKN_SESSIONKEY'));
-        } else {
-            return FALSE;
-        }        
-    }
     // __ PUB    
     /**
      * Genera y almacena un nuevo Token.  Requiere previamente del
@@ -91,12 +62,11 @@ trait SessionToken
            && isset($this->uid)
         ) {
            $token = self::tokenMake($this->randToken,
+                                    SMP_TKN_SESSIONKEY,
                                     $this->timestamp,
+                                    SMP_SESSIONKEY_LIFETIME,
                                     $this->uid); 
-           if(self::isValid_sessionToken($token)) {
-               $this->token = $token;
-               return TRUE;
-           }
+           return $this->setToken($token);
         }
         
         return FALSE;
@@ -121,8 +91,10 @@ trait SessionToken
         ) {
             // Verifico que tokenMake no sea false
             $sessToken = self::tokenMake($this->randToken,
-                                         $this->timestamp,
-                                         $this->uid);
+                                            SMP_TKN_SESSIONKEY,
+                                            $this->timestamp,
+                                            SMP_SESSIONKEY_LIFETIME,
+                                            $this->uid);
             if ($sessToken && ($sessToken === $this->token)) {
                 return TRUE;            
             }
