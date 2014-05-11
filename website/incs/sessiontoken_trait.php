@@ -27,16 +27,27 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.7
+ * @version 0.8
  */
 trait SessionToken 
 {
-    use Token, UIDt;
+    use Token, UID;
+      
     // __ SPECIALS
     
     // __ PRIV
     
-    // __ PROT    
+    // __ PROT
+    /**
+     * Determina si el Token de Sesión indicado es válido.
+     * @param string $sessionToken Token de Sesión a validar.
+     * @return boolean TRUE si es un Token de Sesión válido, FALSE si no.
+     */
+    protected static function isValid_sessiontoken($sessionToken)
+    {
+        return self::isValid_token($sessionToken);
+    }
+    
     /**
      * Devuelve un Token de Sesión armado.
      * 
@@ -49,10 +60,10 @@ trait SessionToken
     {
         if (self::isValid_token($randToken) 
             && self::isValid_timestamp($timestamp)
-            && self::isValid_uuid($uid)
+            && Usuario::isValid_UID($uid)
         ) {        
             // Esta operación siempre dará -1 cuando 
-            // $timestamp < microtime < $timestamp + lifetime
+            // $timestamp < time < $timestamp + lifetime
             // Devolverá cualquier otro valor en otro caso.
             $time = intval(($timestamp - time() 
                                 - SMP_SESSIONKEY_LIFETIME) 
@@ -66,18 +77,7 @@ trait SessionToken
             return FALSE;
         }        
     }
-    // __ PUB
-    /**
-     * Almacena el UID del usuario.
-     * 
-     * @param string $uid UID del usuario
-     * @return boolean TRUE si se almacenó exitosamente, FALSE si no.
-     */
-    public function setUID($uid)
-    {
-        return $this->set($uid);
-    }
-    
+    // __ PUB    
     /**
      * Genera y almacena un nuevo Token.  Requiere previamente del
      * Random Token, Timestamp y UID.
@@ -130,23 +130,14 @@ trait SessionToken
 
         return FALSE;  
     }
-    
+        
     /**
-     * Determina si el Token de Sesión indicado es válido.
-     * @param string $sessionToken Token de Sesión a validar.
-     * @return boolean TRUE si es un Token de Sesión válido, FALSE si no.
-     */
-    public static function isValid_sessiontoken($sessionToken)
-    {
-        return self::isValid_token($sessionToken);
-    }
-    
-    /**
-     * Recupera el Random Token y el Timestamp almacenado en la DB y lo guarda 
-     * en el objeto.  Usar los respectivos get... para obtener los valores.
+     * Recupera el Random Token, el Timestamp y el UID almacenado en la DB y lo 
+     * guarda en el objeto.  Usar los respectivos get... para obtener los 
+     * valores.
      * 
      * @return boolean TRUE si tuvo exito, FALSE si no.
-     * @see setTokenID
+     * @see setTokenId
      */
     public function retrieve_fromDB() 
     {
@@ -184,9 +175,9 @@ trait SessionToken
      */
     public function store_inDB() 
     {
-        if (!empty($this->TokenId) 
-            && !empty($this->randToken)
-            && !empty($this->timestamp)
+        if (isset($this->TokenId) 
+            && isset($this->randToken)
+            && isset($this->timestamp)
         ) {
             $db = new DB(TRUE);
             $db->setQuery('UPDATE Token '

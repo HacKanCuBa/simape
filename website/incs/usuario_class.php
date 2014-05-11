@@ -32,107 +32,124 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.7 untested
+ * @version 0.82
  */
-class Usuario extends Empleado 
+class Usuario extends Empleado
 {    
-    use UsuarioPerfil, UIDt, Passwordt, SessionToken {
-        UsuarioPerfil::__construct as __construct_UsuarioPerfil;
-        UsuarioPerfil::getId as getUsuarioPerfilId;
-        UsuarioPerfil::getNombre as getUsuarioPerfilNombre;
-        UsuarioPerfil::getTimestamp as getUsuarioPerfilTimestamp;
+    // SessionToken ya incorpora UID.
+    use SessionToken, Passwordt {        
+        SessionToken::store_inDB as SessionToken_storeinDB;
+        SessionToken::retrieve_fromDB as SessionToken_retrieve_fromDB;
+        SessionToken::authenticateToken as protected SessionToken_authenticateToken;
+        SessionToken::tokenMake as SessionToken_tokenMake;
         
-        UID::__construct as __construct_UID;
-        UID::store_inDB as store_inDB_UID;
+        Passwordt::getPlaintext as public getPasswordPlaintext;
+        Passwordt::setPlaintext as public setPasswordPlaintext;
+        Passwordt::getEncrypted as public getPasswordEncrypted;
+        Passwordt::setEncrypted as public setPasswordEncrypted;
+        Passwordt::authenticateToken as protected Password_authenticateToken;
+        Passwordt::tokenMake as Password_tokenMake;
         
-        Password::__construct as __construct_Password;
-        Password::store_inDB as store_inDB_Password;
+        SessionToken::tokenMake insteadof Passwordt;
+        SessionToken::authenticateToken insteadof Passwordt;
         
-        SessionToken::__construct as __construct_SessionToken;
+        // SessionToken
+        retrieve_fromDB_TokenId as protected;
+        retrieve_tblToken as protected;
+        authenticateToken as protected;
+        
+        // Passwordt
+        retrieve_fromDB_PwdRestore as protected;
     }
     
-    protected $Usuario = array ('UsuarioId' => 0,
-                                'EmpleadoId' => 0,
-                                'UsuarioPerfilId' => 0,
-                                'TokenId' => 0,
-                                'Nombre' => '',
-                                'UID' => '',
-                                'PasswordSalted' => '',
-                                'PasswordTimestamp' => 0,
-                                'Activo' => FALSE,
-                                'PrivKey' => '',
-                                'PubKey' => '',
-                                'CreacionTimestamp' => 0,
-                                'ModificacionTimestamp' => 0
-                                );
+    const TOKEN_PASSWORDRESTORE = TRUE;
+    const TOKEN_SESSION = FALSE;
+
+
+//    /**
+//     * Tabla Usuario de la DB.
+//     * @var array
+//     */
+//    protected $Usuario = array ('UsuarioId' => 0,
+//                                'EmpleadoId' => 0,
+//                                'UsuarioPerfilId' => 0,
+//                                'TokenId' => 0,
+//                                'Nombre' => '',
+//                                'UID' => '',
+//                                'PasswordSalted' => '',
+//                                'PasswordTimestamp' => 0,
+//                                'Activo' => FALSE,
+//                                'PrivKey' => '',
+//                                'PubKey' => '',
+//                                'CreacionTimestamp' => 0,
+//                                'ModificacionTimestamp' => 0
+//                                );
+    
+    protected $UsuarioId = 0;
+    protected $UsuarioNombre = '';
+    protected $Activo = FALSE;
+    protected $PrivKey = NULL;
+    protected $PubKey = NULL;
+    protected $UsuarioCreacionTimestamp = 0;
+    protected $UsuarioModificacionTimestamp = 0;
+    
+//    /**
+//     * Tabla UsuarioPerfil de la DB.
+//     * @var array
+//     */
+//    protected $UsuarioPerfil = array('UsuarioPerfilId' => 0,
+//                                     'Nombre' => '',
+//                                     'Timestamp' => 0
+//                                    );
+    
+    protected $UsuarioPerfilId = 0;
+    protected $UsuarioPerfilNombre = '';
+    protected $UsuarioPerfilTimestamp = 0;
+    
+    /**
+     * Indica si el usuario es nuevo o ya existe.  Importante para determinar
+     * si se debe cambiar CreacionTimestamp.
+     * @var boolean
+     */
     protected $esNuevoUsuario;
     
+    /**
+     * Determina si al grabar en la DB se escribirá el ID de la tabla (TRUE)
+     * o no (FALSE, por defecto) al crear un nuevo Usuario, dado que la DB
+     * maneja este valor automáticamente.
+     * @var boolean
+     */
+    protected $write_id = FALSE;
+   
     // Metodos
     // __ SPECIALS
     /**
-     * Busca en la DB si ya existe un usuario con los datos pasados:
-     * Nombre, UID o Legajo de Empleado.<br />
-     * Si lo encuentra, recupera todos los datos desde la DB.  Al mismo tiempo,
-     * considera que se estará actualizando dicho usuario.<br />
-     * Si no lo encuentra, considera que se está creando un nuevo usuario.
+     * Busca en la DB si ya existe un Usuario con los datos pasados:
+     * UsuarioId, Nombre o UID (en ese orden de prioridad)<br />
+     * Si lo encuentra, recupera todos los datos desde la DB.  No almacena los 
+     * datos pasados.<br />
+     * Si no lo encuentra, considera que se está creando un nuevo Usuario y 
+     * almacena los datos pasados.<br />
+     * <i>No es recomendable crear un nuevo usuario con UsuarioId manual,
+     * dado que la DB genera uno automáticamente.</i>
      * 
      * @param string $Nombre Nombre de usuario.
      * @param string $UID UID del usuario.
-     * @param string $Legajo Legajo del Empleado.
+     * @param int $UsuarioId Id de la tabla Usuario.
      */
-    function __construct($Nombre = NULL, $UID = NULL, $Legajo = NULL) {      
-        parent::__construct($Legajo);
-        self::__construct_UsuarioPerfil();
-        self::__construct_UID($UID);
-        self::__construct_Password();
-        self::__construct_SessionToken();
+    function __construct($Nombre = NULL, $UID = NULL, $UsuarioId = NULL) 
+    {        
+        // Es necesario incializar passwordcost!
+        $this->setPasswordCost();
         
-        $this->setNombre($Nombre);
-        
-        /* !!! */
         // Búsqueda
-        $UsuarioId = 0;
-        if (!empty($Nombre)) {
-            $UsuarioId = $this->findUsuarioId_usingNombre($Nombre);
-        } elseif (!empty($UID)) {
-            $UsuarioId = $this->findUsuarioId_usingUID($UID);
-        } elseif (!empty($Empleado) && is_a($Empleado, 'Empleado')) {
-            $UsuarioId = $this->findUsuarioId_usingEmpleadoId(
-                                        $Empleado->getEmpleadoId);
-        }
+        $this->setNombre($Nombre);
+        $this->setUID($UID);
+        $this->setUsuarioId($UsuarioId);
+        $this->esNuevoUsuario = !$this->retrieve_fromDB();
         
-        if ($UsuarioId > 0) {
-            // Encontrado
-            $this->Usuario['UsuarioId'] = $UsuarioId;
-            $data = $this->getUserTblFromDB();
-            if (is_array($data)) {
-                $this->Usuario = &$data;
-                $this->Empleado['EmpleadoId'] = $this->Usuario['EmpleadoId'];
-                $this->UsuarioPerfil['UsuarioPerfilId'] = 
-                                           $this->Usuario['UsuarioPerfilId'];
-                $this->EsNuevoUsuario = FALSE;
-            } else {
-                // Error critico!
-                // Encontró el UsuarioId, pero algo sucedió en la consulta de
-                // datos... DB desconectada?
-            }
-        } else {
-            // No encotrado
-            $this->EsNuevoUsuario = TRUE;
-            $this->setUID($this->crypto->get());
-            $this->setUsuarioCreacionTimestamp(time());
-        }
-        
-        // Ya sea que se trate de uno nuevo o de actualizar uno existente.
-        if (!empty($Activo)) {
-            $this->setActivo($Activo);
-        }
-        if (!empty($Nombre)) {
-            $this->setUsuarioNombre($Nombre);
-        }
-        if (!empty($PasswordPlain)) {
-            $this->setPasswordPlain($PasswordPlain);
-        }
+        // Búsqueda de empleado
+        parent::__construct(NULL, NULL, $this->EmpleadoId);
     }
     // __ PRIV
     
@@ -158,51 +175,51 @@ class Usuario extends Empleado
         }
     }
     
-    /**
-     * Valida y determina si se trata de un objeto Empleado.
-     * 
-     * @param mixed $empleado
-     * @return boolean TRUE si se trata de un objeto Empleado, FALSE si no.
-     */
-    protected static function isValid_Empleado($empleado)
-    {
-        if (!empty($empleado) && is_a($empleado, 'Empleado')) {
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
+//    /**
+//     * Valida y determina si se trata de un objeto Empleado.
+//     * 
+//     * @param mixed $empleado
+//     * @return boolean TRUE si se trata de un objeto Empleado, FALSE si no.
+//     */
+//    protected static function isValid_Empleado($empleado)
+//    {
+//        if (!empty($empleado) && is_a($empleado, 'Empleado')) {
+//            return TRUE;
+//        }
+//        
+//        return FALSE;
+//    }
     
-    /**
-     * Valida y determina si se trata de un objeto DB.
-     * 
-     * @param mixed $db
-     * @return boolean TRUE si se trata de un objeto DB, FALSE si no.
-     */
-    protected static function isValid_DB($db)
-    {
-        if (!empty($db) && is_a($db, 'DB')) {
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
+//    /**
+//     * Valida y determina si se trata de un objeto DB.
+//     * 
+//     * @param mixed $db
+//     * @return boolean TRUE si se trata de un objeto DB, FALSE si no.
+//     */
+//    protected static function isValid_DB($db)
+//    {
+//        if (!empty($db) && is_a($db, 'DB')) {
+//            return TRUE;
+//        }
+//        
+//        return FALSE;
+//    }
+//    
+//    /**
+//     * Valida y determina si se trata de un objeto Password.
+//     * 
+//     * @param mixed $password
+//     * @return boolean TRUE si se trata de un objeto Password, FALSE si no.
+//     */
+//    protected static function isValid_Password($password)
+//    {
+//        if (!empty($password) && is_a($password, 'Password')) {
+//            return TRUE;
+//        }
+//        
+//        return FALSE;
+//    }
     
-    /**
-     * Valida y determina si se trata de un objeto Password.
-     * 
-     * @param mixed $password
-     * @return boolean TRUE si se trata de un objeto Password, FALSE si no.
-     */
-    protected static function isValid_Password($password)
-    {
-        if (!empty($password) && is_a($password, 'Password')) {
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
-
     /**
      * Verifica si todos los datos están en orden para guardar en la DB.
      * 
@@ -210,38 +227,39 @@ class Usuario extends Empleado
      */
     protected function isDataReady() 
     {        
-        if (isset($this->db) && is_a($this->db, 'DB')
-            && isset($this->Usuario['Nombre'])
-            && isset($this->Usuario['PasswordSalted'])
-            && isset($this->Usuario['Activo'])
-            && isset($this->Usuario['UID'])
-            && isset($this->Usuario['CreacionTimestamp'])
-            && isset($this->Empleado) && is_a($this->Empleado, 'Empleado')
+        if (!empty($this->EmpleadoId)
+            && !empty($this->UsuarioPerfilId)
+            && !empty($this->TokenId)
+            && !empty($this->UsuarioNombre)
+            && !empty($this->uid)
+            && !empty($this->passwordEC)
+            && !empty($this->passwordModificationTimestamp)
+            && !empty($this->UsuarioCreacionTimestamp)
+            && !empty($this->UsuarioModificacionTimestamp)    
         ) {
             return TRUE;
-        } else {
-            return FALSE;
         }
+
+        return FALSE;
     }
 
     /**
      * Busca en la DB todos los datos del usuario, usando como parámetro
      * UsuarioId, UID o Nombre.
      * 
-     * @param mixed (int) UsuarioId, (UID) UID o (string) Nombre.
+     * @param mixed (int) UsuarioId, (string) UID o (string) Nombre.
      * @return mixed Todos los valores en un array, FALSE si se produjo
      * un error.
      */
     protected static function retrieve_fromDB_tbl($searchParam) {
         if (!empty($searchParam)) {
             $db = new DB;
-            if (is_int($searchParam)) {
+            if (DB::isValid_TblId($searchParam)) {
                 $db->setQuery('SELECT * FROM Usuario WHERE UsuarioId = ?');
                 $db->setBindParam('i');
             } elseif (self::isValid_UID($searchParam)) {
                 $db->setQuery('SELECT * FROM Usuario WHERE UID = ?');
                 $db->setBindParam('s');
-                $searchParam = $searchParam->get();
             } elseif (self::isValid_username($searchParam)) {
                 $db->setQuery('SELECT * FROM Usuario WHERE Nombre = ?');
                 $db->setBindParam('s');
@@ -258,53 +276,122 @@ class Usuario extends Empleado
         
         return FALSE;
     }
-        
+    
+    /**
+     * Fija el valor del timestamp de creación de usuario (CreacionTimestamp), 
+     * y el de la contraseña (PasswordTimestamp).  Al tratarse de un usuario 
+     * nuevo, deben tener el mismo valor.
+     * 
+     * @param int $NuevoTimestamp CreacionTimestamp.
+     * @return TRUE si tuvo éxito, FALSE si no.
+     */
     protected function setCreacionTimestamp($NuevoTimestamp)
     {
-        $this->Usuario['CreacionTimestamp'] = $NuevoTimestamp;
-    }
-
-    // --
-    // __ PUB
-    // Set
-    public function setNombre($NuevoNombreUsuario) {
-        if ($this->isValid_username($NuevoNombreUsuario)) {
-            $this->Usuario['Nombre'] = strtolower(trim($NuevoNombreUsuario));
+        if (is_int($NuevoTimestamp)) {
+            $this->UsuarioCreacionTimestamp = $NuevoTimestamp;
+            $this->passwordModificationTimestamp = $NuevoTimestamp;
             return TRUE;
         }
         return FALSE;
     }
     
-//    /**
-//     * Almacena una nueva contraseña, como objeto o string.  El objeto debe 
-//     * contener una contraseña en texto plano o encriptada.
-//     * @param type $NuevoPassword
-//     * @return boolean
-//     */
-//    public function setPassword($NuevoPassword) 
-//    {
-//        $retval = FALSE;
-//        
-//        if (self::isValid_Password($NuevoPassword) 
-//            && (!empty($NuevoPassword->getPlaintext()) 
-//                || !empty($NuevoPassword->getEncrypted()))
-//        ) {
-//            $this->password = $NuevoPassword;
-//            $retval = TRUE;
-//        } elseif (Password::isStrong($NuevoPassword)) {
-//            $this->password = new Password;
-//            $this->password->setPlaintext($NuevoPassword);
-//            $retval = TRUE;
-//        }
-//        
-//        return $retval;
-//    }
+    /**
+     * Genera y almacena un Token del tipo indicado.
+     * @param boolean $type Indica el tipo de token a generar: 
+     * TOKEN_PASSWORDRESTORE o TOKEN_SESSION.
+     * @return boolean TRUE si se generó exitosamente, FALSe si no.
+     */
+    protected function generateToken($type) {
+        if (isset($type)
+            && isset($this->randToken)
+            && isset($this->timestamp) 
+            && isset($this->uid)
+        ) {
+            $token = $type ? 
+                        $this->Password_tokenMake($this->randToken,
+                                     $this->timestamp,
+                                     $this->uid) : 
+                        $this->SessionToken_tokenMake($this->randToken,
+                                     $this->timestamp,
+                                     $this->uid); 
+            if(self::isValid_token($token)) {
+                $this->token = $token;
+                return TRUE;
+            }
+        }
+               
+        return FALSE;
+    }
+    // __ PUB
+    /**
+     * Almacena en el objeto el ID de la tabla Usuario.<br />
+     * <i>No es recomendable crear un nuevo usuario con UsuarioId manual, 
+     * dado que la DB genera uno automáticamente.</i>
+     * 
+     * @param int $UsuarioId Identificador de la tabla Usuario.
+     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
+     */
+    public function setUsuarioId($UsuarioId)
+    {
+        if (DB::isValid_TblId($UsuarioId)) {
+            $this->UsuarioId = $UsuarioId;
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    public function setNombre($NuevoNombreUsuario) {
+        if ($this->isValid_username($NuevoNombreUsuario)) {
+            $this->UsuarioNombre = strtolower(trim($NuevoNombreUsuario));
+            return TRUE;
+        }
+        return FALSE;
+    }
+    
+    /**
+     * Almacena una nueva contraseña, como objeto o string.<br />
+     * Si es string, y determina que es una contraseña encriptada, 
+     * la almacena como tal.  Si no, como texto plano.<br />
+     * Si es un objeto, reemplaza todos los valores propios por los del objeto.
+     * @param mixed $password Password como objeto o string
+     * @param boolean $requireStrong TRUE para requerirle al Plaintext que 
+     * sea una contraseña <i>fuerte</i>.
+     * @return boolean TRUE si se almacenó correctamente, FALSE si no.  
+     * Para el caso del objeto, siempre devuelve TRUE.
+     */
+    public function setPassword($password, 
+                                    $requireStrong = SMP_PASSWORD_REQUIRESTRONG) 
+    {
+        $retval = FALSE;
+        
+        if (is_a($password, 'Password')) {
+            $this->setPasswordPlaintext($password->getPlaintext(), $requireStrong);
+            $this->setPasswordEncrypted($password->getEncrypted());
+            $this->setRandomToken($password->getRandomToken());
+            $this->setTimestamp($password->getTimestamp());
+            $this->setToken($password->getToken());
+            $this->setModificationTimestamp($password->getModificationTimestamp());
+            $retval = TRUE;
+        } elseif (is_string($password)) {
+            $retval = $this->setPasswordEncrypted($password) ?: 
+                        $this->setPasswordPlaintext($password, $requireStrong);
+        }
+        
+        return $retval;
+    }
   
+    /**
+     * Fija el estado, que indica si el usuario está activado 
+     * (puede loggearse y operar) o no.
+     * @param boolean $NuevoActivo TRUE para Activo, FALSE para No Activo.
+     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
+     */
     public function setActivo($NuevoActivo) {
         if (!empty($NuevoActivo) 
             && is_bool($NuevoActivo)
         ) {
-            $this->Usuario['Activo'] = $NuevoActivo;
+            $this->Activo = $NuevoActivo;
             return TRUE;
         }
         return FALSE;
@@ -337,68 +424,143 @@ class Usuario extends Empleado
 //        return $retval;
 //    }
     // --
-    // Get
-    public function getUsuarioNombre() {
-        return $this->Usuario['Nombre'];
+    // Get    
+    /**
+     * Devuelve el nombre de usuario, si hay.
+     * 
+     * @return string Nombre de usuario o string vacío
+     */
+    public function getNombre() {
+        return $this->Nombre;
     }
     
-    public function getUID() {
-        return $this->Usuario['UID'];
-    }
-
-    public function getPasswordSalted() 
-    {
-        return $this->Usuario['PasswordSalted'];
-    }
-    
+    /**
+     * Devuelve el estado del usuario que indica si el usuario está activado 
+     * (puede loggearse y operar) o no: TRUE para Activo, FALSE para No Activo
+     * 
+     * @return boolean Estado del usuario.
+     */
     public function getActivo()
     {
-        return $this->Usuario['Activo'];
+        return $this->Activo;
     }
     
+    /**
+     * Devuelve el identificador de la tabla Usuario, si hay.
+     * 
+     * @return int Identificador de la tabla Usuario o 0.
+     */
     public function getUsuarioId()
     {
-        return $this->Usuario['UsuarioId'];
+        return $this->UsuarioId;
     }
     
-    public function getUsuarioPerfilId()
+    /**
+     * Devuelve el identificador de la tabla UsuarioPerfil, si hay.
+     * 
+     * @return int Identificador de la tabla UsuarioPerfil o 0.
+     */
+    public function getPerfilId()
     {
-        return $this->Usuario['UsuarioPerfilId'];
+        return $this->UsuarioPerfilId;
     }
     
-    public function getEmpleadoId()
+    /**
+     * Devuelve el valor del timestamp de creación de la tabla Usuario, si hay.
+     * 
+     * @return int Valor del timestamp de creación de la tabla Usuario o 0.
+     */
+    public function getCreacionTimestamp()
     {
-        return $this->Usuario['EmpleadoId'];
+        return $this->UsuarioCreacionTimestamp;
     }
+    
+    /**
+     * Devuelve el valor del timestamp de modificación de la tabla Usuario, 
+     * si hay.
+     * 
+     * @return int Valor del timestamp de modificación de la tabla Usuario o 0.
+     */
+    public function getModificacionTimestamp()
+    {
+        return $this->UsuarioModificacionTimestamp;
+    }
+    
+//    /**
+//     * Devuelve el objeto password almacenado.
+//     * 
+//     * @return Password Password.
+//     */
+//    public function getPassword()
+//    {
+//        return $this->password;
+//    }
+    
+//    /**
+//     * Devuelve la contraseña del usuario en texto plano almacenada, 
+//     * o FALSE si no hay ninguna.
+//     * 
+//     * @return string|FALSE Contraseña en texto plano.
+//     */
+//    public function getPasswordPlaintext()
+//    {
+//        return $this->Password_getPlaintext();
+//    }
+    
+//    /**
+//     * Devuelve la contraseña encriptada del usuario, o FALSE si no hay.
+//     * 
+//     * @return string|FALSE La contraseña encriptada.
+//     */
+//    public function getPasswordEncrypted() 
+//    {
+//        return $this->Password_getEncrypted();
+//    }
+    
+//    /**
+//     * Devuelve el Token de Restablecimiento de contraseña.
+//     * @return string Token de restablecimiento de contraseña o string vacío.
+//     */
+//    public function getPasswordRestoreToken()
+//    {
+//        return $this->getToken();
+//    }
 
-    public function getUsuarioCreacionTimestamp()
-    {
-        return $this->Usuario['CreacionTimestamp'];
-    }
-    
-    public function getUsuarioModificacionTimestamp()
-    {
-        return $this->Usuario['ModificacionTimestamp'];
-    }
-    // --
-    // Otras
     /**
      * Recupera de la DB todos los datos del usuario, siempre y cuando se haya
-     * establecido previamente el ID, nombre o UID del mismo.
+     * establecido previamente el ID, Nombre o UID del mismo (la búsqueda se 
+     * realiza en ese orden de prioridad).<br />
+     * <b>ATENCIÓN:</b> ¡se sobreescribirán los datos almacenados respecto del 
+     * usuario!
      * 
      * @return boolean TRUE si se recuperó correctamente, FALSE si no.
      */
-    public function retrieve_fromDB_usuario()
+    public function retrieve_fromDB()
     {
-        if (isset($this->Usuario['UsuarioId'])) {
-            $this->Usuario = self::retrieve_fromDB_tbl($this->Usuario['UsuarioId']);
-            return TRUE;
-        } elseif (isset($this->Usuario['Nombre'])) {
-            $this->Usuario = self::retrieve_fromDB_tbl($this->Usuario['Nombre']);
-            return TRUE;
-        } elseif (isset($this->Usuario['UID'])) {
-            $this->Usuario = self::retrieve_fromDB_tbl($this->Usuario['UID']);
-            return TRUE;
+        $searchParams = array($this->UsuarioId, 
+                            $this->UsuarioNombre, 
+                            $this->uid);
+        foreach ($searchParams as $searchP) {
+            $usuario = self::retrieve_fromDB_tbl($searchP);
+            if (is_array($usuario) && !empty($usuario)) {
+                //$this->Usuario = $usuario;
+                list($this->UsuarioId, 
+                        $this->EmpleadoId, 
+                        $this->UsuarioPerfilId, 
+                        $this->TokenId, 
+                        $this->UsuarioNombre, 
+                        $this->uid, 
+                        $this->passwordEC, 
+                        $this->passwordModificationTimestamp, 
+                        $this->Activo, 
+                        $this->PrivKey, 
+                        $this->PubKey, 
+                        $this->UsuarioCreacionTimestamp, 
+                        $this->UsuarioModificacionTimestamp) = array_values($usuario);
+//                $this->password->setEncrypted($usuario['PasswordSalted']);
+//                $this->password->setModificationTimestamp($usuario['PasswordTimestamp']);
+                return TRUE;
+            }
         }
         return FALSE;
     }
@@ -410,17 +572,203 @@ class Usuario extends Empleado
      * @return boolean TRUE si tuvo éxito, FALSE si no.
      */
     public function store_inDB() {
-        if ($this->isDataReady()) {
-            $ModificacionTimestamp = time();
-            
-            if ($this->Nuevo) {
-                $this->db->setQuery("INSERT INTO Usuario");
-            } else {
-                $this->db->setQuery("UPDATE Usuario SET");
+        
+        
+        return FALSE;
+    }
+    
+    /**
+     * Inicia una nueva sesión de usuario, esto es, realiza el log in al 
+     * sistema.<br />
+     * <i>Se requiere el UID del usuario antes de llamar a este método.</i><br />
+     * <ul>
+     * <li>Almacena en $_SESSION el nombre de usuario;</li>
+     * <li>Genera una nueva llave de sesión, almacena las partes 
+     * correspondientes en la DB y $_SESSION;</li>
+     * <li>Genera y almacena el Fingerprint Token en la DB.</li>
+     * </ul>
+     * @return boolean TRUE si se inició correctamente, 
+     * FALSE si alguna instancia de las mencionadas falló.  
+     * De ser así, no prosigue con las siguientes, que se ejecutan en el orden 
+     * indicado.
+     */
+    public function sesionIniciar()
+    {
+        $retval = FALSE;
+        
+        // Guardo el nombre de usuario en $_SESSION
+        Session::store(SMP_SESSINDEX_USERNAME, $this->getNombre());
+        
+        // Genero nuevo sessionkey
+        $this->generateRandomToken();
+        $this->generateTimestamp();
+        if($this->generateToken()) {
+            if($this->SessionToken_storeinDB()) {
+                Session::store(SMP_SESSINDEX_SESSIONKEY_TOKEN, 
+                                $this->getToken());
+                // Fingerprint
+                $fingerprint = new Fingerprint;
+                $fingerprint->setMode(Fingerprint::MODE_USEIP);
+                $fingerprint->generateToken();
+                // Guardarlo en DB
+                $fingerprint->setTokenId($this->getTokenId());
+                $retval = $fingerprint->store_inDB();
+                unset($fingerprint);
+            }
+        }
+        
+        return $retval;
+    }
+    
+    /**
+     * Cierra la sesión del usuario, es decir, hace logout:
+     * <ul>
+     * <li>Remueve el token de sesión de $_SESSION,</li>
+     * <li>Anula los tokens y el timestamp,</li>
+     * <li>Escribe en la DB.</li>
+     * </ul>
+     */
+    public function sesionFinalizar()
+    {
+        Session::remove(SMP_SESSINDEX_SESSIONKEY_TOKEN);
+        $this->token = NULL;
+        $this->randToken = NULL;
+        $this->timestamp = 0;
+        $this->SessionToken_storeinDB();
+    }
+    
+    /**
+     * Autentica una sesión de usuario, incluyendo el Fingerprint.  
+     * En caso que éste falle, cerrará la sesión como medida de seguridad.
+     * 
+     * @return boolean TRUE si la sesión es auténtica, es decir, el usuario 
+     * está loggeado; FALSE si no.
+     */
+    public function authenticateSession()
+    {
+        if ($this->setToken(Session::retrieve(SMP_SESSINDEX_SESSIONKEY_TOKEN))) {
+            if($this->TokenId ?: $this->retrieve_fromDB_TokenId($this->UsuarioNombre)) {
+                $fingerprint = new Fingerprint;
+                $fingerprint->setTokenId($this->TokenId);
+                $fingerprint->retrieve_fromDB();
+                if ($fingerprint->authenticateToken()) {
+                    if ($this->SessionToken_retrieve_fromDB()) {
+                        return $this->SessionToken_authenticateToken();
+                    }
+                } else {
+                    // fallo el fingerprint
+                    $this->sesionFinalizar();
+                }
             }
         }
         
         return FALSE;
     }
-    // --
+    
+    /**
+     * Realiza el procedimiento para restablecer la contraseña:
+     * <ul>
+     * <li>Genera los tokens,</li>
+     * <li>Almacena en la DB,</li>
+     * <li>Envía email</li>
+     * </ul>
+     * <i>IMPORTANTE: Es posible que se recuperen todos los datos del usuario 
+     * desde la DB, pisando los existentes si hubieran.</i>
+     * @return TRUE si tuvo éxito, FALSE si no.
+     */
+    public function passwordRestore()
+    {
+        if(($this->uid ?: $this->retrieve_fromDB())
+                && ($this->TokenId ?: $this->retrieve_fromDB_TokenId($this->UsuarioNombre))
+        ) {
+            $this->generateRandomToken();
+            $this->generateTimestamp();
+            if ($this->generateToken()
+                    && $this->store_inDB_PwdRestore()
+            ) {
+                $passrestore_url = Sanitizar::glSERVER('HTTPS') ? 'https://' : 'http://';
+                $passrestore_url .= Sanitizar::glSERVER('SERVER_NAME') 
+                                    . '/nav.php' 
+                                    . '?accion=' . SMP_RESTOREPWD 
+                                    . '&username=' . $this->UsuarioNombre 
+                                    . '&passRestoreToken=' . $this->password->getToken();
+
+                // Enviar email
+                $email = new Email;
+
+                $email->setFrom('SiMaPe', SMP_EMAIL_FROM);
+                $email->addAddress(/*$this->Email*/"hackan@gmail.com");/*!!!!!!!!!!!!!!!!!!!!!!!!*/
+                $email->setSubjet('Restablecimiento de contraseña para SiMaPe');
+                $email->setBody("<!DOCTYPE html>"
+                . "\n<html lang='es-AR'>"
+                . "\n<head>" 
+                . "\n\t<meta content='text/html; charset=". $email->getCharset() . "' http-equiv='Content-Type' />"
+                . "\n</head>"
+                . "\n<body style='background:#e0e0e0;'>"
+                . "\n\t<h2 style='text-align: center;'>"
+                . "\n\t\t<span style='font-family:courier new,courier,monospace;'>"
+                        . "Sistema Integrado de Manejo de Personal</span>"
+                . "\n\t</h2>"
+                . "\n\t<p><span style='font-family:courier new,courier,monospace;'>"
+                        . "Ha solicitado restablecer su contrase&ntilde;a en "
+                        . "SiMaPe, y por eso recibe este correo.&nbsp; Si no "
+                        . "realiz&oacute; esta acci&oacute;n, puede omitir "
+                        . "este mensaje sin m&aacute;s, su cuenta sigue "
+                        . "estando segura</span>"
+                . "\n\t</p>"
+                . "\n\t<p><span style='font-family:courier new,courier,monospace;'>"
+                        . "Para continuar con el proceso, dir&iacute;jase a "
+                        . "este enlace (o bien copie y pegue en su navegador):"
+                        . "<br />"
+                        . "<a href='" . $passrestore_url . "'>" . $passrestore_url . "</a></span>"
+                . "\n\t</p>"
+                . "\n\t<p><span style='font-family:courier new,courier,monospace;'>"
+                        . "Tenga en cuenta que el v&iacute;nculo arriba "
+                        . "indicado caducar&aacute; a los " 
+                        . (SMP_PASSWORD_RESTORETIME / 60)  
+                        . " minutos de recibido este email (exactamente a las " 
+                        . strftime('%H:%M:%S del %d de %B del %G' , 
+                                    $this->password->getTimestamp()) 
+                        . "), y deber&aacute; solicitar restablecer su "
+                        . "contrase&ntilde;a nuevamente.</span>"
+                . "\n\t</p>"
+                . "\n\t<p>"
+                . "\n\t<span style='font-family:courier new,courier,monospace;'>"
+                        . "Atte.:<br />"
+                        . "SiMaPe</span>"
+                . "\n\t</p>"
+                . "\n\t<p><span style='font-family:courier new,courier,monospace;'>"
+                        . "<em><small>P. D.: este mensaje ha sido generado "
+                        . "autom&aacute;ticamente.&nbsp; Por favor, no "
+                        . "responder al mismo dado que ninguna persona lo "
+                        . "leer&aacute;.</small></em></span>"
+                . "\n\t</p>"
+                . "\n</body>"
+                . "\n</html>");
+
+                return $email->send();
+            }
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Autentica un token de restablecimiento de contraseña.
+     * Debe fijarse primero el mismo mediante setToken().
+     * @see setToken
+     * @return boolean TRUE si el token de restablecimiento de contraseña es 
+     * válido, FALSE si no.
+     * @access public
+     */
+    public function authenticatePasswordRestore()
+    {
+        if(($this->uid ?: $this->retrieve_fromDB())
+                && ($this->TokenId ?: $this->retrieve_fromDB_TokenId($this->UsuarioNombre))
+        ) {
+            if ($this->retrieve_fromDB_PwdRestore()) {
+                return $this->Password_authenticateToken();
+            }
+        }
+    }
 }

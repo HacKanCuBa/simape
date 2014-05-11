@@ -32,17 +32,29 @@
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @version 0.1 untested
+ * @deprecated
  */
 
 trait UsuarioPerfil
-{    
+{   
+    /**
+     * Tabla UsuarioPerfil de la DB.
+     * @var array
+     */
     protected $UsuarioPerfil = array('UsuarioPerfilId' => '',
                                      'Nombre' => '',
                                      'Timestamp' => ''
                                     );
     
+    protected $UsuarioPerfilId = 0;
+    protected $Nombre = '';
+    protected $Timestamp = 0;
+
     // __ SPECIALS
-    function __construct();
+    function __construct()
+    {
+        
+    }
     // __ PRIV
     
     // __ PROT

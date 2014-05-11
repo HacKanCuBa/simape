@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.1
+ * @version 1.3
  */
 
 /*
@@ -68,27 +68,25 @@ const LOGIN_ERR_RESTORETKN = '&iexcl;El token de restablecimiento de contrase&nt
 /**
  * Constantes que manejan lo que será mostrado al usuario.
  */
-const DISPLAY_DEFAULT = NULL;
-const DISPLAY_PWDRESTORE_FORM = 1;
-const DISPLAY_PWDRESTORE_ERROR = 2;
-const DISPLAY_PWDRESTORE_OK = 3;
-const DISPLAY_EMAIL_SENT = 4;
-const DISPLAY_EMAIL_NOTSENT = 5;
-const DISPLAY_EMAIL_NOTFOUND = 6;
-const DISPLAY_NEWPWD_FORM = 7;
-const DISPLAY_NEWPWD_OK = 8;
-const DISPLAY_NEWPWD_ERROR = 9;
+const LOGIN_DISPLAY_DEFAULT = NULL;
+const LOGIN_DISPLAY_PWDRESTORE_FORM = 1;
+const LOGIN_DISPLAY_PWDRESTORE_ERROR = 2;
+const LOGIN_DISPLAY_PWDRESTORE_OK = 3;
+const LOGIN_DISPLAY_EMAIL_SENT = 4;
+const LOGIN_DISPLAY_EMAIL_NOTSENT = 5;
+const LOGIN_DISPLAY_EMAIL_NOTFOUND = 6;
+const LOGIN_DISPLAY_NEWPWD_FORM = 7;
+const LOGIN_DISPLAY_NEWPWD_OK = 8;
+const LOGIN_DISPLAY_NEWPWD_ERROR = 9;
+const LOGIN_DISPLAY_LOGGEDOUT = 10;
 
 /**
  * @var string Indica qué se mostrará al usuario en la página.
  */
-$display = DISPLAY_DEFAULT;
+$display = LOGIN_DISPLAY_DEFAULT;
 
 // Iniciar o continuar sesion
 Session::initiate();
-
-// Cerrar sesión si estaba abierta
-Session::remove(SMP_SESSINDEX_SESSIONKEY_TOKEN);
 
 // Inicializaciones
 $formToken = new FormToken;
@@ -99,6 +97,8 @@ if (empty($username)) {
     $username = trim(Sanitizar::glGET('username'));
 }
 
+$usuario = new Usuario($username);
+
 if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
     
     //$start = time();
@@ -108,8 +108,9 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
     if (Session::retrieve(LOGIN_SESSINDEX_CAPTCHA) == Sanitizar::glPOST('frm_txtCaptcha'))
     {
         // captcha OK
-        $password = new Password(Sanitizar::glPOST('frm_pwdLogin'));
-        $password->retrieve_fromDB($username);
+        //$password = new Password(Sanitizar::glPOST('frm_pwdLogin'));
+        //$password->retrieve_fromDB($username);
+        $usuario->setPassword(Sanitizar::glPOST('frm_pwdLogin'));
             
         $formToken->setRandomToken(Session::retrieve(SMP_SESSINDEX_FORM_RANDOMTOKEN));
         $formToken->setTimestamp(Session::retrieve(SMP_SESSINDEX_FORM_TIMESTAMP));
@@ -117,41 +118,49 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
         
         // Ejecuto la autenticación de la contraseña aún si el form
         // token no valida, para evitar Timing Oracle.
-        if($password->authenticatePassword() 
+        if($usuario->authenticatePassword() 
            && $formToken->authenticateToken()
         ) {
             // Login OK 
-            // ToDo: verificaciones (guardo ok? leyo ok?)
-            $uid = new UID;
-            $uid->retrieve_fromDB($username);
-            // Iniciar sesion...
-            $session = new Session;
-            $session->generateRandomToken();
-            $session->generateTimestamp();
-            $session->setUID($uid);
-            $session->generateToken();
-            // Guardar RandToken y Timestamp de sesion en DB
-            $session->retrieve_fromDB_TokenID($username);
-            $session->store_inDB();
-            // Guardar Token de sesion en SESSION
-            $session->store(SMP_SESSINDEX_SESSIONKEY_TOKEN, $session->getToken());
+            // ToDo: verificaciones (guardó ok? leyó ok?)
+//            $uid = new UID;
+//            $uid->retrieve_fromDB($username);
+//            // Iniciar sesion...
+//            $session = new Session;
+//            $session->generateRandomToken();
+//            $session->generateTimestamp();
+//            $session->setUID($uid);
+//            $session->generateToken();
+//            // Guardar RandToken y Timestamp de sesion en DB
+//            $session->retrieve_fromDB_TokenId($username);
+//            $session->store_inDB();
+//            // Guardar Token de sesion en SESSION
+//            $session->store(SMP_SESSINDEX_SESSIONKEY_TOKEN, $session->getToken());
+//             
+//            // Fingerprint
+//            $fingerprint = new Fingerprint;
+//            $fingerprint->setMode(Fingerprint::MODE_USEIP);
+//            $fingerprint->generateToken();
+//            // Guardarlo en DB
+//            $fingerprint->retrieve_fromDB_TokenId($username);
+//            $fingerprint->store_inDB();
             
-            // Fingerprint
-            $fingerprint = new Fingerprint;
-            $fingerprint->setMode(Fingerprint::MODE_USEIP);
-            $fingerprint->generateToken();
-            // Guardarlo en DB
-            $fingerprint->retrieve_fromDB_TokenID($username);
-            $fingerprint->store_inDB();
-            
-            // Guardar nombre de usuario en SESSION
-            $session->store(SMP_SESSINDEX_USERNAME, $username);
+//            // Guardar nombre de usuario en SESSION
+//            $session->store(SMP_SESSINDEX_USERNAME, $username);
 
+            if($usuario->sesionIniciar()) {
+                // Sesion iniciada, ir a la pagina de inicio del usuario
+                $nav = SMP_HOME;
+            } else {
+                // Falló
+                Session::store(SMP_SESSINDEX_NOTIF_ERR, 'Ha ocurrido un error '
+                        . 'inesperado.  Vuelva a iniciar sesión o contacte con '
+                        . 'un administrador');
+                $display = LOGIN_DISPLAY_DEFAULT;
+            }
+            
             // elimino el captcha, si existiese
             Session::remove(LOGIN_SESSINDEX_CAPTCHA);
-            
-            // Sesion iniciada, ir a la pagina de inicio del usuario
-            $nav = SMP_HOME;
         } else {
             // Enviar mensaje user pass incorrecto       
             Session::store(SMP_SESSINDEX_NOTIF_ERR, SMP_ERR_AUTHFAIL);
@@ -161,7 +170,7 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
         Session::store(SMP_SESSINDEX_NOTIF_ERR, LOGIN_ERR_CAPTCHA);
     }
     $login_atempt = TRUE;
-    $display = DISPLAY_DEFAULT;
+    $display = LOGIN_DISPLAY_DEFAULT;
     //$end = time();
 } elseif (!empty(Sanitizar::glPOST('frm_btnCancelLogin'))) {
     // Volver a la pág inicial
@@ -171,115 +180,135 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
     $nav = SMP_LOGIN;
 } elseif (!empty(Sanitizar::glPOST('frm_btnForget'))) {
     // Cargar form de restablecimiento de contraseña
-    $display = DISPLAY_PWDRESTORE_FORM;
+    $display = LOGIN_DISPLAY_PWDRESTORE_FORM;
 } elseif (!empty(Sanitizar::glPOST('frm_btnRestore'))) {
-    if (empty($username)) {
-        $display =  DISPLAY_EMAIL_NOTFOUND;
+    if (empty($usuario->getEmail())) {
+        $display =  LOGIN_DISPLAY_EMAIL_NOTFOUND;
     } else {
-        // Crear tokens de reestablecimiento de pwd
-        $password = new Password;
-        $password->generateRandomToken();
-        $password->generateTimestamp();
+        // Crear tokens de restablecimiento de pwd
+//        $password = new Password;
+//        $password->generateRandomToken();
+//        $password->generateTimestamp();
+//
+//        $uid = new UID();
+//        $uid->retrieve_fromDB($username);
+//
+//        $password->setUID($uid->get());
+//        $password->generateToken();
+//
+//        // Guardar RandTkn y Timestamp en la DB
+//        $password->retrieve_fromDB_TokenId($username);
+//        $password->store_inDB_PwdRestore();
 
-        $uid = new UID();
-        $uid->retrieve_fromDB($username);
-
-        $password->setUID($uid);
-        $password->generateToken();
-
-        // Guardar RandTkn y Timestamp en la DB
-        $password->retrieve_fromDB_TokenID($username);
-        $password->store_inDB_PwdRestore();
-
-        if (!empty(Sanitizar::glSERVER('HTTPS'))) {
-            $passrestore_url = 'https://';
-        } else {
-            $passrestore_url = 'http://';
-        }
-        $passrestore_url .= Sanitizar::glSERVER('SERVER_NAME') 
-                            . Sanitizar::glSERVER('SCRIPT_NAME') 
-                            . '?username=' . $username 
-                            . '&passRestoreToken=' . $password->getToken();
-
-        // Enviar email
-        // Cargar clase PHPMailer
-        $email = new Email;
-
-        $email->setFrom('SiMaPe', SMP_EMAIL_FROM);
-        $email->addAddress("hackan@gmail.com");/*!!!!!!!!!!!!!!!!!!!!!!!!*/
-        $email->setSubjet('Restablecimiento de contraseña para SiMaPe');
-        $email->setBody('<html>
-	<head>
-		<title></title>
-	</head>
-	<body style="background:#e0e0e0;">
-		<h2 style="text-align: center;">
-                    <span style="font-family:courier new,courier,monospace;">Sistema Integrado de Manejo de Personal</span>
-                </h2>
-		<p>
-                    <span style="font-family:courier new,courier,monospace;">Ha solicitado restablecer su contrase&ntilde;a en SiMaPe, y por eso recibe este correo.&nbsp; Si no realiz&oacute; esta acci&oacute;n, puede omitir este mensaje sin m&aacute;s, su cuenta sigue estando segura.</span>
-                </p>
-		<p>
-                    <span style="font-family:courier new,courier,monospace;">Para continuar con el proceso, dir&iacute;jase a este enlace (o bien copie y pegue en su navegador):<br /><a href="' . $passrestore_url . '">' . $passrestore_url . '</a></span>
-                </p>
-                <p>
-                    <span style="font-family:courier new,courier,monospace;">Tenga en cuenta que el v&iacute;nculo arriba indicado caducar&aacute; a los ' . (SMP_PASSWORD_RESTORETIME / 60)  . ' minutos de recibido este email (exactamente a las ' . strftime('%H:%M:%S del %d de %B del %G' , $password->getTimestamp()) . '), y deber&aacute; solicitar restablecer su contrase&ntilde;a nuevamente.</span>
-                </p>
-		<p>
-                    <span style="font-family:courier new,courier,monospace;">Atte.:<br />
-                    SiMaPe</span>
-                </p>
-		<p>
-                    <span style="font-family:courier new,courier,monospace;"><em><small>P. D.: este mensaje ha sido generado autom&aacute;ticamente.&nbsp; Por favor, no responder al mismo dado que ninguna persona lo leer&aacute;.</small></em></span>
-                </p>
-	</body>
-</html>');
+//        $usuario->generateRandomToken();
+//        $usuario->generateTimestamp();
+//        $usuario->retrieve_fromDB();
+//        $usuario->generateToken();
+//        $usuario->store_inDB_PwdRestore();
+//        
+//        if (!empty(Sanitizar::glSERVER('HTTPS'))) {
+//            $passrestore_url = 'https://';
+//        } else {
+//            $passrestore_url = 'http://';
+//        }
+//        $passrestore_url .= Sanitizar::glSERVER('SERVER_NAME') 
+//                            . '/nav.php' 
+//                            . '?accion=' . SMP_RESTOREPWD 
+//                            . '&username=' . $username 
+//                            . '&passRestoreToken=' . $usuario->getToken();
+//
+//        // Enviar email
+//        // Cargar clase PHPMailer
+//        $email = new Email;
+//
+//        $email->setFrom('SiMaPe', SMP_EMAIL_FROM);
+//        $email->addAddress("hackan@gmail.com");/*!!!!!!!!!!!!!!!!!!!!!!!!*/
+//        $email->setSubjet('Restablecimiento de contraseña para SiMaPe');
+//        $email->setBody('<html>
+//	<head>
+//		<title></title>
+//	</head>
+//	<body style="background:#e0e0e0;">
+//		<h2 style="text-align: center;">
+//                    <span style="font-family:courier new,courier,monospace;">Sistema Integrado de Manejo de Personal</span>
+//                </h2>
+//		<p>
+//                    <span style="font-family:courier new,courier,monospace;">Ha solicitado restablecer su contrase&ntilde;a en SiMaPe, y por eso recibe este correo.&nbsp; Si no realiz&oacute; esta acci&oacute;n, puede omitir este mensaje sin m&aacute;s, su cuenta sigue estando segura.</span>
+//                </p>
+//		<p>
+//                    <span style="font-family:courier new,courier,monospace;">Para continuar con el proceso, dir&iacute;jase a este enlace (o bien copie y pegue en su navegador):<br /><a href="' . $passrestore_url . '">' . $passrestore_url . '</a></span>
+//                </p>
+//                <p>
+//                    <span style="font-family:courier new,courier,monospace;">Tenga en cuenta que el v&iacute;nculo arriba indicado caducar&aacute; a los ' . (SMP_PASSWORD_RESTORETIME / 60)  . ' minutos de recibido este email (exactamente a las ' . strftime('%H:%M:%S del %d de %B del %G' , $password->getTimestamp()) . '), y deber&aacute; solicitar restablecer su contrase&ntilde;a nuevamente.</span>
+//                </p>
+//		<p>
+//                    <span style="font-family:courier new,courier,monospace;">Atte.:<br />
+//                    SiMaPe</span>
+//                </p>
+//		<p>
+//                    <span style="font-family:courier new,courier,monospace;"><em><small>P. D.: este mensaje ha sido generado autom&aacute;ticamente.&nbsp; Por favor, no responder al mismo dado que ninguna persona lo leer&aacute;.</small></em></span>
+//                </p>
+//	</body>
+//</html>');
+//    
+//        if($email->send()) {
+//            $display = LOGIN_DISPLAY_EMAIL_SENT;
+//        } else {
+//            $display = LOGIN_DISPLAY_EMAIL_NOTSENT;
+//        }
+//        
+//        unset($email);
     
-        if($email->send()) {
-            $display = DISPLAY_EMAIL_SENT;
+        if($usuario->passwordRestore()) {
+            $display = LOGIN_DISPLAY_EMAIL_SENT;
         } else {
-            $display = DISPLAY_EMAIL_NOTSENT;
+            $display = LOGIN_DISPLAY_EMAIL_NOTSENT;
         }
     }   
-} elseif (!empty(Sanitizar::glGET('passRestoreToken'))) {
-    $password = new Password;
-    $password->retrieve_fromDB_TokenID($username);
-    $password->retrieve_fromDB_PwdRestore();
+} elseif (Sanitizar::glGET(SMP_NAV_ACTION) == SMP_RESTOREPWD) {
+//    $password = new Password;
+//    $password->retrieve_fromDB_TokenId($username);
+//    $password->retrieve_fromDB_PwdRestore();
+//    
+//    $uid = new UID();
+//    $uid->retrieve_fromDB($username);
+//    
+//    $password->setUID($uid);
+//    $password->setToken(Sanitizar::glGET('passRestoreToken'));
     
-    $uid = new UID();
-    $uid->retrieve_fromDB($username);
+    $usuario->setToken(Sanitizar::glGET('passRestoreToken'));
     
-    $password->setUID($uid);
-    $password->setToken(Sanitizar::glGET('passRestoreToken'));
+    $page = new Page('login.php', 
+            Session::retrieve(SMP_SESSINDEX_PAGE_RANDOMTOKEN), 
+            Session::retrieve(SMP_SESSINDEX_PAGE_TIMESTAMP), 
+            Sanitizar::glGET(SMP_SESSINDEX_PAGE_TOKEN));
     
-    if ($password->authenticateToken()) {
+    if ($usuario->authenticatePasswordRestore()
+            && $page->authenticateToken()
+    ) {
         // Token válido
-        if (empty(Sanitizar::glPOST('frm_btnNewPwd'))) {
-            // mostrar formulario
-            $display = DISPLAY_NEWPWD_FORM;
-        } else {
-            // guardar nueva contraseña
-            $display = DISPLAY_NEWPWD_FORM;
-            
+        // mostrar formulario
+        $display = LOGIN_DISPLAY_NEWPWD_FORM;
+        if (!empty(Sanitizar::glPOST('frm_btnNewPwd'))) {
+            // guardar nueva contraseña      
             $formToken->setRandomToken(Session::retrieve(SMP_SESSINDEX_FORM_RANDOMTOKEN));
             $formToken->setTimestamp(Session::retrieve(SMP_SESSINDEX_FORM_TIMESTAMP));
             $formToken->setToken(Sanitizar::glPOST(SMP_SESSINDEX_FORM_TOKEN));
             if ($formToken->authenticateToken()) {
-                $newpasswd = Sanitizar::glPOST('frm_pwdLogin');
-                $newpasswd = [trim($newpasswd[0]), trim($newpasswd[1])];
+                $newpasswd = array_map('trim', Sanitizar::glPOST('frm_pwdLogin'));
                 if ($newpasswd[0] === $newpasswd[1]) {
-                    if ($password->setPlaintext($newpasswd[0], TRUE)) {
-                        $display = DISPLAY_NEWPWD_ERROR;
-                        if ($password->encryptPassword()) {
-                            if ($password->store_inDB($username)) {
+                    $usuario->retrieve_fromDB();
+                    if ($usuario->setPassword($newpasswd[0], SMP_PASSWORD_REQUIRESTRONG)) {
+                        $display = LOGIN_DISPLAY_NEWPWD_ERROR;
+                        if ($usuario->encryptPassword()) {
+                            if ($usuario->store_inDB()) {
                                 // nueva contraseña establecida
                                 // borrar tokens de restablecimiento
-                                $password->setTimestamp(1);
-                                $password->generateRandomToken();
-                                $password->retrieve_fromDB_TokenID($username);
-                                $password->store_inDB_PwdRestore();
+                                $usuario->setTimestamp(1);
+                                $usuario->generateRandomToken();
+                                $usuario->store_inDB_PwdRestore();
                                 
-                                $display = DISPLAY_NEWPWD_OK;
+                                $display = LOGIN_DISPLAY_NEWPWD_OK;
                             }
                         }
                     } else {
@@ -296,9 +325,11 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
         }
     } else {
         // Token inválido
-        $display = DISPLAY_DEFAULT;
+        $display = LOGIN_DISPLAY_DEFAULT;
         Session::store(SMP_SESSINDEX_NOTIF_ERR, LOGIN_ERR_RESTORETKN);
     }
+} elseif (Sanitizar::glGET(SMP_LOGOUT)) {
+    $display = LOGIN_DISPLAY_LOGGEDOUT;
 }
 
 if (isset($nav)) {
@@ -333,7 +364,7 @@ echo "\n\t\t<form style='text-align: center; margin: 0 auto; width: 100%;' "
      . "name='loginform' id='loginform' method='post' >";
 
 switch ($display) {
-    case DISPLAY_NEWPWD_ERROR:
+    case LOGIN_DISPLAY_NEWPWD_ERROR:
         echo "\n\t\t\t<h3 style='text-align: center;'>Restablecimiento de "
              . "contrase&ntilde;a</h3>";
         echo "\n\t\t\t<p>Ha ocurrido un error al tratar de restablecer su "
@@ -350,7 +381,7 @@ switch ($display) {
             . "</p>";
         break;
     
-    case DISPLAY_NEWPWD_OK:
+    case LOGIN_DISPLAY_NEWPWD_OK:
         echo "\n\t\t\t<h3 style='text-align: center;'>Restablecimiento de "
              . "contrase&ntilde;a</h3>";
         echo "\n\t\t\t<p>¡Se ha restablecido satisfactoriamente su contrase&ntilde;a!</p>";
@@ -361,7 +392,7 @@ switch ($display) {
             . "</p>";
         break;
     
-    case DISPLAY_NEWPWD_FORM:
+    case LOGIN_DISPLAY_NEWPWD_FORM:
         echo "\n\t\t\t<h3 style='text-align: center;'>Restablecimiento de "
              . "contrase&ntilde;a</h3>";
         if (!empty(Session::retrieve(SMP_SESSINDEX_NOTIF_ERR))) {
@@ -419,7 +450,7 @@ switch ($display) {
         echo "\n\t\t\t</table>";
         break;
     
-    case DISPLAY_EMAIL_SENT:
+    case LOGIN_DISPLAY_EMAIL_SENT:
         // TODO: mostrar casilla de email enmascarada
         echo "\n\t\t\t<h3 style='text-align: center;'>Restablecimiento de "
              . "contrase&ntilde;a</h3>";
@@ -428,7 +459,7 @@ switch ($display) {
         echo "\n\t\t\t<p>Puede cerrar esta p&aacute;gina.</p>";
         break;
         
-    case DISPLAY_EMAIL_NOTSENT:
+    case LOGIN_DISPLAY_EMAIL_NOTSENT:
         echo "\n\t\t\t<h3 style='text-align: center;'>Restablecimiento de "
              . "contrase&ntilde;a</h3>";
         echo "\n\t\t\t<p>No se ha podido enviar el email correctamente por "
@@ -440,7 +471,7 @@ switch ($display) {
             . "</p>";
         break;
     
-    case DISPLAY_EMAIL_NOTFOUND:
+    case LOGIN_DISPLAY_EMAIL_NOTFOUND:
         // no se encontro email para ese usuario, o no es un usuario valido
         echo "\n\t\t\t<h3 style='text-align: center;'>Restablecimiento de "
              . "contrase&ntilde;a</h3>";
@@ -455,8 +486,8 @@ switch ($display) {
                 . "</p>";
         break;
     
-    case DISPLAY_PWDRESTORE_FORM:
-        // Fromulario de reestablecimiento de pwd
+    case LOGIN_DISPLAY_PWDRESTORE_FORM:
+        // Fromulario de restablecimiento de pwd
         echo "\n\t\t\t<h3 style='text-align: center;'>Restablecimiento de "
              . "contrase&ntilde;a</h3>";
         echo "\n\t\t\t<table style='text-align: left; margin: auto; width: auto;' >";
@@ -480,7 +511,7 @@ switch ($display) {
         echo "\n\t\t\t\t\t\t\t<br />";
         echo "\n\t\t\t\t\t\t\t<address style='width: auto; max-width: 350px;'>"
              . "Se enviará un email a su dirección registrada en el sistema "
-             . "para continuar con el proceso de reestablecimiento de "
+             . "para continuar con el proceso de restablecimiento de "
              . "contrase&ntilde;a</address>";
         echo "\n\t\t\t\t\t\t\t<br />";
         echo "\n\t\t\t\t\t\t\t<input name='frm_btnRestore' value='Reestablecer "
@@ -494,6 +525,10 @@ switch ($display) {
         echo "\n\t\t\t</table>";
         break;
     
+    case LOGIN_DISPLAY_LOGGEDOUT:
+        echo "\n\t\t\t<p>¡Hasta luego " . $username . "!  Su sesión ha finalizado "
+            . "satisfactoriamente.</p>";
+        // omito el break
     default:
         echo "\n\t\t\t<address>Por favor, identif&iacute;quese para continuar</address>";
         echo "\n\t\t\t<br />";

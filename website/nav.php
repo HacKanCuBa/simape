@@ -31,7 +31,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.3
+ * @version 1.42
  */
 
 require_once 'load.php';
@@ -46,16 +46,33 @@ $params = NULL;
 $intLink = NULL;
 
 $page = new Page;
+$usuario = new Usuario(Session::retrieve(SMP_SESSINDEX_USERNAME));
 
 switch($action) {
     case SMP_LOGOUT:
+        $usuario->sesionFinalizar();
+        $page->setLocation('login.php');
+        $params = SMP_LOGOUT . "=true";
+        break;
+    
     case NULL:
     case '':
     case SMP_WEB_ROOT:
-        Session::remove(SMP_SESSINDEX_SESSIONKEY_TOKEN);
         $page->setLocation(SMP_WEB_ROOT);
         // Ya se que da FALSE, es para que se entienda.
         // Location=NULL lleva a WEBROOT
+        break;
+    
+    case SMP_RESTOREPWD:
+        $page->setLocation('login.php');
+        $page->generateRandomToken();
+        $page->generateTimestamp();
+        $page->generateToken();
+        Session::store(SMP_SESSINDEX_PAGE_RANDOMTOKEN, $page->getRandomToken());
+        Session::store(SMP_SESSINDEX_PAGE_TIMESTAMP, $page->getTimestamp());
+        
+        $params = Sanitizar::glGET(Sanitizar::ALL);
+        array_push($params, "pagetkn=" . $page->getToken());
         break;
     
     case SMP_LOGIN:
@@ -71,24 +88,24 @@ switch($action) {
             // Si el usuario está loggeado, dirigirse a la pag solicitada con un
             // page token.
             // Si no esta loggeado, darán error las comprobaciones
-            $username = Session::retrieve(SMP_SESSINDEX_USERNAME);
+//            $username = Session::retrieve(SMP_SESSINDEX_USERNAME);
+//            
+//            $uid = new UID;
+//            $uid->retrieve_fromDB($username);
+//            
+//            $session = new Session;
+//            $session->setUID($uid);
+//            $session->retrieve_fromDB_TokenId($username);
+//            $session->retrieve_fromDB();
+//            $session->setToken(Session::retrieve(SMP_SESSINDEX_SESSIONKEY_TOKEN));
             
-            $uid = new UID;
-            $uid->retrieve_fromDB($username);
+//            $fingerprint = new Fingerprint;
+//            $fingerprint->retrieve_fromDB_TokenId($username);
+//            $fingerprint->retrieve_fromDB();
             
-            $session = new Session;
-            $session->setUID($uid);
-            $session->retrieve_fromDB_TokenID($username);
-            $session->retrieve_fromDB();
-            $session->setToken(Session::retrieve(SMP_SESSINDEX_SESSIONKEY_TOKEN));
-            
-            $fingerprint = new Fingerprint;
-            $fingerprint->retrieve_fromDB_TokenID($username);
-            $fingerprint->retrieve_fromDB();
-            
-            if ($fingerprint->authenticateToken() 
-                && $session->authenticateToken()
-            ) {
+//            if ($fingerprint->authenticateToken() 
+//                && $session->authenticateToken()
+            if ($usuario->authenticateSession()) {
                 // Login OK
                 // Page Token
                 $page->generateRandomToken();
@@ -97,13 +114,13 @@ switch($action) {
                 $page->generateToken();
                 
                 // Guardo Page RandTkn y Timestamp en SESSION encriptado
-                $session->setPassword($uid->getHash());
-                $session->setPasswordSalt($session->getRandomToken());
+                $session->setPassword($usuario->getUID());
+                $session->setPasswordSalt($usuario->getRandomToken());
                 
                 $session->storeEnc(SMP_SESSINDEX_PAGE_RANDOMTOKEN, 
-                                    $page->getRandomToken());
+                                                $page->getRandomToken());
                 $session->storeEnc(SMP_SESSINDEX_PAGE_TIMESTAMP, 
-                                    $page->getTimestamp());
+                                               $page->getTimestamp());
                 
                 // Paso por GET el Page Token
                 $params = "pagetkn=" . $page->getToken();

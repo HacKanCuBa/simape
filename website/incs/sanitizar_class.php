@@ -37,10 +37,16 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.8
+ * @version 0.9
  */
 class Sanitizar
 {
+    /**
+     * Constante especial para indicar que se desea retornar todos los 
+     * parámetros del array especial.
+     */
+    const ALL = 'allParameters';
+    
     protected $DirtyValue;
     
     // __ SPECIALS
@@ -69,7 +75,7 @@ class Sanitizar
         if (isset($str) && is_string($str)) {
             return filter_var($str, 
                               FILTER_SANITIZE_STRING, 
-                              FILTER_FLAG_STRIP_LOW);
+                              FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH);
         }
         
         return FALSE;
@@ -131,7 +137,8 @@ class Sanitizar
     }
 
     /**
-     * Sanitiza un valor de la variable super global $_POST
+     * Sanitiza un valor de la variable super global $_POST.<br />
+     * Si se emplea ALL como parámetro, devuelve un array con todos ellos.
      * 
      * @param mixed $POSTkey Nombre del índice de $_POST, string o int.
      * @return string Devuelve un string sanitizado.
@@ -141,7 +148,9 @@ class Sanitizar
     public static function glPOST($POSTkey) 
     {
         try {
-            if (isset($POSTkey) && isset($_POST[$POSTkey])) {
+            if ($POSTkey == self::ALL) {
+                return self::value($_POST);
+            } elseif (isset($_POST[$POSTkey])) {
                 return self::value($_POST[$POSTkey]);
             }
             
@@ -153,7 +162,8 @@ class Sanitizar
     }
 
     /**
-     * Sanitiza un valor de la variable super global $_GET
+     * Sanitiza un valor de la variable super global $_GET.<br />
+     * Si se emplea ALL como parámetro, devuelve un array con todos ellos.
      * 
      * @param mixed $GETkey Nombre del índice de $_GET, string o int.
      * @return string Devuelve un string sanitizado.
@@ -163,7 +173,9 @@ class Sanitizar
     public static function glGET($GETkey) 
     {
         try {
-            if (isset($GETkey)) {
+            if ($GETkey == self::ALL) {
+                return self::value($_GET);
+            } else {
                 return filter_input(INPUT_GET, $GETkey, FILTER_SANITIZE_STRING, 
                                     FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH);
             }
@@ -176,7 +188,8 @@ class Sanitizar
     }
 
     /**
-     * Sanitiza un valor de la variable super global $_SERVER
+     * Sanitiza un valor de la variable super global $_SERVER.<br />
+     * Si se emplea ALL como parámetro, devuelve un array con todos ellos.
      * 
      * @param string $SERVERkey Nombre del índice de $_SERVER
      * @return string Devuelve un string sanitizado.
@@ -186,7 +199,9 @@ class Sanitizar
     public static function glSERVER($SERVERkey) 
     {
         try {
-            if (isset($SERVERkey)) {
+            if ($SERVERkey == self::ALL) {
+                return self::value($_SERVER);
+            } else {
                 return filter_input(INPUT_SERVER, $SERVERkey, FILTER_SANITIZE_STRING, 
                                     FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH);
             }
@@ -199,7 +214,8 @@ class Sanitizar
     }
     
     /**
-     * Sanitiza y devuelve un valor de la variable super global $_SESSION.
+     * Sanitiza y devuelve un valor de la variable super global $_SESSION.<br />
+     * Si se emplea ALL como parámetro, devuelve un array con todos ellos.
      * 
      * @param mixed $SESSIONkey Nombre del índice de $_SESSION, string o int.
      * @return mixed Devuelve un valor sanitizado.
@@ -209,10 +225,12 @@ class Sanitizar
     public static function glSESSION($SESSIONkey) 
     {
         try {
-            if (session_status() == PHP_SESSION_ACTIVE 
-                && isset($_SESSION[$SESSIONkey])
-            ) {
-                return self::value($_SESSION[$SESSIONkey]);
+            if (session_status() == PHP_SESSION_ACTIVE) {
+                if ($SESSIONkey == self::ALL) {
+                    return self::value($_SESSION);
+                } elseif(isset($_SESSION[$SESSIONkey])) {
+                    return self::value($_SESSION[$SESSIONkey]);
+                }
             }
             
             return NULL;

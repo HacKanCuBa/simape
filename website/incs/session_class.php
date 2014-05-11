@@ -45,11 +45,16 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.21
+ * @version 1.3
  */
 class Session
 {
-    use SessionToken;
+    /**
+     * La clase Usuario maneja SessionToken.
+     * @deprecated since version 107
+     */
+    //use SessionToken;
+    /* -- */
     
     /**
      * Contraseña empleada por la función de encriptación.

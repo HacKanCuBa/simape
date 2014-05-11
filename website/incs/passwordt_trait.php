@@ -24,63 +24,37 @@
 /**
  * Maneja la creacion de contraseñas y la autenticación.
  * 
- * Ejemplo de uso:
- * <pre><code>
- * $pass = new Password();
- * $pass->setPlaintext($ptPass);
- * $pass->encryptPassword();
- * // Obtengo la contraseña encriptada
- * $encPass = $pass->getEncrypted();
- * // Valido una nueva contraseña plana
- * $pass->setPlaintext($NewptPass); 
- * if ($pass->authenticatePassword()) {
- *      echo "Contraseña valida";
- * } else {
- *      echo "Contraseña incorrecta";
- * }
- * </code></pre>
- * 
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.5
+ * @version 1.0
  */
 trait Passwordt
-{
-    use SessionToken;
-    
+{   
     protected $passwordPT, $passwordEC, $passwordCost, 
               $passwordModificationTimestamp;
 
     // Metodos
     // __ SPECIALS
+
+    // __ PRIV
+    
+    // __ PROT   
     /**
-     * Crea un nuevo objeto Password.  Si recibe el parámetro, lo almacena como 
-     * una contraseña en texto plano, si la misma cumple las 
-     * restricciones (es decir, es válida), y prepara para encriptarla.
-     * Llamar a encryptPassword() para encriptarla.
-     * 
-     * @see encryptPassword()
-     * @param string $passwordPT Contraseña en texto plano
-     * @param string $passwordEC Contraseña encriptada.
+     * Fija el valor de PasswordCost según la configuración del sistema.
+     * @access protected
      */
-    public function __construct($passwordPT = NULL, 
-                                 $passwordEC = NULL)
+    protected function setPasswordCost()
     {
-        if (((int) constant('SMP_PASSWORD_COST')) < 10) {
+        if (constant('SMP_PASSWORD_COST') < 10) {
             $this->passwordCost = 10;
-        } elseif (((int) constant('SMP_PASSWORD_COST')) > 31) {
+        } elseif (constant('SMP_PASSWORD_COST') > 31) {
             $this->passwordCost = 31;
         } else {
             $this->passwordCost = SMP_PASSWORD_COST;
         }
-        
-        $this->setPlaintext($passwordPT);
-        $this->setEncrypted($passwordEC);
     }
-    // __ PRIV
     
-    // __ PROT    
     /**
      * Valida un string y determina si cumple las restricciones impuestas sobre
      * las contraseñas (planas). 
@@ -125,18 +99,18 @@ trait Passwordt
     }
     
     /**
-     * Devuelve un Token de Reestablecimiento de contraseña armado.
+     * Devuelve un Token de Restablecimiento de contraseña armado.
      * 
      * @param string $randToken Token aleatorio.
-     * @param float $timestamp Timestamp.
-     * @param UID $uid UID del usuario.
+     * @param int $timestamp Timestamp.
+     * @param string $uid UID del usuario.
      * @return mixed Token de Sesión o FALSE en caso de error.
      */
-    protected static function tokenMake($randToken, $timestamp, UID $uid)
+    protected static function tokenMake($randToken, $timestamp, $uid)
     {
         if (self::isValid_token($randToken) 
             && self::isValid_timestamp($timestamp)
-            && self::isValid_UID($uid)
+            && Usuario::isValid_UID($uid)
         ) {        
             // Esta operación siempre dará -1 cuando 
             // $timestamp < microtime < $timestamp + lifetime
@@ -147,8 +121,8 @@ trait Passwordt
 
             return Crypto::getHash($time 
                                     . $randToken 
-                                    . $uid->getHash()
-                                    . constant('SMP_TKN_PWDRESTORE'));
+                                    . $uid
+                                    . constant('SMP_TKN_PWDRESTORE'), 1);
         } else {
             return FALSE;
         }        
@@ -185,12 +159,14 @@ trait Passwordt
      * 
      * @param string $passwordPT Contraseña en texto plano
      * @param boolean $requireStrong Si es TRUE, requiere que la contraseña 
-     * sea <i>fuerte</i>; FALSE por defecto.
+     * sea <i>fuerte</i>.
      * @return boolean TRUE si la contraseña es válida y fue almacenada, 
-     * FALSE si no.
+     * FALSE si no.  Por defecto: SMP_PASSWORD_REQUIRESTRONG.
      */
-    public function setPlaintext($passwordPT, $requireStrong = FALSE)
+    public function setPlaintext($passwordPT, 
+                                    $requireStrong = SMP_PASSWORD_REQUIRESTRONG)
     {
+        $passwordPT = trim($passwordPT);
         if ($this->isValid_ptPassword($passwordPT)) {
             if ($requireStrong) {
                 if (self::isStrong($passwordPT)) {
@@ -239,36 +215,6 @@ trait Passwordt
         ) {
             $this->passwordModificationTimestamp = $password_modification_time;
             return TRUE;
-        }
-        
-        return FALSE;
-    }
-    
-    /**
-     * Almacena en la DB el password encriptado guardado en el objeto, si lo hay.
-     * 
-     * @param string $username Nombre de usuario al que le pertenece el 
-     * password encriptado.
-     * @return boolean TRUE si se almacenó en la DB exitosamente, 
-     * FALSE en caso contrario.
-     */
-    public function store_inDB($username) 
-    {
-        if (!empty($this->passwordEC) 
-            && !empty($username) 
-            && is_string($username)
-        ) {
-            $db = new DB(TRUE);
-            $db->setQuery('UPDATE Usuario SET PasswordSalted = ? '
-                        . 'WHERE Nombre = ?');
-            $db->setBindParam('ss');
-            $db->setQueryParams([$this->passwordEC, $username]);
-            //// atenti porque la func devuelve tb nro de error
-            // ToDo: procesar nro de error
-            $retval = $db->queryExecute();
-            if (is_bool($retval)) {
-                return $retval;
-            }
         }
         
         return FALSE;
@@ -381,35 +327,14 @@ trait Passwordt
 
         return $cost;
     }
-        
-    /**
-     * Recupera de la DB la contraseña encriptada del usuario indicado y la 
-     * almacena en el objeto.
-     * 
-     * @param string $username Nombre de usuario.
-     * @return boolean TRUE si se encontró y almacenó correctamente, 
-     * FALSE si no.
-     */
-    public function retrieve_fromDB($username)
-    {
-        if (!empty($username) && is_string($username)) {
-            $db = new DB;
-            $db->setQuery('SELECT PasswordSalted FROM Usuario WHERE Nombre = ?');
-            $db->setBindParam('s');
-            $db->setQueryParams($username);
-            $db->queryExecute();
-            return $this->setEncrypted($db->queryGetData());
-        }
-        
-        return FALSE;
-    }
     
     /**
      * Recupera el Random Token y el Timestamp almacenado en la DB y lo guarda 
      * en el objeto.  Usar los respectivos get... para obtener los valores.
      * 
      * @return boolean TRUE si tuvo exito, FALSE si no.
-     * @see setTokenID
+     * @see setTokenId
+     * @access public
      */
     public function retrieve_fromDB_PwdRestore() 
     {
@@ -483,16 +408,16 @@ trait Passwordt
             
             return FALSE;
         } else {
-            return (boolean) password_verify($this->passwordPT, 
-                                             $this->passwordEC);
+            return password_verify($this->passwordPT, 
+                                    $this->passwordEC);
         }
     }
     
     /**
-     * Autentica el Token de reestablecimiento de contraseña.<br />
+     * Autentica el Token de restablecimiento de contraseña.<br />
      * Devuelve TRUE si es auténtico, FALSE en cualquier otro caso.
      * 
-     * @return boolean TRUE si el Token de reestablecimiento de contraseña
+     * @return boolean TRUE si el Token de restablecimiento de contraseña
      * es auténtico, FALSE si no.
      */
     public function authenticateToken() 

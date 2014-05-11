@@ -126,8 +126,9 @@ class Fingerprint
      */ 
     public function generateToken()
     {
-        if (isset($this->mode)) {
-            $this->token = self::tokenMake($this->mode);
+        $token = self::tokenMake($this->mode);
+        if (self::isValid_fingerprintToken($token)) {
+            $this->token = $token;
             return TRUE;
         }
         

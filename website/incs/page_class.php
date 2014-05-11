@@ -314,19 +314,19 @@ class Page
      * que la identifique.
      * @return mixed Token de página o FALSE en caso de error.
      */
-    protected static function tokenMake($randToken, $timestamp, string $pageID) 
+    protected static function tokenMake($randToken, $timestamp, $pageID) 
     {
         if (self::isValid_token($randToken) 
             && self::isValid_timestamp($timestamp)
-            && !empty($pageID)
+            && is_string($pageID)
         ) {
-            // Para forzar una vida util durante sólo el mismo dia.
-            // Si cambia el dia, el valor de la operacion cambiara.
-            $time = $timestamp - (float) Timestamp::getToday();
+            // Esta operación siempre dará -1 cuando 
+            // $timestamp < time < $timestamp + lifetime
+            // Devolverá cualquier otro valor en otro caso.
+            $time = intval(($timestamp - time() - self::TOKEN_LIFETIME) 
+                                    / self::TOKEN_LIFETIME);
             
-            return Crypto::getHash(Timestamp::getThisSeconds(
-                                    self::TOKEN_LIFETIME) 
-                                    . $randToken
+            return Crypto::getHash($randToken
                                     . $time
                                     . $pageID
                                     . SMP_TKN_PAGE);
@@ -663,7 +663,9 @@ class Page
             && ($now < ($this->timestamp + self::TOKEN_LIFETIME))
         ) {
             // Verifico que getToken no sea FALSE.
-            $pageToken = $this->getToken(TRUE);
+            $pageToken = $this->tokenMake($this->randToken, 
+                                            $this->timestamp, 
+                                            $this->pageLoc);
             if ($pageToken && ($this->token === $pageToken)) {
                 return TRUE;
             }
