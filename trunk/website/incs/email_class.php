@@ -28,7 +28,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.2
+ * @version 0.21
  * @uses PHPMailer PHP email creation and transport class.
  */
 class Email
@@ -55,7 +55,8 @@ class Email
         $this->phpmailer->Username = SMP_EMAIL_USER;
         $this->phpmailer->Password = SMP_EMAIL_PSWD;
         $this->phpmailer->isHTML(TRUE);
-        $this->phpmailer->WordWrap = 80;
+        // Sale mal el link de password restore con WordWrap pq elimina el token
+        //$this->phpmailer->WordWrap = 80;
     }
     
     /**
@@ -114,6 +115,16 @@ class Email
     }
     
     /**
+     * Devuelve el charset del email.
+     * 
+     * @return string Charset.
+     */
+    public function getCharset()
+    {
+        return $this->phpmailer->CharSet;
+    }
+
+        /**
      * Agrega una dirección <i>Para:</i> (<i>To:</i>).  Permite agregar uno o 
      * más receptores.
      * 

@@ -47,7 +47,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.2
+ * @version 1.21
  */
 class DB extends mysqli
 {     
@@ -141,8 +141,8 @@ class DB extends mysqli
      * <p>Guarda los datos obtenidos de la query (cuando la misma se trató 
      * de un SELECT) de la siguiente manera:
      * <ul>
-     * <li>Si la consulta devolvió un único dato, como string.  Si devolvió más 
-     * de un dato, como array.</li>
+     * <li>Si la consulta devolvió un único dato, lo guarda sin más.  
+     * Si devolvió más de un dato, como array.</li>
      * <li>Si no se obtuvieron datos, como TRUE.</li>
      * <li>Si la consulta devolvió error, como FALSE.</li>
      * </ul>
@@ -161,7 +161,8 @@ class DB extends mysqli
      * 
      * <p>IMPORTANTE: Requiere native driver (<i>php5-mysqlnd</i>)<br />
      * ATENCIÓN: el resultado debería evaluarse con <i>is_array()</i> o 
-     * <i>is_string()</i> para determinar si se obtuvieron datos en la consulta,
+     * <i>is_string()|is_int()|is_float()....</i> para determinar si se 
+     * obtuvieron datos en la consulta,
      * o <i>DB::getAffectedRows()</i> para determinar la cantidad de filas 
      * obtenidas.</p>
      *  
@@ -321,8 +322,8 @@ class DB extends mysqli
      * @return mixed Los datos obtenidos de la query (cuando la misma se trató 
      * de un SELECT) de la siguiente manera:
      * <ul>
-     * <li>Si la consulta devolvió un único dato, como string.  Si devolvió más 
-     * de un dato, como array.</li>
+     * <li>Si la consulta devolvió un único dato, lo entrega sin más.
+     * Si devolvió más de un dato, como array.</li>
      * <li>Si no se obtuvieron datos, como TRUE.</li>
      * <li>Si la consulta devolvió error, como FALSE.</li>
      * </ul>
@@ -445,5 +446,75 @@ class DB extends mysqli
         } else {
             return NULL;
         }
+    }
+    
+    /**
+     * Determina si el valor pasado es un identificador válido de tabla en DB.
+     * 
+     * @param int $tblId Identificador de la tabla.
+     * @return boolean TRUE si es válido, FALSE si no.
+     */
+    public static function isValid_TblId($tblId)
+    {
+        if (!empty($tblId) && is_int($tblId)) {
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Devuelve una tabla de la DB.
+     * 
+     * @param type $tblName Nombre de la tabla.
+     * @param int $tblId Identificador de la tabla.
+     * @return boolean|array Un array asociativo conteniendo la tabla, 
+     * o FALSE en caso de error.
+     */
+    public function retrieve_tblToken($tblName, $tblId)
+    {
+        if (is_string($tblName) && is_int($tblId)) {
+            $this->setQuery('SELECT * FROM ' . $tblName 
+                            . ' WHERE ' . $tblName . 'Id = ?');
+            $this->setBindParam('i');
+            $this->setQueryParams($tblId);
+            $this->queryExecute();
+            return $this->getQueryData();
+        }
+        return FALSE;
+    }
+    
+    /**
+     * Devuelve el identificador de tabla de la tabla indicada, buscando por el 
+     * parámetro indicado. P. E.:<br />
+     * <pre><code>
+     * SELECT TblNameId FROM TblName WHERE Param = Value;
+     * </code></pre>
+     * 
+     * @param string $tblName Nombre de la tabla.
+     * @param string $param_name Nombre del parámetro a buscar en la tabla.
+     * @param string $param_type Una letra para indicar el tipo de
+     * dato del parámetro: i: integer; s: string; d: double; b: blob 
+     * @param mixed $param_value Valor del parámetro buscado, que debe 
+     * coincidir con el tipo de dato indicado.
+     * 
+     * @return int|boolean Identificador de tabla o FALSE en caso de error.
+     */
+    public function retrieve_tableId($tblName, 
+                                        $param_name, $param_type, $param_value)
+    {
+        if ($this->setBindParam($param_type) && is_string($tblName)) {
+            $this->setQuery('SELECT ' . $tblName . 'Id FROM ' . $tblName 
+                            . ' WHERE ' . $param_name . ' = ?');
+            
+            $this->setQueryParams($param_value);
+            $this->queryExecute();
+            $tblId = $this->getQueryData();
+            if (is_int($tblId)) {
+                return $tblId;
+            }
+        }
+        
+        return FALSE;
     }
 }

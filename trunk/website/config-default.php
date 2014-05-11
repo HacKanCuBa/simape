@@ -32,7 +32,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.95
+ * @version 0.98
  */
 
 // << Config
@@ -157,9 +157,16 @@ const SMP_PASSWORD_COST = 13;
 const SMP_PASSWORD_MAXDAYS = 365;
 
 /**
- * Tiempo de vida del Token de reestablecimiento de contraseña, en segundos.
+ * Tiempo de vida del Token de restablecimiento de contraseña, en segundos.
  */
 const SMP_PASSWORD_RESTORETIME = 1800;  // 30 minutos
+
+/**
+ * Determina si se requerirá que las contraseñas de los usuarios sean 
+ * <i>fuertes</i> por defecto.<br />
+ * <b>NOTA:</b> Puede ser anulada desde el código.
+ */
+const SMP_PASSWORD_REQUIRESTRONG = TRUE;
 
 const SMP_USRNAME_MAXLEN = 15;
 const SMP_USRNAME_MINLEN = 5;
@@ -196,6 +203,7 @@ const SMP_NAV_ACTION = 'accion';
 const SMP_LOGOUT = 'logout';
 const SMP_LOGIN = 'login';
 const SMP_HOME = 'home';
+const SMP_RESTOREPWD = 'restorePwd';
 // --
 // 
 // >>

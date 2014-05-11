@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.5
+ * @version 0.6
  */
 
 trait Token
@@ -56,6 +56,13 @@ trait Token
      */
     protected $TokenId;
     
+    /**
+     * Tabla Token de la DB.
+     * @var array
+     */
+    protected $tblToken;
+
+
     // __ PRIV
     /**
      * Fuerza la implementación de un método para armar el Token
@@ -97,26 +104,8 @@ trait Token
         
         return FALSE;
     }
-       
-    /**
-     * Verifica si el TokenId es válido (entero no vacío).
-     * 
-     * @param int $TokenId TokenId a validar.
-     * @return boolean TRUE si es válido, FALSE si no.
-     */
-    protected static function isValid_TokenID($TokenId)
-    {
-	if (!empty($TokenId) 
-            && is_int($TokenId)
-        ) {
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
     
     // __PUB
-    
     /**
      * Genera un nuevo token aleatorio y lo almacena en el objeto.
      */
@@ -180,23 +169,17 @@ trait Token
     }
     
     /**
-     * Recupera de la DB el ID de la tabla Token para el usuario dado, 
-     * y lo almacena en el objeto.
-     * 
-     * @param string $username Nombre de usuario.
-     * @return boolean TRUE si tuvo éxito, FALSE si no.
+     * Devuelve el identificador de tabla Token.
+     * @return integer TokenId 
      */
-    public function retrieve_fromDB_TokenID($username)
+    public function getTokenId ()
     {
-        $db = new DB;
-        $db->setQuery('SELECT TokenId FROM Usuario WHERE Nombre = ?');
-        $db->setBindParam('s');
-        $db->setQueryParams($username);
-        $db->queryExecute();
-
-        return $this->setTokenID($db->getQueryData());
+        if (isset($this->TokenId)) {
+            return $this->TokenId;
+        }
+        return 0;
     }
-
+    
     /**
      * Almacena en el objeto un Token aleatorio.  Emplearlo para la función
      * de autenticación.
@@ -254,9 +237,9 @@ trait Token
      * @param int $TokenId Identificador de la tabla Token.
      * @return boolean TRUE si se almacenó correctamente, FALSE si no.
      */
-    public function setTokenID($TokenId) 
+    public function setTokenId($TokenId) 
     {
-        if (self::isValid_TokenID($TokenId)) {
+        if (DB::isValid_TblId($TokenId)) {
             $this->TokenId = $TokenId;
             return TRUE;
         }
@@ -269,4 +252,40 @@ trait Token
     * especial de la clase implementadora.
     */
     abstract public function authenticateToken();
+    
+    /**
+     * Recupera de la DB el ID de la tabla Token para el usuario dado, 
+     * y lo almacena en el objeto.
+     * 
+     * @param string $username Nombre de usuario.
+     * @return boolean TRUE si tuvo éxito, FALSE si no.
+     */
+    public function retrieve_fromDB_TokenId($username)
+    {
+        $db = new DB;
+        return $this->setTokenId($db->retrieve_tableId('Usuario', 
+                                                        'Nombre', 
+                                                        's', 
+                                                        $username));
+    }
+    
+    /**
+     * Recupera de la DB la tabla Token y la almacena en el objeto.  Debe 
+     * haberse fijado el valor de TokenId previamente.
+     * 
+     * @see retrieve_fromDB_TokenId
+     * @return boolean TRUE si se recuperó correctamente, FALSE si no.
+     */
+    public function retrieve_tblToken()
+    {
+        if(!empty($this->TokenId)) {
+            $db = new DB;
+            $tblToken = $db->retrieve_tblToken('Token', $this->TokenId);
+            if (is_array($tblToken)) {
+                $this->tblToken = $tblToken;
+                return TRUE;
+            }
+        }
+        return FALSE;
+    }
 }

@@ -30,7 +30,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.01
+ * @version 1.1
  */
 
 class Crypto
@@ -456,6 +456,24 @@ class Crypto
             }
         }
         
+        return FALSE;
+    }
+    
+        /**
+     * Valida un string y determina si se trata de un código UUID v4.
+     * 
+     * @param string $uuid String a validar.
+     * @return boolean TRUE si el string cumple los requisitos y es un código 
+     * UUID4 válido, FALSE si no lo es.
+     */
+    public static function isValid_uuid4($uuid) 
+    {
+        if (!empty($uuid) && is_string($uuid)) {
+            return (bool) preg_match('/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-'
+                                     . '[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i', 
+                                     $uuid);
+        }
+
         return FALSE;
     }
 }
