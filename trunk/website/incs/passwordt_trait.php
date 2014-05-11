@@ -98,36 +98,6 @@ trait Passwordt
         }
     }
     
-    /**
-     * Devuelve un Token de Restablecimiento de contraseña armado.
-     * 
-     * @param string $randToken Token aleatorio.
-     * @param int $timestamp Timestamp.
-     * @param string $uid UID del usuario.
-     * @return mixed Token de Sesión o FALSE en caso de error.
-     */
-    protected static function tokenMake($randToken, $timestamp, $uid)
-    {
-        if (self::isValid_token($randToken) 
-            && self::isValid_timestamp($timestamp)
-            && Usuario::isValid_UID($uid)
-        ) {        
-            // Esta operación siempre dará -1 cuando 
-            // $timestamp < microtime < $timestamp + lifetime
-            // Devolverá cualquier otro valor en otro caso.
-            $time = intval(($timestamp - time() 
-                                - SMP_PASSWORD_RESTORETIME) 
-                                    / SMP_PASSWORD_RESTORETIME);
-
-            return Crypto::getHash($time 
-                                    . $randToken 
-                                    . $uid
-                                    . constant('SMP_TKN_PWDRESTORE'), 1);
-        } else {
-            return FALSE;
-        }        
-    }
-    
     // __ PUB 
     /**
      * Determina si una contraseña en texto plano es fuerte (criptográficamente 
@@ -153,6 +123,29 @@ trait Passwordt
         return FALSE;
     }
 
+    /**
+     * Genera y almacena un nuevo Token.  Requiere previamente del
+     * Random Token, Timestamp y UID.
+     * 
+     * @return boolean TRUE si tuvo éxito, FALSE si no.
+     */
+    public function generateToken()
+    {
+        if(isset($this->randToken)
+           && isset($this->timestamp) 
+           && isset($this->uid)
+        ) {
+           $token = self::tokenMake($this->randToken,
+                                    SMP_TKN_PWDRESTORE,
+                                    $this->timestamp,
+                                    SMP_PASSWORD_RESTORETIME,
+                                    $this->uid); 
+           return $this->setToken($token);
+        }
+        
+        return FALSE;
+    }
+    
     /**
      * Almacena una contraseña en texto plano, si la misma cumple las 
      * restricciones (es decir, es válida), y prepara para encriptarla.
@@ -430,8 +423,10 @@ trait Passwordt
             && isset($this->token)
         ) {
             // Verifico que tokenMake no sea FALSE.
-            $passtoken = self::tokenMake($this->randToken, 
-                                            $this->timestamp, 
+            $passtoken = self::tokenMake($this->randToken,
+                                            SMP_TKN_PWDRESTORE,
+                                            $this->timestamp,
+                                            SMP_PASSWORD_RESTORETIME,
                                             $this->uid);
             if ($passtoken && ($this->token === $passtoken)) {
                 return TRUE;

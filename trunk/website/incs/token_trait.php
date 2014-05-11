@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.6
+ * @version 0.61
  */
 
 trait Token
@@ -65,10 +65,43 @@ trait Token
 
     // __ PRIV
     /**
-     * Fuerza la implementación de un método para armar el Token
-     * especial.
+     * Devuelve un Token especial armado.
+     * 
+     * @param string $randToken Token aleatorio.
+     * @param string $constToken Token constante.
+     * @param int $timestamp Timestamp.
+     * @param int $lifetime Tiempo de vida del token.
+     * @param string $extra Información adicional para generar el token.
+     * @return string|FALSE Token especial o FALSE en caso de error.
      */
-    abstract protected function tokenMake();
+    protected static function tokenMake($randToken, 
+                                        $constToken, 
+                                        $timestamp = NULL, 
+                                        $lifetime = NULL,
+                                        $extra = NULL)
+    {
+        if (self::isValid_token($randToken) 
+            && self::isValid_token($constToken)
+            && (is_null($timestamp) || self::isValid_timestamp($timestamp)) 
+            && (is_null($lifetime) || self::isValid_timestamp($lifetime))
+            && (is_null($extra) || is_string($extra))
+        ) {  
+            $time = 0;
+            if (!is_null($timestamp) && !is_null($lifetime)) {
+                // Esta operación siempre dará -1 cuando 
+                // $timestamp < time < $timestamp + lifetime
+                // Devolverá cualquier otro valor en otro caso.
+                $time = intval(($timestamp - time() - $lifetime) / $lifetime);
+            }
+
+            return Crypto::getHash($time 
+                                    . $randToken 
+                                    . $extra
+                                    . $constToken, 1);
+        }
+        
+        return FALSE;
+    }
     
     // __ PROT
     /**

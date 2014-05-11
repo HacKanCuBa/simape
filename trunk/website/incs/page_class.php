@@ -303,37 +303,6 @@ class Page
         
         return FALSE;
     }
-    
-    /**
-     * Devuelve un Token de Página armado.
-     * 
-     * @param string $randToken Token aleatorio.
-     * @param float $timestamp Timestamp.
-     * @param string $pageID Identificador de la página para la cual se 
-     * generará el token.  Puede ser su nombre, título o URL, cualquier valor 
-     * que la identifique.
-     * @return mixed Token de página o FALSE en caso de error.
-     */
-    protected static function tokenMake($randToken, $timestamp, $pageID) 
-    {
-        if (self::isValid_token($randToken) 
-            && self::isValid_timestamp($timestamp)
-            && is_string($pageID)
-        ) {
-            // Esta operación siempre dará -1 cuando 
-            // $timestamp < time < $timestamp + lifetime
-            // Devolverá cualquier otro valor en otro caso.
-            $time = intval(($timestamp - time() - self::TOKEN_LIFETIME) 
-                                    / self::TOKEN_LIFETIME);
-            
-            return Crypto::getHash($randToken
-                                    . $time
-                                    . $pageID
-                                    . SMP_TKN_PAGE);
-        }
-        
-        return FALSE;
-    }
 
     // __ PUB
     /**
@@ -605,8 +574,10 @@ class Page
            && isset($this->timestamp)
            && isset($this->pageLoc)
         ){
-            $token = self::tokenMake($this->randToken, 
-                                     $this->timestamp, 
+            $token = self::tokenMake($this->randToken,
+                                     SMP_TKN_PAGE,
+                                     $this->timestamp,
+                                     self::TOKEN_LIFETIME,
                                      $this->pageLoc);
             if(self::isValid_pageToken($token)) {
                 $this->token = $token;
