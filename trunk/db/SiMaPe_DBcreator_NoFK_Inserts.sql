@@ -115,7 +115,7 @@ CREATE  TABLE IF NOT EXISTS `SiMaPe`.`Empleado` (
   `ResolIngreso_Año` SMALLINT UNSIGNED NOT NULL ,
   `DocumentoNro` INT UNSIGNED NOT NULL ,
   `CUIL` BIGINT UNSIGNED NOT NULL ,
-  `LegajoNro` INT UNSIGNED NOT NULL ,
+  `Legajo` INT UNSIGNED NOT NULL ,
   `TelNro` VARCHAR(20) NOT NULL ,
   `TelCodArea` VARCHAR(10) NOT NULL ,
   `CelNro` VARCHAR(20) NOT NULL ,
@@ -131,7 +131,7 @@ CREATE  TABLE IF NOT EXISTS `SiMaPe`.`Empleado` (
   PRIMARY KEY (`EmpleadoId`) )
 ENGINE = InnoDB;
 
-CREATE UNIQUE INDEX `LegajoNro_UNIQUE` ON `SiMaPe`.`Empleado` (`LegajoNro` ASC) ;
+CREATE UNIQUE INDEX `LegajoNro_UNIQUE` ON `SiMaPe`.`Empleado` (`Legajo` ASC) ;
 
 CREATE INDEX `Empleado_NomApDoc` ON `SiMaPe`.`Empleado` (`Nombre` ASC, `Apellido` ASC, `DocumentoNro` ASC) ;
 
@@ -546,7 +546,7 @@ COMMIT;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `SiMaPe`;
-INSERT INTO `SiMaPe`.`Empleado` (`EmpleadoId`, `Nombre`, `Apellido`, `FicheroId`, `Titulo`, `Sexo`, `FechaNac`, `FechaIngresoDependencia`, `FechaIngresoJusticia`, `ResolIngreso_Nro`, `ResolIngreso_Año`, `DocumentoNro`, `CUIL`, `LegajoNro`, `TelNro`, `TelCodArea`, `CelNro`, `CelCodArea`, `Email`, `NivelEstudioId`, `ProfesionTitulo`, `EstadoCivil`, `EstadoId`, `Comentario`, `CreacionTimestamp`, `ModificacionTimestamp`) VALUES (1, 'SiMaPe', 'SiMaPe', 1, NULL, 'M', '2013-11-28', '0000-00-00', '0000-00-00', 0, 0, 0, 0, 0, '0', '0', '0', '0', 'simape@simape.com.ar', 1, NULL, 'Soltero', 1, 'GNU GPL v3.0 (C) Iván Ariel Barrera Oro', 1386012582, 1386012582);
+INSERT INTO `SiMaPe`.`Empleado` (`EmpleadoId`, `Nombre`, `Apellido`, `FicheroId`, `Titulo`, `Sexo`, `FechaNac`, `FechaIngresoDependencia`, `FechaIngresoJusticia`, `ResolIngreso_Nro`, `ResolIngreso_Año`, `DocumentoNro`, `CUIL`, `Legajo`, `TelNro`, `TelCodArea`, `CelNro`, `CelCodArea`, `Email`, `NivelEstudioId`, `ProfesionTitulo`, `EstadoCivil`, `EstadoId`, `Comentario`, `CreacionTimestamp`, `ModificacionTimestamp`) VALUES (1, 'SiMaPe', 'SiMaPe', 1, NULL, 'M', '2013-11-28', '0000-00-00', '0000-00-00', 0, 0, 0, 0, 0, '0', '0', '0', '0', 'simape@simape.com.ar', 1, NULL, 'Soltero', 1, 'GNU GPL v3.0 (C) Iván Ariel Barrera Oro', 1386012582, 1386012582);
 
 COMMIT;
 
