@@ -45,7 +45,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.3
+ * @version 1.4
  */
 class Session
 {
@@ -86,12 +86,12 @@ class Session
      */
     const COOKIE_LIFETIME = 0;
     
+    const USE_SYSTEM_PWD = 'usesystempwd';
+    
     // __ SPECIALS
     /**
      * Inicia una sesión si no estaba iniciada.<br />
-     * Guarda el ID de la sesión si estaba iniciada, y luego lo regenera.
-     * @see getID
-     * @see getID_old
+     * Guarda el ID y nombre de la sesión si estaba iniciada, y luego lo regenera.
      */
     public function __construct() 
     {
@@ -160,6 +160,18 @@ class Session
         //return $name;
     }
     
+    /**
+     * Devuelve la base de la contraseña de sistema, empleando los tokens fijos.
+     * @return string Base de la contraseña de sistema.
+     */
+    protected static function getSystemPassword_base()
+    {
+        return Crypto::getHash(SMP_TKN_SESSIONKEY 
+                                . SMP_TKN_FINGERPRINT 
+                                . SMP_TKN_FORM 
+                                . SMP_TKN_PAGE 
+                                . SMP_TKN_PWDRESTORE, 1, 'sha1');
+    }
     // __ PUB
     /**
      * Inicia o continúa una sesión.  Ante cada inicio, regenera el ID 
@@ -431,11 +443,12 @@ class Session
     }
 
     /**
-     * Devuelve el ID actual de la sesión.  Tener en cuenta que cada llamada<br />
+     * Devuelve el ID actual de la sesión.  Tener en cuenta que cada llamada
      * a initiate() podría cambiar este ID.
      * 
      * @see initiate()
      * @return string ID actual de la sesión.
+     * @access public
      */
     public static function getID()
     {
@@ -448,6 +461,7 @@ class Session
      * hace.
      * 
      * @return string ID de sesión anterior.
+     * @access public
      */
     public function geID_old()
     {
@@ -456,6 +470,23 @@ class Session
         }
         
         return '';
+    }
+    
+    /**
+     * Fija como contraseña a la contraseña de sistema, que se basa en los 
+     * token fijos y el ID de sesión, para emplear cuando el usuario aún no está 
+     * autenticado.<br />
+     * El parámetro determina si se debe emplear la contraseña para encriptar 
+     * o para desencriptar.
+     * 
+     * @param boolean $encrypt TRUE para encriptar, FALSE para desencriptar.
+     * @access public
+     * @tutorial https://code.google.com/p/simape/wiki/ModeloSeguridad
+     */
+    public function setSystemPassword($encrypt = TRUE)
+    {
+        $this->password = self::getSystemPassword_base();
+        $this->password_salt = $encrypt ? self::getID() : $this->session_id_old;
     }
 
     /**

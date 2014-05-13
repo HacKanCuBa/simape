@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.0
+ * @version 1.1
  */
 trait Passwordt
 {   
@@ -131,9 +131,9 @@ trait Passwordt
      */
     public function generateToken()
     {
-        if(isset($this->randToken)
-           && isset($this->timestamp) 
-           && isset($this->uid)
+        if(!empty($this->randToken)
+           && !empty($this->timestamp) 
+           && !empty($this->uid)
         ) {
            $token = self::tokenMake($this->randToken,
                                     SMP_TKN_PWDRESTORE,
@@ -156,7 +156,7 @@ trait Passwordt
      * @return boolean TRUE si la contraseña es válida y fue almacenada, 
      * FALSE si no.  Por defecto: SMP_PASSWORD_REQUIRESTRONG.
      */
-    public function setPlaintext($passwordPT, 
+    public function setPasswordPlaintext($passwordPT, 
                                     $requireStrong = SMP_PASSWORD_REQUIRESTRONG)
     {
         $passwordPT = trim($passwordPT);
@@ -184,7 +184,7 @@ trait Passwordt
      * @return boolean TRUE si la contraseña es válida y fue almacenada, 
      * FALSE si no.
      */
-    public function setEncrypted($passwordEC)
+    public function setPasswordEncrypted($passwordEC)
     {
         if ($this->isValid_encPassword($passwordEC)) {
             $this->passwordEC = $passwordEC;
@@ -230,8 +230,8 @@ trait Passwordt
     public function store_inDB_PwdRestore()
     {
         if (!empty($this->TokenId) 
-            && !empty($this->randToken)
-            && !empty($this->timestamp)
+            && isset($this->randToken)
+            && isset($this->timestamp)
         ) {
             $db = new DB(TRUE);
             $db->setQuery('UPDATE Token '
@@ -253,12 +253,12 @@ trait Passwordt
     
     /**
      * Devuelve la contraseña encriptada.  Debe haberse llamado primero a 
-     * encryptPassword() o en su defecto setEncrypted().
+     * encryptPassword() o en su defecto setPasswordEncrypted().
      * 
      * @see encryptPassword()
      * @return string|FALSE La contraseña encriptada.
      */
-    public function getEncrypted()
+    public function getPasswordEncrypted()
     {
         if (isset($this->passwordEC)) {
             return $this->passwordEC;
@@ -273,7 +273,7 @@ trait Passwordt
      * 
      * @return string|FALSE La contraseña en texto plano.
      */
-    public function getPlaintext()
+    public function getPasswordPlaintext()
     {
         if (isset($this->passwordPT)) {
             return $this->passwordPT;
@@ -352,10 +352,27 @@ trait Passwordt
     }
     
     /**
+     * Remueve de la DB el random token y el timestamp de Password Restore.  
+     * Requiere TokenId.
+     * @return boolean TRUE si tuvo éxito, FALSE si no.
+     * @access public
+     */
+    public function remove_fromDB_PwdRestore()
+    {
+        if (!empty($this->TokenId)) {
+            $this->randToken = NULL;
+            $this->timestamp = 0;
+            return $this->store_inDB_SessionToken();
+        }
+        
+        return FALSE;
+    }
+
+    /**
      * Encripta la contraseña almacenada en texto plano.  Para obtener el 
-     * resultado: getEncrypted().
+     * resultado: getPasswordEncrypted().
      * NOTA: ¡puede demorar varios segundos!
-     * @see getEncrypted()
+     * @see getPasswordEncrypted()
      * @return boolean TRUE si se encriptó correctamente, FALSE si no.
      */
     public function encryptPassword() 
@@ -379,8 +396,8 @@ trait Passwordt
      * NOTA: A fin de evitar en cierta medida un ataque de timing oracle,
      * esta función implementa un restraso cuando passwordEC es nulo.
      * 
-     * @see setPlaintext()
-     * @see setEncrypted()
+     * @see setPasswordPlaintext()
+     * @see setPasswordEncrypted()
      * @return boolean TRUE si la contraseña es válida (idéntica a la 
      * encriptada), FALSE en caso contrario.
      */

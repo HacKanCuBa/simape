@@ -47,7 +47,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.21
+ * @version 1.22
  */
 class DB extends mysqli
 {     
@@ -471,7 +471,7 @@ class DB extends mysqli
      * @return boolean|array Un array asociativo conteniendo la tabla, 
      * o FALSE en caso de error.
      */
-    public function retrieve_tblToken($tblName, $tblId)
+    public function retrieve_table($tblName, $tblId)
     {
         if (is_string($tblName) && is_int($tblId)) {
             $this->setQuery('SELECT * FROM ' . $tblName 

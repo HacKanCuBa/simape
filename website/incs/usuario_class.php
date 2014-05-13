@@ -32,25 +32,16 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.82
+ * @version 0.83
  */
 class Usuario extends Empleado
 {    
     // SessionToken ya incorpora UID.
     use SessionToken, Passwordt {        
-        SessionToken::store_inDB as SessionToken_storeinDB;
-        SessionToken::retrieve_fromDB as SessionToken_retrieve_fromDB;
         SessionToken::authenticateToken as protected SessionToken_authenticateToken;
-        SessionToken::tokenMake as SessionToken_tokenMake;
         
-        Passwordt::getPlaintext as public getPasswordPlaintext;
-        Passwordt::setPlaintext as public setPasswordPlaintext;
-        Passwordt::getEncrypted as public getPasswordEncrypted;
-        Passwordt::setEncrypted as public setPasswordEncrypted;
         Passwordt::authenticateToken as protected Password_authenticateToken;
-        Passwordt::tokenMake as Password_tokenMake;
         
-        SessionToken::tokenMake insteadof Passwordt;
         SessionToken::authenticateToken insteadof Passwordt;
         
         // SessionToken
@@ -60,17 +51,24 @@ class Usuario extends Empleado
         
         // Passwordt
         retrieve_fromDB_PwdRestore as protected;
+        store_inDB_PwdRestore as protected;
     }
     
     const TOKEN_PASSWORDRESTORE = TRUE;
     const TOKEN_SESSION = FALSE;
 
+    /**
+     * El método authenticateSession fija el valor de esta variable, 
+     * que determina si el usuario está loggeado (TRUE) o no (FALSE).
+     * @var boolean
+     */
+    private $isLoggedIn;
 
 //    /**
 //     * Tabla Usuario de la DB.
 //     * @var array
 //     */
-//    protected $Usuario = array ('UsuarioId' => 0,
+//    protected $tblUsuario = array ('UsuarioId' => 0,
 //                                'EmpleadoId' => 0,
 //                                'UsuarioPerfilId' => 0,
 //                                'TokenId' => 0,
@@ -298,22 +296,27 @@ class Usuario extends Empleado
     /**
      * Genera y almacena un Token del tipo indicado.
      * @param boolean $type Indica el tipo de token a generar: 
-     * TOKEN_PASSWORDRESTORE o TOKEN_SESSION.
+     * TOKEN_PASSWORDRESTORE (TRUE) o TOKEN_SESSION (FALSE).
      * @return boolean TRUE si se generó exitosamente, FALSe si no.
+     * @access protected
      */
     protected function generateToken($type) {
         if (isset($type)
-            && isset($this->randToken)
-            && isset($this->timestamp) 
-            && isset($this->uid)
+            && !empty($this->randToken)
+            && !empty($this->timestamp) 
+            && !empty($this->uid)
         ) {
             $token = $type ? 
-                        $this->Password_tokenMake($this->randToken,
-                                     $this->timestamp,
-                                     $this->uid) : 
-                        $this->SessionToken_tokenMake($this->randToken,
-                                     $this->timestamp,
-                                     $this->uid); 
+                        $this->tokenMake($this->randToken,
+                                            SMP_TKN_PWDRESTORE,
+                                            $this->timestamp,
+                                            SMP_PASSWORD_RESTORETIME,
+                                            $this->uid) : 
+                        $this->tokenMake($this->randToken,
+                                            SMP_TKN_SESSIONKEY,
+                                            $this->timestamp,
+                                            SMP_SESSIONKEY_LIFETIME,
+                                            $this->uid); 
             if(self::isValid_token($token)) {
                 $this->token = $token;
                 return TRUE;
@@ -366,8 +369,8 @@ class Usuario extends Empleado
         $retval = FALSE;
         
         if (is_a($password, 'Password')) {
-            $this->setPasswordPlaintext($password->getPlaintext(), $requireStrong);
-            $this->setPasswordEncrypted($password->getEncrypted());
+            $this->setPasswordPlaintext($password->getPasswordPlaintext(), $requireStrong);
+            $this->setPasswordEncrypted($password->getPasswordEncrypted());
             $this->setRandomToken($password->getRandomToken());
             $this->setTimestamp($password->getTimestamp());
             $this->setToken($password->getToken());
@@ -431,7 +434,7 @@ class Usuario extends Empleado
      * @return string Nombre de usuario o string vacío
      */
     public function getNombre() {
-        return $this->Nombre;
+        return $this->UsuarioNombre;
     }
     
     /**
@@ -514,7 +517,7 @@ class Usuario extends Empleado
 //     */
 //    public function getPasswordEncrypted() 
 //    {
-//        return $this->Password_getEncrypted();
+//        return $this->Password_getPasswordEncrypted();
 //    }
     
 //    /**
@@ -557,8 +560,9 @@ class Usuario extends Empleado
                         $this->PubKey, 
                         $this->UsuarioCreacionTimestamp, 
                         $this->UsuarioModificacionTimestamp) = array_values($usuario);
-//                $this->password->setEncrypted($usuario['PasswordSalted']);
+//                $this->password->setPasswordEncrypted($usuario['PasswordSalted']);
 //                $this->password->setModificationTimestamp($usuario['PasswordTimestamp']);
+                $this->esNuevoUsuario = FALSE;
                 return TRUE;
             }
         }
@@ -591,33 +595,41 @@ class Usuario extends Empleado
      * FALSE si alguna instancia de las mencionadas falló.  
      * De ser así, no prosigue con las siguientes, que se ejecutan en el orden 
      * indicado.
+     * @access public
      */
     public function sesionIniciar()
     {
-        $retval = FALSE;
-        
-        // Guardo el nombre de usuario en $_SESSION
-        Session::store(SMP_SESSINDEX_USERNAME, $this->getNombre());
-        
-        // Genero nuevo sessionkey
-        $this->generateRandomToken();
-        $this->generateTimestamp();
-        if($this->generateToken()) {
-            if($this->SessionToken_storeinDB()) {
-                Session::store(SMP_SESSINDEX_SESSIONKEY_TOKEN, 
-                                $this->getToken());
-                // Fingerprint
-                $fingerprint = new Fingerprint;
-                $fingerprint->setMode(Fingerprint::MODE_USEIP);
-                $fingerprint->generateToken();
-                // Guardarlo en DB
-                $fingerprint->setTokenId($this->getTokenId());
-                $retval = $fingerprint->store_inDB();
-                unset($fingerprint);
+        if (!(isset($this->isLoggedIn) && is_bool($this->isLoggedIn))) {
+            $this->isLoggedIn = FALSE;
+
+            // Guardo el nombre de usuario en $_SESSION
+            Session::store(SMP_SESSINDEX_USERNAME, $this->getNombre());
+
+            // Genero nuevo sessionkey
+            $this->generateRandomToken();
+            $this->generateTimestamp();
+            !empty($this->uid) ?: $this->retrieve_fromDB();
+            !empty($this->TokenId) ?: $this->retrieve_fromDB_TokenId($this->UsuarioNombre);
+            if($this->generateToken(self::TOKEN_SESSION)) {
+                if($this->store_inDB_SessionToken()) {
+                    Session::store(SMP_SESSINDEX_SESSIONKEY_TOKEN, 
+                                                        $this->getToken());
+                    // en este punto la sesión está iniciada
+                    $this->isLoggedIn = TRUE;   // podria considerarse o no el fingTkn...
+                    //
+                    // Fingerprint
+                    $fingerprint = new Fingerprint;
+                    $fingerprint->setMode(Fingerprint::MODE_USEIP);
+                    $fingerprint->generateToken();
+                    // Guardarlo en DB
+                    $fingerprint->setTokenId($this->getTokenId());
+                    $fingerprint->store_inDB(); //acá lo considero, pero si falla, como proceder?
+                    unset($fingerprint);
+                }
             }
         }
         
-        return $retval;
+        return $this->isLoggedIn;
     }
     
     /**
@@ -627,14 +639,15 @@ class Usuario extends Empleado
      * <li>Anula los tokens y el timestamp,</li>
      * <li>Escribe en la DB.</li>
      * </ul>
+     * @access public
      */
     public function sesionFinalizar()
     {
         Session::remove(SMP_SESSINDEX_SESSIONKEY_TOKEN);
         $this->token = NULL;
-        $this->randToken = NULL;
-        $this->timestamp = 0;
-        $this->SessionToken_storeinDB();
+        $this->isLoggedIn = FALSE;
+        !empty($this->TokenId) ?: $this->retrieve_fromDB_TokenId($this->UsuarioNombre);
+        $this->remove_fromDB_PwdRestore();
     }
     
     /**
@@ -646,23 +659,31 @@ class Usuario extends Empleado
      */
     public function authenticateSession()
     {
-        if ($this->setToken(Session::retrieve(SMP_SESSINDEX_SESSIONKEY_TOKEN))) {
-            if($this->TokenId ?: $this->retrieve_fromDB_TokenId($this->UsuarioNombre)) {
-                $fingerprint = new Fingerprint;
-                $fingerprint->setTokenId($this->TokenId);
-                $fingerprint->retrieve_fromDB();
-                if ($fingerprint->authenticateToken()) {
-                    if ($this->SessionToken_retrieve_fromDB()) {
-                        return $this->SessionToken_authenticateToken();
+        if (isset($this->isLoggedIn) && is_bool($this->isLoggedIn)) {
+            return $this->isLoggedIn;
+        } else {
+            $this->isLoggedIn = FALSE;
+
+            if ($this->setToken(Session::retrieve(SMP_SESSINDEX_SESSIONKEY_TOKEN))) {
+                if(!empty($this->uid) ?: $this->retrieve_fromDB()
+                    && !empty($this->TokenId) ?: $this->retrieve_fromDB_TokenId($this->UsuarioNombre)
+                ) {
+                    $fingerprint = new Fingerprint;
+                    $fingerprint->setTokenId($this->TokenId);
+                    $fingerprint->retrieve_fromDB();
+                    if ($fingerprint->authenticateToken()) {
+                        if ($this->retrieve_fromDB_SessionToken()) {
+                            $this->isLoggedIn = $this->SessionToken_authenticateToken();
+                        }
+                    } else {
+                        // fallo el fingerprint
+                        $this->sesionFinalizar();
                     }
-                } else {
-                    // fallo el fingerprint
-                    $this->sesionFinalizar();
                 }
             }
         }
         
-        return FALSE;
+        return $this->isLoggedIn;
     }
     
     /**
@@ -678,12 +699,12 @@ class Usuario extends Empleado
      */
     public function passwordRestore()
     {
-        if(($this->uid ?: $this->retrieve_fromDB())
-                && ($this->TokenId ?: $this->retrieve_fromDB_TokenId($this->UsuarioNombre))
+        if((!empty($this->uid) ?: $this->retrieve_fromDB())
+                && (!empty($this->TokenId) ?: $this->retrieve_fromDB_TokenId($this->UsuarioNombre))
         ) {
             $this->generateRandomToken();
             $this->generateTimestamp();
-            if ($this->generateToken()
+            if ($this->generateToken(self::TOKEN_PASSWORDRESTORE)
                     && $this->store_inDB_PwdRestore()
             ) {
                 $passrestore_url = Sanitizar::glSERVER('HTTPS') ? 'https://' : 'http://';
@@ -763,8 +784,8 @@ class Usuario extends Empleado
      */
     public function authenticatePasswordRestore()
     {
-        if(($this->uid ?: $this->retrieve_fromDB())
-                && ($this->TokenId ?: $this->retrieve_fromDB_TokenId($this->UsuarioNombre))
+        if((!empty($this->uid) ?: $this->retrieve_fromDB())
+                && (!empty($this->TokenId) ?: $this->retrieve_fromDB_TokenId($this->UsuarioNombre))
         ) {
             if ($this->retrieve_fromDB_PwdRestore()) {
                 return $this->Password_authenticateToken();

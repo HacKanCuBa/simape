@@ -31,13 +31,13 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.42
+ * @version 1.43
  */
 
 require_once 'load.php';
 
 // Iniciar o continuar sesion
-Session::initiate();
+$session = new Session;
 
 $action = Sanitizar::glGET(SMP_NAV_ACTION);
 
@@ -80,6 +80,7 @@ switch($action) {
         break;
     
     case SMP_HOME:  // por ahora, mensajes.php
+        $action = SMP_LOC_PAGS . 'mensajes.php';
     case SMP_LOC_PAGS . 'mensajes.php':
         $intLink = "tabR"; // no uso break para que ejecute default
     default:
@@ -88,23 +89,6 @@ switch($action) {
             // Si el usuario está loggeado, dirigirse a la pag solicitada con un
             // page token.
             // Si no esta loggeado, darán error las comprobaciones
-//            $username = Session::retrieve(SMP_SESSINDEX_USERNAME);
-//            
-//            $uid = new UID;
-//            $uid->retrieve_fromDB($username);
-//            
-//            $session = new Session;
-//            $session->setUID($uid);
-//            $session->retrieve_fromDB_TokenId($username);
-//            $session->retrieve_fromDB();
-//            $session->setToken(Session::retrieve(SMP_SESSINDEX_SESSIONKEY_TOKEN));
-            
-//            $fingerprint = new Fingerprint;
-//            $fingerprint->retrieve_fromDB_TokenId($username);
-//            $fingerprint->retrieve_fromDB();
-            
-//            if ($fingerprint->authenticateToken() 
-//                && $session->authenticateToken()
             if ($usuario->authenticateSession()) {
                 // Login OK
                 // Page Token
@@ -127,7 +111,7 @@ switch($action) {
             }
         } else {
             // No existe la pagina
-            $page->setLocation(SMP_LOC_404);
+            $page->setLocation('404.php');
         }
         break;
 }

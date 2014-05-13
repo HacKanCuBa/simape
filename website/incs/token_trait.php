@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.61
+ * @version 0.62
  */
 
 trait Token
@@ -279,6 +279,26 @@ trait Token
         
         return FALSE;
     }
+    
+    /**
+     * Fija los valores pasados a fin de prepararlos para la función de 
+     * autenticación.  Idem a llamar cada set() individual.
+     * 
+     * @param string $token Token.
+     * @param string $randToken RanomToken.
+     * @param int $timestamp Timestamp.
+     * @param string $uid UID.
+     */
+    public function prepare_to_auth($token = NULL,
+                                    $randToken = NULL,
+                                    $timestamp = NULL,
+                                    $uid = NULL)
+    {
+        $this->setRandomToken($randToken);
+        $this->setToken($token);
+        $this->setTimestamp($timestamp);
+        method_exists($this, 'setUID') ? call_user_method('setUID', $this, $uid) : FALSE;
+    }
 
     /**
     * Fuerza la implementación de un método para autenticar el Token
@@ -313,7 +333,7 @@ trait Token
     {
         if(!empty($this->TokenId)) {
             $db = new DB;
-            $tblToken = $db->retrieve_tblToken('Token', $this->TokenId);
+            $tblToken = $db->retrieve_table('Token', $this->TokenId);
             if (is_array($tblToken)) {
                 $this->tblToken = $tblToken;
                 return TRUE;
