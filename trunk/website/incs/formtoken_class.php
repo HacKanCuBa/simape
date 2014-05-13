@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.31
+ * @version 0.32
  */
 
 class FormToken 
@@ -71,8 +71,8 @@ class FormToken
      */
     public function generateToken()
     {
-        if (isset($this->randToken)
-            && isset($this->timestamp)
+        if (!empty($this->randToken)
+            && !empty($this->timestamp)
         ) {
             $token = self::tokenMake($this->randToken, 
                                         SMP_TKN_FORM,

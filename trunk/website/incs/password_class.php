@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.61
+ * @version 1.62
  */
 class Password
 {
@@ -51,8 +51,8 @@ class Password
     public function __construct($passwordPT = NULL, $passwordEC = NULL)
     {
         $this->setPasswordCost();
-        $this->setPlaintext($passwordPT);
-        $this->setEncrypted($passwordEC);
+        $this->setPasswordPlaintext($passwordPT);
+        $this->setPasswordEncrypted($passwordEC);
     }
     // __ PRIV
     
@@ -105,7 +105,7 @@ class Password
             $db->setBindParam('s');
             $db->setQueryParams($username);
             $db->queryExecute();
-            return $this->setEncrypted($db->queryGetData());
+            return $this->setPasswordEncrypted($db->queryGetData());
         }
         
         return FALSE;

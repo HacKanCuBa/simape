@@ -57,9 +57,9 @@ trait SessionToken
      */
     public function generateToken()
     {
-        if(isset($this->randToken)
-           && isset($this->timestamp) 
-           && isset($this->uid)
+        if(!empty($this->randToken)
+           && !empty($this->timestamp) 
+           && !empty($this->uid)
         ) {
            $token = self::tokenMake($this->randToken,
                                     SMP_TKN_SESSIONKEY,
@@ -102,6 +102,23 @@ trait SessionToken
 
         return FALSE;  
     }
+    /**
+     * Remueve de la DB el random token y el timestamp de Password Restore.  
+     * Requiere TokenId.
+     * @return boolean TRUE si tuvo éxito, FALSE si no.
+     * @access public
+     */
+    public function remove_fromDB_SessionToken()
+    {
+        if (!empty($this->TokenId)) {
+            $this->randToken = NULL;
+            $this->timestamp = 0;
+            return $this->store_inDB_SessionToken();
+        }
+        
+        return FALSE;
+    }
+    
         
     /**
      * Recupera el Random Token, el Timestamp y el UID almacenado en la DB y lo 
@@ -111,7 +128,7 @@ trait SessionToken
      * @return boolean TRUE si tuvo exito, FALSE si no.
      * @see setTokenId
      */
-    public function retrieve_fromDB() 
+    public function retrieve_fromDB_SessionToken()
     {
         if (!empty($this->TokenId)) {
             $db = new DB;
@@ -121,8 +138,8 @@ trait SessionToken
             $db->setQueryParams($this->TokenId);
             if ($db->queryExecute()) {
                 $tokens = $db->getQueryData();
-                $this->setRandomToken($tokens[Session_RandomToken]);
-                $this->setTimestamp($tokens[Session_Timestamp]);
+                $this->setRandomToken($tokens['Session_RandomToken']);
+                $this->setTimestamp($tokens['Session_Timestamp']);
                 
                 return TRUE;
             }            
@@ -145,9 +162,9 @@ trait SessionToken
      * @return boolean TRUE si se almacenó en la DB exitosamente, 
      * FALSE en caso contrario.
      */
-    public function store_inDB() 
+    public function store_inDB_SessionToken() 
     {
-        if (isset($this->TokenId) 
+        if (!empty($this->TokenId) 
             && isset($this->randToken)
             && isset($this->timestamp)
         ) {

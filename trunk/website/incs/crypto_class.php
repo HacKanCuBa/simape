@@ -59,7 +59,10 @@ class Crypto
     /**
      * Algoritmo de hashing por defecto.
      */
-    const HASH_ALGO = 'sha512';
+    const HASH_ALGO = 'sha512'; 
+    //tarda 4 veces mas que el 256!! pero recien es medible el efecto a partir
+    //de las 1000 iteraciones en una pc lenta.  Notable efecto a partir de
+    // 100000 iteraciones.
 
     // __ SPECIALS
         
