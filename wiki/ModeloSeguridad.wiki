@@ -13,3 +13,5 @@ Cuando el usuario está autenticado, se emplea la contraseña de usuario, que se
 
 Cuando el usuario no está autenticado, o bien se debe encriptar un valor que es requerido para autenticar al usuario, se emplea esta contraseña.  La misma se forma en base a los tokens fijos que se encuentran en el archivo config.php y un string aleatorio que se genera la primera vez que el método apropiado es llamado.
 P.E.: el nombre de usuario se almacena en _$_SESSION_ de esta manera.
+
+= [Tokens Tokens] =
