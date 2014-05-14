@@ -1,10 +1,10 @@
 #summary Lista de contribuidores del proyecto
-#labels contrib
+#labels contrib,Featured
 
 == Detalles ==
 
 Los campos del listado hacen referencia a:
- * Nombre y apellido (N)
+ * Nombre y Apellido (N)
  * Email (E)
  * Página web (W)
  * Llave PGP ID y fingerprint (P)
@@ -15,4 +15,4 @@ Los campos del listado hacen referencia a:
 
 = Contribuidores =
 
-_Aún no hay contribuidores
+_Aún no hay contribuidores_
