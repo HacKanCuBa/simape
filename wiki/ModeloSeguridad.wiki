@@ -5,7 +5,7 @@
 
 Los datos almacenados en la cookie y en $_SESSION deben estar encriptados en todo momento.  Para ello, la contraseña que se emplea depende de si el usuario está loggeado o no.
 
-== Contraseña de usuario ==
+=== Contraseña de usuario ===
 
 Cuando el usuario _está autenticado_, se emplea la contraseña de usuario, que se forma con el SESSION_RANDOMTOKEN y el UID del usuario.
 {{{
@@ -18,7 +18,8 @@ $session->setPasswordSalt($usuario->getRandomToken());
 $session->storeEnc($key, $value);
 $session->retrieveEnc($key, $value);
 }}}
-== Contraseña de sistema ==
+
+=== Contraseña de sistema ===
 Cuando el usuario no está autenticado, o bien se debe encriptar un valor que es requerido para autenticar al usuario, se emplea esta contraseña denominada _SystemPassword_.  La misma se forma en base a los tokens fijos que se encuentran en el archivo config.php y un string aleatorio que se genera la primera vez que el método apropiado es llamado.
 P.E.: el nombre de usuario se almacena en _$_SESSION_ de esta manera.
 
@@ -29,11 +30,11 @@ $session->useSystemPassword();
 $session->storeEnc($key, $value);
 $session->retrieveEnc($key, $value);
 }}}
-= [Tokens Tokens] =
+== [Tokens Tokens] ==
 _ver página_
 
-= Autenticar Usuario =
-== Iniciar sesión ==
+== Autenticar Usuario ==
+=== Iniciar sesión ===
 {{{
 $username = 'nombre de usuario';
 $passwd = 'contraseña en texto plano del usuario';
@@ -48,7 +49,7 @@ if ($usuario->authenticatePassword()) {
 }}}
 El nombre de usuario autenticado se almacena encriptado con SystemPassword en `$_SESSION[SMP_SESSINDEX_USERNAME]`.
 
-== Autenticar usuario / verificar que esté iniciada la sesión ==
+=== Autenticar usuario / verificar que esté iniciada la sesión ===
 {{{
 $session = new Session;
 $session->useSystemPassword();
