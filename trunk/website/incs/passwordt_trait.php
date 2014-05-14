@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.1
+ * @version 1.11
  */
 trait Passwordt
 {   
@@ -382,10 +382,7 @@ trait Passwordt
             $passwordEC = password_hash($this->passwordPT, 
                                                PASSWORD_DEFAULT, 
                                                $options);
-            if ($passwordEC) {
-                $this->passwordEC = $passwordEC;
-                return TRUE;
-            }
+            return $this->setPasswordEncrypted($passwordEC);
         }
         
         return FALSE;

@@ -31,7 +31,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.43
+ * @version 1.44
  */
 
 require_once 'load.php';
@@ -46,7 +46,8 @@ $params = NULL;
 $intLink = NULL;
 
 $page = new Page;
-$usuario = new Usuario(Session::retrieve(SMP_SESSINDEX_USERNAME));
+$session->useSystemPassword();
+$usuario = new Usuario($session->retrieveEnc(SMP_SESSINDEX_USERNAME));
 
 switch($action) {
     case SMP_LOGOUT:
@@ -64,15 +65,15 @@ switch($action) {
         break;
     
     case SMP_RESTOREPWD:
-        $page->setLocation('login.php');
-        $page->generateRandomToken();
-        $page->generateTimestamp();
-        $page->generateToken();
-        Session::store(SMP_SESSINDEX_PAGE_RANDOMTOKEN, $page->getRandomToken());
-        Session::store(SMP_SESSINDEX_PAGE_TIMESTAMP, $page->getTimestamp());
+          $page->setLocation('login.php');
+//        $page->generateRandomToken();
+//        $page->generateTimestamp();
+//        $page->generateToken();
+//        $session->store(SMP_SESSINDEX_PAGE_RANDOMTOKEN, $page->getRandomToken());
+//        $session->store(SMP_SESSINDEX_PAGE_TIMESTAMP, $page->getTimestamp());
         
         $params = Sanitizar::glGET(Sanitizar::ALL);
-        array_push($params, "pagetkn=" . $page->getToken());
+//        $params[SMP_SESSINDEX_PAGE_TOKEN] = $page->getToken();
         break;
     
     case SMP_LOGIN:
@@ -97,17 +98,16 @@ switch($action) {
                 $page->setLocation($action);
                 $page->generateToken();
                 
-                // Guardo Page RandTkn y Timestamp en SESSION encriptado
-                $session->setPassword($usuario->getUID());
-                $session->setPasswordSalt($usuario->getRandomToken());
-                
-                $session->storeEnc(SMP_SESSINDEX_PAGE_RANDOMTOKEN, 
+                // Guardo Page RandTkn y Timestamp en SESSION                
+                $session->store(SMP_SESSINDEX_PAGE_RANDOMTOKEN, 
                                                 $page->getRandomToken());
-                $session->storeEnc(SMP_SESSINDEX_PAGE_TIMESTAMP, 
-                                               $page->getTimestamp());
+                $session->store(SMP_SESSINDEX_PAGE_TIMESTAMP, 
+                                                $page->getTimestamp());
                 
                 // Paso por GET el Page Token
                 $params = "pagetkn=" . $page->getToken();
+            } else {
+                $page->setLocation('403.php');
             }
         } else {
             // No existe la pagina

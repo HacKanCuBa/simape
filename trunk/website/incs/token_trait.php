@@ -297,7 +297,7 @@ trait Token
         $this->setRandomToken($randToken);
         $this->setToken($token);
         $this->setTimestamp($timestamp);
-        method_exists($this, 'setUID') ? call_user_method('setUID', $this, $uid) : FALSE;
+        method_exists($this, 'setUID') ? $this->{'setUID'}($uid) : NULL;
     }
 
     /**
@@ -339,6 +339,25 @@ trait Token
                 return TRUE;
             }
         }
+        return FALSE;
+    }
+    
+    /**
+     * Crea una nueva tabla Token en la DB, y devuelve el ID de ésta.
+     * 
+     * @return int|boolean ID de la nueva tabla, o FALSE en caso de error.
+     */
+    public function create_tblToken()
+    {
+        $db = new DB(TRUE);
+        $db->setQuery('INSERT INTO Token () VALUES ()');
+        if ($db->queryExecute()) {
+            $db->setQuery('SELECT DISTINCT LAST_INSERT_ID() FROM Token');
+            if($db->queryExecute()) {
+                return $db->getQueryData();
+            }
+        }
+        
         return FALSE;
     }
 }

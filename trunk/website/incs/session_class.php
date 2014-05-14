@@ -45,7 +45,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.4
+ * @version 1.42
  */
 class Session
 {
@@ -85,8 +85,6 @@ class Session
      * cierre del navegador'.
      */
     const COOKIE_LIFETIME = 0;
-    
-    const USE_SYSTEM_PWD = 'usesystempwd';
     
     // __ SPECIALS
     /**
@@ -170,7 +168,7 @@ class Session
                                 . SMP_TKN_FINGERPRINT 
                                 . SMP_TKN_FORM 
                                 . SMP_TKN_PAGE 
-                                . SMP_TKN_PWDRESTORE, 1, 'sha1');
+                                . SMP_TKN_PWDRESTORE, 1);
     }
     // __ PUB
     /**
@@ -352,11 +350,7 @@ class Session
      */
     public function retrieveEnc($key, $sanitize = FALSE)
     {
-        if (isset($this->password)) {
-            return self::retrieve($key, $sanitize, $this->password);
-        }
-        
-        return FALSE;
+        return self::retrieve($key, $sanitize, $this->password, $this->password_salt);
     }
     
     /**
@@ -476,17 +470,18 @@ class Session
      * Fija como contraseña a la contraseña de sistema, que se basa en los 
      * token fijos y el ID de sesión, para emplear cuando el usuario aún no está 
      * autenticado.<br />
-     * El parámetro determina si se debe emplear la contraseña para encriptar 
-     * o para desencriptar.
      * 
-     * @param boolean $encrypt TRUE para encriptar, FALSE para desencriptar.
      * @access public
      * @tutorial https://code.google.com/p/simape/wiki/ModeloSeguridad
      */
-    public function setSystemPassword($encrypt = TRUE)
+    public function useSystemPassword()
     {
+        // en la primer ejecución, se guardará una nueva random salt
+        self::retrieve(SMP_SESSINDEX_SYSTEMPASSWORDSALT) ?: 
+                self::store(SMP_SESSINDEX_SYSTEMPASSWORDSALT, Crypto::getRandomTkn());
+        
         $this->password = self::getSystemPassword_base();
-        $this->password_salt = $encrypt ? self::getID() : $this->session_id_old;
+        $this->password_salt = self::retrieve(SMP_SESSINDEX_SYSTEMPASSWORDSALT);
     }
 
     /**

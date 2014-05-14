@@ -23,14 +23,14 @@
 
 include 'load.php';
 
-echo Page::getHead('SiMaPe - 403 No permitido');
+echo Page::getHead('SiMaPe - Error 403');
 echo Page::getBody();
 echo Page::getHeader();
 echo Page::getHeaderClose();
 echo Page::getMain();
 
 echo "\n\t\t<h2 style='text-align: center;font-weight: bold'>"
-     . "Error 403: No permitido/h2>";
+     . "Error 403: Acceso denegado</h2>";
 echo "\n\t\t<br /><br />";
 echo "\n\t\t<p style='text-align: center;font-style: italic'>No tiene permiso "
      . "para acceder a la p&aacute;gina requerida.";

@@ -37,39 +37,49 @@
  */
 class Empleado 
 {
-//    protected $Empleado = array(
-//        'EmpleadoId' => 0,
-//        'Nombre' => '',
-//        'Apellido' => '',
-//        'FicheroId' => 0,
-//        'Titulo' => 0,
-//        'Sexo' => '',
-//        'FechaNac' => 0,
-//        'FechaIngresoDependencia' => 0,
-//        'FechaIngresoJusticia' => 0,
-//        'ResolIngreso_Nro' => 0,
-//        'ResolIngreso_Año' => 0,
-//        'DocumentoNro' => 0,
-//        'CUIL' => 0,
-//        'LegajoNro' => 0,
-//        'TelNro' => '',
-//        'TelCodArea' => '',
-//        'CelNro' => '',
-//        'CelCodArea' => '',
-//        'Email' => '',
-//        'NivelEstudioId' => 0,
-//        'ProfesionTitulo' => '',
-//        'EstadoCivil' => '',
-//        'EstadoId' => 0,
-//        'Comentario' => '',
-//        'CreacionTimestamp' => 0,
-//        'ModificacionTimestamp' => 0
-//    );
+    /**
+     * Tabla Empleado.
+     * @var array
+     */
+    protected $Empleado = array(
+        'EmpleadoId' => 0,
+        'Nombre' => '',
+        'Apellido' => '',
+        'FicheroId' => 0,
+        'Titulo' => 0,
+        'Sexo' => '',
+        'FechaNac' => 0,
+        'FechaIngresoDependencia' => 0,
+        'FechaIngresoJusticia' => 0,
+        'ResolIngreso_Nro' => 0,
+        'ResolIngreso_Año' => 0,
+        'DocumentoNro' => 0,
+        'CUIL' => 0,
+        'Legajo' => 0,
+        'TelNro' => '',
+        'TelCodArea' => '',
+        'CelNro' => '',
+        'CelCodArea' => '',
+        'Email' => '',
+        'NivelEstudioId' => 0,
+        'ProfesionTitulo' => '',
+        'EstadoCivil' => '',
+        'EstadoId' => 0,
+        'Comentario' => '',
+        'CreacionTimestamp' => 0,
+        'ModificacionTimestamp' => 0
+    );
     
-    protected $EmpleadoId = 0;
-    protected $Email = '';
-    protected $Legajo = 0;
-
+//    protected $EmpleadoId = 0;
+//    protected $EmpleadoNombre = '';
+//    protected $EmpleadoApellido = '';
+//    protected $Email = '';
+//    protected $Legajo = 0;
+//    protected $FicheroId = 0;
+//    protected $Titulo = 0;
+//    protected $Sexo = '';
+//    protected $FechaNac = 0;
+//    protected $FechaIngresoDependencia = 0;
 
     /**
      * Determina si al grabar en la DB se escribirá el ID de la tabla (TRUE)
@@ -110,6 +120,45 @@ class Empleado
         $this->setEmail($Email);
         $this->esNuevoEmpleado = !$this->retrieve_fromDB();
     }
+    
+    /**
+     * 
+     * @param type $name
+     * @param type $arguments
+     * @return boolean
+     */
+    function __call($name, $arguments)
+    {
+        if (method_exists($this, $name)) {
+            return $this->{$name}($arguments);
+        }
+        
+        $method = substr($name, 0, 3);
+        $var = substr($name, 3);
+        
+        switch ($method) {
+            case 'get':
+                $retval = $this->Empleado[$var] ?: NULL;
+                break;
+            
+            case 'set':
+                $retval = TRUE;
+                if(method_exists($this, 'isValid_' . $var)) {
+                    $this->{'isValid_' . $var}($arguments[0]) ? 
+                        $this->Empleado[$var] = $arguments[0] : $retval = FALSE;
+                } else {
+                    isset($this->Empleado[$var]) ? $this->Empleado[$var] = $arguments[0] : $retval = FALSE;
+                }
+                break;
+            
+            default:
+                $retval = FALSE;
+                break;
+        }
+        
+        return $retval;
+    }
+
     // __ PRIV
     
     // __ PROT
@@ -194,78 +243,102 @@ class Empleado
         return FALSE;
     }
     // __ PUB
-    /**
-     * Recibe un número de Legajo y lo almacena si es válido.
-     * 
-     * @param string $Legajo Legajo a almacenar.
-     * @return boolean TRUE si el Legajo recibido es válido y se almacenó 
-     * correctamente, FALSE si no.
-     */
-    public function setLegajo($Legajo)
-    {
-        if (self::isValid_Legajo($Legajo)) {
-            $this->Legajo = $Legajo;
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
+//    /**
+//     * Recibe un número de Legajo y lo almacena si es válido.
+//     * 
+//     * @param string $Legajo Legajo a almacenar.
+//     * @return boolean TRUE si el Legajo recibido es válido y se almacenó 
+//     * correctamente, FALSE si no.
+//     */
+//    public function setLegajo($Legajo)
+//    {
+//        if (self::isValid_Legajo($Legajo)) {
+//            $this->Empleado['Legajo'] = $Legajo;
+//            return TRUE;
+//        }
+//        
+//        return FALSE;
+//    }
+//    
+//    /**
+//     * Almacena en el objeto el ID de la tabla Empleado.<br />
+//     * <i>No es recomendable crear un nuevo usuario con EmpleadoId manual, 
+//     * dado que la DB genera uno automáticamente.</i>
+//     * 
+//     * @param int $EmpleadoId Identificador de la tabla Empleado.
+//     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
+//     */
+//    public function setEmpleadoId($EmpleadoId)
+//    {
+//        if (self::isValid_EmpleadoId($EmpleadoId)) {
+//            $this->Empleado['EmpleadoId']= $EmpleadoId;
+//            return TRUE;
+//        }
+//        
+//        return FALSE;
+//    }
+//    
+//    /**
+//     * Recibe una dirección de Email y la almacena si es válida.
+//     * 
+//     * @param string $Email Email a almacenar.
+//     * @return boolean TRUE si el Email recibido es válido y se almacenó 
+//     * correctamente, FALSE si no.
+//     */
+//    public function setEmail($Email)
+//    {
+//        if (self::isValid_Email($Email)) {
+//            $this->Empleado['Email'] = $Email;
+//            return TRUE;
+//        }
+//        
+//        return FALSE;
+//    }
+//    
+//    /**
+//     * Devuelve el identificador de la tabla Empleado, si hay.
+//     * 
+//     * @return int Identificador de la tabla Empleado o 0.
+//     */
+//    public function getEmpleadoId()
+//    {
+//        return $this->Empleado['EmpleadoId'];
+//    }
     
     /**
-     * Almacena en el objeto el ID de la tabla Empleado.<br />
-     * <i>No es recomendable crear un nuevo usuario con EmpleadoId manual, 
-     * dado que la DB genera uno automáticamente.</i>
-     * 
-     * @param int $EmpleadoId Identificador de la tabla Empleado.
-     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
-     */
-    public function setEmpleadoId($EmpleadoId)
-    {
-        if (self::isValid_EmpleadoId($EmpleadoId)) {
-            $this->EmpleadoId= $EmpleadoId;
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
-    
-    /**
-     * Recibe una dirección de Email y la almacena si es válida.
-     * 
-     * @param string $Email Email a almacenar.
-     * @return boolean TRUE si el Email recibido es válido y se almacenó 
-     * correctamente, FALSE si no.
-     */
-    public function setEmail($Email)
-    {
-        if (self::isValid_Email($Email)) {
-            $this->Email = $Email;
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
-    
-    /**
-     * Devuelve el identificador de la tabla Empleado, si hay.
-     * 
-     * @return int Identificador de la tabla Empleado o 0.
-     */
-    public function getEmpleadoId()
-    {
-        return $this->EmpleadoId;
-    }
-    
-    /**
-     * Devuelve el Email del Empleado.
-     * 
+     * Devuelve el Email del Empleado.  Puede solicitarse devolverlo oculto.<br />
+     * P.E: simape@simape.com.ar | s****e@simape.com.ar
+     * @param boolean $obscured [opcional]<br />
+     * TRUE para devolver el email oculto, FALSE para devolverlo normal 
+     * (por defecto).
      * @return string Email del Empleado.
      */
-    public function getEmail()
+    public function getEmail($obscured = FALSE)
     {
-        return $this->Email;
+        $email = '';
+        if (!empty($this->Empleado['Email'])) {
+            if ($obscured) {
+                list($local, $domain) = explode('@', $this->Empleado['Email']);
+                
+                $email = (strlen($local) > 3) ? substr($local, 0, 1) 
+                                    . str_repeat('*', strlen($local) - 2) 
+                                    . substr($local, -1, 1) : 
+                                    $local;
+                
+                list($hostname, $com) = explode('.', $domain, 2);
+                $email .= '@';
+                $email .= (strlen($hostname) > 2) ? substr($hostname, 0, 2) 
+                                    . str_repeat('*', strlen($hostname) - 2) :
+                                    $hostname;
+                $email .= '.' . $com;
+            } else {
+                $email = $this->Empleado['Email'];
+            }
+        }
+        
+        return $email;
     }
-    
+
     /**
      * Recupera de la DB todos los datos del Empleado, siempre y cuando se haya
      * establecido previamente el ID, Legajo o Email del mismo (la búsqueda se 
