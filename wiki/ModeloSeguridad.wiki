@@ -1,5 +1,5 @@
 #summary Descripción de cómo manejar los datos en la apliación respecto de la seguridad.
-#labels encryption,security,model,seguridad,encriptacion
+#labels encryption,security,model,seguridad,encriptacion,token,auth,Featured,Phase-Implementation
 
 = Modelo de Seguridad =
 
@@ -30,8 +30,145 @@ $session->useSystemPassword();
 $session->storeEnc($key, $value);
 $session->retrieveEnc($key, $value);
 }}}
-== [Tokens Tokens] ==
-_ver página_
+
+== Tokens ==
+La aplicación utiliza diversos tokens para autenticar (session, page, password restore, etc), todos basados en principio en el mismo trait: _Token_trait_.
+
+Los tokens están formados por:
+ * Token constante definido en _config.php_
+ * Random Token
+ * Timestamp
+ * Otro dato: 
+  * Session Token, Password Restore Token: UID
+  * Fingerprint Token: datos del navegador
+  * Page Token: identificador de página
+
+Se utilizan los métodos _get_ del objeto tipo Token que corresponda (session, fingerprint, page, etc) para obtener la información respectiva a Random Token, Timestamp y Token propiamente dicho.
+Luego, se autentica comparando el valor del Token con el generado luego de usar los métodos _set_ del objeto, para insertar la información pertinente.  Dicho objeto incluye la función de autenticación (_authenticateToken_).  Éste método devuelve un valor booleano que debe usarse para autenticar (TRUE es válido, FALSE no).
+Los Tokens se almacenan en la DB luego de que el usuario se loggea satisfactoriamente.
+
+=== Form Token ===
+
+El Random Token y Timestamp se almacenan en _SESSION_.  El Form Token se pasa a través de un campo oculto en el formulario.  Se autentica por el método apropiado.
+
+==== Crear ====
+{{{
+$formToken = new Token;
+$formToken->generateRandomToken();
+$formToken->generateTimestamp();
+$formToken->generateToken();
+Session::store(SMP_SESSINDEX_FORM_RANDOMTOKEN, $formToken->getRandomToken());
+Session::store(SMP_SESSINDEX_FORM_TIMESTAMP, $formToken->getTimestamp());
+}}}
+
+==== Autenticar ====
+{{{
+$formToken = new Token;
+$formToken->prepare_to_auth(Sanitizar::glPOST(SMP_SESSINDEX_FORM_TOKEN), 
+                            $session->retrieve(SMP_SESSINDEX_FORM_RANDOMTOKEN), 
+                            $session->retrieve(SMP_SESSINDEX_FORM_TIMESTAMP));
+
+$formToken->authenticateToken() ? echo "token válido" : echo "token NO válido";
+}}}
+
+=== Session Token ===
+
+A diferencia de los otros tokens, éste emplea el UID del usuario para validar de forma unívoca a la sesión, una vez que el usuario está loggeado.  No confundir con _SESSION_ de PHP.
+Los valores de Random Token y Timestamp se almacenan en la DB.  El Token, en _SESSION_.
+Para autenticar, se lee de la DB los datos, se almacenan en el objeto y se emplea el método de autenticación para contrastar con el Token de _SESSION_.
+
+==== Crear ====
+_Manejado por la clase Usuario_
+
+==== Autenticar ====
+_Manejado por la clase Usuario_
+
+=== Page Token ===
+
+El Random Token y Timestamp se almacenan en _SESSION_.  También se emplea un identificador de la página para generar el token, que puede ser su nombre o url.  El Page Token se pasa a través de la url (por GET).  Se autentica por el método apropiado.
+_nav.php_ se encarga de generarlo.
+
+==== Crear ====
+{{{
+$pageId = 'identificador de página';
+
+$page = new Page;
+$page->generateRandomToken();
+$page->generateTimestamp();
+$page->setLocation($pageId);
+$page->generateToken();
+
+Session::store(SMP_SESSINDEX_PAGE_RANDOMTOKEN, $page->getRandomToken());
+Session::store(SMP_SESSINDEX_PAGE_TIMESTAMP, $page->getTimestamp());
+}}}
+
+==== Autenticar ====
+{{{
+$pageId = 'identificador de página';
+}}}
+{{{
+$page = new Page($pageId, 
+                 Session::retrieve(SMP_SESSINDEX_PAGE_RANDOMTOKEN), 
+                 Session::retrieve(SMP_SESSINDEX_PAGE_TIMESTAMP), 
+                 Sanitizar::glGET(SMP_SESSINDEX_PAGE_TOKEN));
+}}}
+Otra forma
+{{{
+$page = new Page
+$page->prepare_to_auth(Sanitizar::glGET(SMP_SESSINDEX_PAGE_TOKEN), 
+                       Session::retrieve(SMP_SESSINDEX_PAGE_RANDOMTOKEN), 
+                       Session::retrieve(SMP_SESSINDEX_PAGE_TIMESTAMP),
+                       $pageId);
+}}}
+Finalmente
+{{{
+$page->authenticateToken() ? echo "token auténtico" : echo "token NO auténtico!";
+}}}
+
+=== Password Restore Token ===
+
+El Random Token y Timestamp se almacenan en la DB.  El Token se pasa a través de la URL, o bien mediante un formulario (fallback).  Se autentica con el método apropiado.
+
+==== Crear ====
+_Manejado por la clase Usuario_
+
+==== Autenticar ====
+_Manejado por la clase Usuario_
+
+=== Fingerprint Token ===
+
+El Token se almacena en la DB.  Se emplean identificadores únicos del navegador del usuario y la IP (esto último dependiendo del modo _MODE_DONTUSEIP_ o _MODE_USEIP_).  Se autentica tomando el Token de la DB, y contrastando con el método apropiado.  El mismo debería mantenerse durante toda la sesión, si cambia implica un error (intento de hackeo?).
+_login.php_ se encarga de generarlo.
+
+_Requiere de un usuario autenticado._
+
+==== Crear ====
+{{{
+$fingerprint = new Fingerprint;
+}}}
+Usando la IP del usuario
+{{{
+$fingerprint->setMode(Fingerprint::MODE_USEIP);
+}}}
+Sin considerar la IP
+{{{
+$fingerprint->setMode(Fingerprint::MODE_DONTUSEIP);
+}}}
+Luego
+{{{
+$fingerprint->generateToken();
+
+$fingerprint->setTokenId($usuario->getTokenId());
+$fingerprint->store_inDB();
+}}}
+
+==== Autenticar ====
+{{{
+$fingerprint = new Fingerprint;
+$fingerprint->setTokenId($usuario->TokenId);
+$fingerprint->retrieve_fromDB();
+$fingerprint->authenticateToken() ? echo "Token auténtico" : echo "Token NO auténtico";
+}}}
 
 == Autenticar Usuario ==
 === Iniciar sesión ===
