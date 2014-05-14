@@ -7,11 +7,56 @@ Los datos almacenados en la cookie y en $_SESSION deben estar encriptados en tod
 
 == Contraseña de usuario ==
 
-Cuando el usuario está autenticado, se emplea la contraseña de usuario, que se forma con el SESSION_RANDOMTOKEN y el UID del usuario.
+Cuando el usuario _está autenticado_, se emplea la contraseña de usuario, que se forma con el SESSION_RANDOMTOKEN y el UID del usuario.
+{{{
+$usuario = new Usuario('nombre');
+...
+$session = new Session;
+$session->setPassword($usuario->getUID());
+$session->setPasswordSalt($usuario->getRandomToken());
 
+$session->storeEnc($key, $value);
+$session->retrieveEnc($key, $value);
+}}}
 == Contraseña de sistema ==
-
-Cuando el usuario no está autenticado, o bien se debe encriptar un valor que es requerido para autenticar al usuario, se emplea esta contraseña.  La misma se forma en base a los tokens fijos que se encuentran en el archivo config.php y un string aleatorio que se genera la primera vez que el método apropiado es llamado.
+Cuando el usuario no está autenticado, o bien se debe encriptar un valor que es requerido para autenticar al usuario, se emplea esta contraseña denominada _SystemPassword_.  La misma se forma en base a los tokens fijos que se encuentran en el archivo config.php y un string aleatorio que se genera la primera vez que el método apropiado es llamado.
 P.E.: el nombre de usuario se almacena en _$_SESSION_ de esta manera.
 
+{{{
+$session = new Session;
+$session->useSystemPassword();
+
+$session->storeEnc($key, $value);
+$session->retrieveEnc($key, $value);
+}}}
 = [Tokens Tokens] =
+_ver página_
+
+= Autenticar Usuario =
+== Iniciar sesión ==
+{{{
+$username = 'nombre de usuario';
+$passwd = 'contraseña en texto plano del usuario';
+
+$usuario = new Usuario($username);
+$usuario->setPassword($passwd);
+if ($usuario->authenticatePassword()) {
+    $usuario->sesionIniciar() ? echo "sesion iniciada" : echo "error al tratar de iniciar sesion";
+} else {
+    echo "usuario o contraseña incorrecta";
+}
+}}}
+El nombre de usuario autenticado se almacena encriptado con SystemPassword en `$_SESSION[SMP_SESSINDEX_USERNAME]`.
+
+== Autenticar usuario / verificar que esté iniciada la sesión ==
+{{{
+$session = new Session;
+$session->useSystemPassword();
+
+$usuario = new Usuario($session->retrieveEnc(SMP_SESSINDEX_USERNAME));
+if ($usuario->authenticateSession()) {
+    echo "usuario autenticado, sesión iniciada";
+} else {
+    echo "usuario no válido!!";
+}
+}}}
