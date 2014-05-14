@@ -11,5 +11,5 @@ Cuando el usuario está autenticado, se emplea la contraseña de usuario, que se
 
 == Contraseña de sistema ==
 
-Cuando el usuario no está autenticado, o bien se debe encriptar un valor que es requerido para autenticar al usuario, se emplea esta contraseña.  La misma se forma en base a los tokens fijos que se encuentran en el archivo config.php y la ID de sesión.
-Como la ID cambia en cada página, la clase Session posee dos métodos para este fin: uno provee la contraseña con la cual se encriptan los datos datos, y el otro, con la que se desencriptan.  Esto es, la primera se genera con el ID de sesión actual.  Luego, al cambiar de página o recargar la misma, el ID anterior se almacena en el objeto declarado, y la contraseña para desencriptar emplea este valor.
+Cuando el usuario no está autenticado, o bien se debe encriptar un valor que es requerido para autenticar al usuario, se emplea esta contraseña.  La misma se forma en base a los tokens fijos que se encuentran en el archivo config.php y un string aleatorio que se genera la primera vez que el método apropiado es llamado.
+P.E.: el nombre de usuario se almacena en _$_SESSION_ de esta manera.
