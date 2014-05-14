@@ -64,24 +64,24 @@ class Usuario extends Empleado
      */
     private $isLoggedIn;
 
-//    /**
-//     * Tabla Usuario de la DB.
-//     * @var array
-//     */
-//    protected $tblUsuario = array ('UsuarioId' => 0,
-//                                'EmpleadoId' => 0,
-//                                'UsuarioPerfilId' => 0,
-//                                'TokenId' => 0,
-//                                'Nombre' => '',
-//                                'UID' => '',
-//                                'PasswordSalted' => '',
-//                                'PasswordTimestamp' => 0,
-//                                'Activo' => FALSE,
-//                                'PrivKey' => '',
-//                                'PubKey' => '',
-//                                'CreacionTimestamp' => 0,
-//                                'ModificacionTimestamp' => 0
-//                                );
+    /**
+     * Tabla Usuario de la DB.
+     * @var array
+     */
+    protected $tblUsuario = array ('UsuarioId' => 0,
+                                'EmpleadoId' => 0,
+                                'UsuarioPerfilId' => 0,
+                                'TokenId' => 0,
+                                'Nombre' => '',
+                                'UID' => '',
+                                'PasswordSalted' => '',
+                                'PasswordTimestamp' => 0,
+                                'Activo' => FALSE,
+                                'PrivKey' => '',
+                                'PubKey' => '',
+                                'CreacionTimestamp' => 0,
+                                'ModificacionTimestamp' => 0
+                                );
     
     protected $UsuarioId = 0;
     protected $UsuarioNombre = '';
@@ -90,7 +90,9 @@ class Usuario extends Empleado
     protected $PubKey = NULL;
     protected $UsuarioCreacionTimestamp = 0;
     protected $UsuarioModificacionTimestamp = 0;
-    
+    protected $EmpleadoId = 0;
+
+
 //    /**
 //     * Tabla UsuarioPerfil de la DB.
 //     * @var array
@@ -118,7 +120,14 @@ class Usuario extends Empleado
      * @var boolean
      */
     protected $write_id = FALSE;
-   
+    
+//    /**
+//     * Sesion a emplear
+//     * @var Session
+//     */
+//    protected $session;
+
+
     // Metodos
     // __ SPECIALS
     /**
@@ -219,26 +228,48 @@ class Usuario extends Empleado
 //    }
     
     /**
-     * Verifica si todos los datos están en orden para guardar en la DB.
+     * Verifica si todos los datos están en orden para crear una tabla en la DB,
+     * esto es, se deben cumplir las restricciones de la DB.
+     * <br />
+     * <b>Deben existir:</b>
+     * <ul>
+     * <li>TokenId</li>
+     * <li>EmpleadoId</li>
+     * <li>UsuarioPerfilId</li>
+     * </ul>
+     * <b>Tienen que valer !NULL:</b>
+     * <ul>
+     * <li>Nombre</li>
+     * <li>UID</li>
+     * <li>PasswordSalted</li>
+     * <li>PasswordTimestamp</li>
+     * <li>Activo</li>
+     * <li>CreacionTimestamp</li>
+     * <li>ModificacionTimestamp</li>
+     * </ul>
      * 
      * @return boolean TRUE si los datos están en orden, FALSE si no.
+     * @access protected
      */
     protected function isDataReady() 
     {        
-        if (!empty($this->EmpleadoId)
-            && !empty($this->UsuarioPerfilId)
-            && !empty($this->TokenId)
-            && !empty($this->UsuarioNombre)
-            && !empty($this->uid)
-            && !empty($this->passwordEC)
-            && !empty($this->passwordModificationTimestamp)
-            && !empty($this->UsuarioCreacionTimestamp)
-            && !empty($this->UsuarioModificacionTimestamp)    
+        $result = FALSE;
+        $db = new DB;
+        if ($db->table_exists('Token', $this->TokenId)
+            && $db->table_exists('Empleado', $this->EmpleadoId)
+            && $db->table_exists('UsuarioPerfil', $this->UsuarioPerfilId)
+            && !is_null($this->UsuarioNombre)
+            && !is_null($this->uid)
+            && !is_null($this->passwordEC)
+            && !is_null($this->passwordModificationTimestamp)
+            && !is_null($this->Activo)
+            && !is_null($this->UsuarioCreacionTimestamp)
+            && !is_null($this->UsuarioModificacionTimestamp)
         ) {
-            return TRUE;
+            $result = TRUE;
         }
-
-        return FALSE;
+        unset($db);
+        return $result;
     }
 
     /**
@@ -390,7 +421,8 @@ class Usuario extends Empleado
      * @param boolean $NuevoActivo TRUE para Activo, FALSE para No Activo.
      * @return boolean TRUE si se almacenó correctamente, FALSE si no.
      */
-    public function setActivo($NuevoActivo) {
+    public function setActivo($NuevoActivo)
+    {
         if (!empty($NuevoActivo) 
             && is_bool($NuevoActivo)
         ) {
@@ -400,6 +432,19 @@ class Usuario extends Empleado
         return FALSE;
     }
     
+//    /**
+//     * Almacena un objeto de sesión establecida, empleado para 
+//     * guardar/recuperar de allí datos encriptados con la contraseña del 
+//     * sistema, u otros usos relacionados.
+//     * @param Session $session Sesion establecida.
+//     * @access public
+//     */
+//    public function setSession(Session $session)
+//    {
+//        $this->session = $session;
+//    }
+
+
 //    /**
 //     * Almacena el UID indicado como nuevo UID del usuario.  Acepta objeto UID 
 //     * o string.<br />
@@ -427,7 +472,20 @@ class Usuario extends Empleado
 //        return $retval;
 //    }
     // --
-    // Get    
+    // Get   
+//    /**
+//     * Devuelve el objeto de sesion establecida.
+//     * @return Session|FALSE Objeto de sesión, o FALSE si está vacío.
+//     */
+//    public function getSession()
+//    {
+//        if (isset($this->session)) {
+//            return $this->session;
+//        }
+//        
+//        return FALSE;
+//    }
+
     /**
      * Devuelve el nombre de usuario, si hay.
      * 
@@ -575,9 +633,40 @@ class Usuario extends Empleado
      * 
      * @return boolean TRUE si tuvo éxito, FALSE si no.
      */
-    public function store_inDB() {
-        
-        
+    public function store_inDB($createTables = TRUE) 
+    {
+        $newUsuario = array($this->UsuarioId, 
+                                $this->EmpleadoId, 
+                                $this->UsuarioPerfilId, 
+                                $this->TokenId, 
+                                $this->UsuarioNombre, 
+                                $this->uid, 
+                                $this->passwordEC, 
+                                $this->passwordModificationTimestamp, 
+                                $this->Activo, 
+                                $this->PrivKey, 
+                                $this->PubKey, 
+                                $this->UsuarioCreacionTimestamp, 
+                                $this->UsuarioModificacionTimestamp);
+        if ($this->esNuevoUsuario) {
+            /*
+             *  Crear nuevo usuario
+             * 1- crear tabla token
+             * 2- crear tabla usuario y popularla
+             */
+            // 1
+            $TokenId = $createTables ? $this->create_tblToken() : $this->TokenId;
+            
+            // 2
+            
+            
+        } else {
+            /*
+             * 1- recuperar los datos de la DB
+             * 2- verificar cuáles cambiaron
+             * 3- escribir los cambios
+             */
+        }
         return FALSE;
     }
     
@@ -600,11 +689,13 @@ class Usuario extends Empleado
     public function sesionIniciar()
     {
         if (!(isset($this->isLoggedIn) && is_bool($this->isLoggedIn))) {
-            $this->isLoggedIn = FALSE;
-
             // Guardo el nombre de usuario en $_SESSION
-            Session::store(SMP_SESSINDEX_USERNAME, $this->getNombre());
-
+            $session = new Session;
+            $session->useSystemPassword();
+            $session->storeEnc(SMP_SESSINDEX_USERNAME, $this->getNombre());
+            unset($session);
+            
+            $this->isLoggedIn = FALSE;
             // Genero nuevo sessionkey
             $this->generateRandomToken();
             $this->generateTimestamp();
@@ -656,6 +747,7 @@ class Usuario extends Empleado
      * 
      * @return boolean TRUE si la sesión es auténtica, es decir, el usuario 
      * está loggeado; FALSE si no.
+     * @access public
      */
     public function authenticateSession()
     {
@@ -712,13 +804,13 @@ class Usuario extends Empleado
                                     . '/nav.php' 
                                     . '?accion=' . SMP_RESTOREPWD 
                                     . '&username=' . $this->UsuarioNombre 
-                                    . '&passRestoreToken=' . $this->password->getToken();
+                                    . '&passRestoreToken=' . $this->getToken();
 
                 // Enviar email
                 $email = new Email;
 
                 $email->setFrom('SiMaPe', SMP_EMAIL_FROM);
-                $email->addAddress(/*$this->Email*/"hackan@gmail.com");/*!!!!!!!!!!!!!!!!!!!!!!!!*/
+                $email->addAddress($this->getEmail());
                 $email->setSubjet('Restablecimiento de contraseña para SiMaPe');
                 $email->setBody("<!DOCTYPE html>"
                 . "\n<html lang='es-AR'>"
@@ -749,7 +841,7 @@ class Usuario extends Empleado
                         . (SMP_PASSWORD_RESTORETIME / 60)  
                         . " minutos de recibido este email (exactamente a las " 
                         . strftime('%H:%M:%S del %d de %B del %G' , 
-                                    $this->password->getTimestamp()) 
+                                    $this->getTimestamp() + SMP_PASSWORD_RESTORETIME) 
                         . "), y deber&aacute; solicitar restablecer su "
                         . "contrase&ntilde;a nuevamente.</span>"
                 . "\n\t</p>"
@@ -791,5 +883,26 @@ class Usuario extends Empleado
                 return $this->Password_authenticateToken();
             }
         }
+    }
+    
+    protected function create_tblUsuario()
+    {
+        if ($this->isDataReady()) {
+            $db = new DB(TRUE);
+            $columns = '';
+            $values = '';
+            $bind = '';
+            foreach ($this->tblUsuario as $key => $value) {
+                $columns .= $key . ',';
+                $values .= $value . ',';
+            }
+            // Elimino última ','
+            $columns = substr($columns, 0, -1);
+            $values = substr($values, 0, -1);
+            $db->setQuery('INSERT INTO Usuario (' 
+                            . $columns . ') VALUES (' . $values . ')');
+            
+        }
+        
     }
 }

@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.31
+ * @version 1.33
  */
 
 /*
@@ -86,10 +86,9 @@ const LOGIN_DISPLAY_LOGGEDOUT = 10;
  */
 $display = LOGIN_DISPLAY_DEFAULT;
 
-// Iniciar o continuar sesion
-Session::initiate();
-
 // Inicializaciones
+// Iniciar o continuar sesion
+$session = new Session;
 $formToken = new FormToken;
 
 // Recuperar el nombre de usuario
@@ -108,10 +107,10 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
     {
         // captcha OK
         $usuario->setPassword(Sanitizar::glPOST('frm_pwdLogin'), FALSE);
-
+        
         $formToken->prepare_to_auth(Sanitizar::glPOST(SMP_SESSINDEX_FORM_TOKEN), 
-                            Session::retrieve(SMP_SESSINDEX_FORM_RANDOMTOKEN), 
-                            Session::retrieve(SMP_SESSINDEX_FORM_TIMESTAMP));
+                            $session->retrieve(SMP_SESSINDEX_FORM_RANDOMTOKEN), 
+                            $session->retrieve(SMP_SESSINDEX_FORM_TIMESTAMP));
         
         // Ejecuto la autenticación de la contraseña aún si el form
         // token no valida, para evitar Timing Oracle.
@@ -130,8 +129,11 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
                 $display = LOGIN_DISPLAY_DEFAULT;
             }
             
-            // elimino el captcha, si existiese
+            // Limpieza
             Session::remove(LOGIN_SESSINDEX_CAPTCHA);
+            Session::remove(LOGIN_SESSINDEX_RETRY_COUNT);
+            Session::remove(SMP_SESSINDEX_FORM_RANDOMTOKEN);
+            Session::remove(SMP_SESSINDEX_FORM_TIMESTAMP);
         } else {
             // Enviar mensaje user pass incorrecto       
             Session::store(SMP_SESSINDEX_NOTIF_ERR, SMP_ERR_AUTHFAIL);
@@ -153,6 +155,7 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
     // Cargar form de restablecimiento de contraseña
     $display = LOGIN_DISPLAY_PWDRESTORE_FORM;
 } elseif (!empty(Sanitizar::glPOST('frm_btnRestore'))) {
+    $usuario->retrieve_fromDB_Empleado();
     if (empty($usuario->getEmail())) {
         $display =  LOGIN_DISPLAY_EMAIL_NOTFOUND;
     } else {   
@@ -162,17 +165,9 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
             $display = LOGIN_DISPLAY_EMAIL_NOTSENT;
         }
     }   
-} elseif (Sanitizar::glGET(SMP_NAV_ACTION) == SMP_RESTOREPWD) {   
-    $page = new Page('login.php', 
-            Session::retrieve(SMP_SESSINDEX_PAGE_RANDOMTOKEN), 
-            Session::retrieve(SMP_SESSINDEX_PAGE_TIMESTAMP), 
-            Sanitizar::glGET(SMP_SESSINDEX_PAGE_TOKEN));
-    
+} elseif (Sanitizar::glGET(SMP_NAV_ACTION) == SMP_RESTOREPWD) {       
     $usuario->setToken(Sanitizar::glGET('passRestoreToken'));
-    
-    if ($usuario->authenticatePasswordRestore()
-            && $page->authenticateToken()
-    ) {
+    if ($usuario->authenticatePasswordRestore()) {
         // Token válido
         // mostrar formulario
         $display = LOGIN_DISPLAY_NEWPWD_FORM;
@@ -233,7 +228,6 @@ $formToken->generateTimestamp();
 $formToken->generateToken();
 Session::store(SMP_SESSINDEX_FORM_RANDOMTOKEN, $formToken->getRandomToken());
 Session::store(SMP_SESSINDEX_FORM_TIMESTAMP, $formToken->getTimestamp());
-
 // -- --
 //
 // Mostrar página
@@ -335,11 +329,11 @@ switch ($display) {
         break;
     
     case LOGIN_DISPLAY_EMAIL_SENT:
-        // TODO: mostrar casilla de email enmascarada
         echo "\n\t\t\t<h3 style='text-align: center;'>Restablecimiento de "
              . "contrase&ntilde;a</h3>";
-        echo "\n\t\t\t<p>Se ha enviado un email a su casilla con instrucciones "
-             . "para continuar.</p>";
+        echo "\n\t\t\t<p>Se ha enviado un email a su casilla " 
+             . $usuario->getEmail(TRUE) . " con instrucciones para "
+             . "continuar.</p>";
         echo "\n\t\t\t<p>Puede cerrar esta p&aacute;gina.</p>";
         break;
         

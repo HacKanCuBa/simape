@@ -47,7 +47,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.22
+ * @version 1.3
  */
 class DB extends mysqli
 {     
@@ -516,5 +516,61 @@ class DB extends mysqli
         }
         
         return FALSE;
+    }
+    
+    /**
+     * Determina si la Tabla indicada existe o no.
+     * @param string $tableName Nombre de la Tabla.
+     * @param int $tableId Identificador de la tabla buscada.
+     * @return boolean TRUE si la tabla existe, FALSE si no.
+     */
+    public function table_exists($tableName, $tableId)
+    {
+        $this->setQuery('SELECT ' . $tableName . 'Id FROM ' . $tableName 
+                                        . ' WHERE ' . $tableName . 'Id = ?');
+        $this->setBindParam('i');
+        $this->setQueryParams($tableId);
+        if ($this->queryExecute()) {
+            if ($this->getQueryData() == $tableId) {
+                return TRUE;
+            }
+        }
+        
+        return FALSE;
+    }
+    
+    /**
+     * Identifica una variable a fin de determinar qué identificador de 
+     * binding le corresponde.<br />
+     * Identificadores: 
+     * <ul>
+     * <li>i (integer): int | bool</li>
+     * <li>s (string): string</li>
+     * <li>d (double): float</li>
+     * <li>b (blob): no es posible determinar</li>
+     * </ul>
+     * @param mixed $bind Variable a identificar.
+     * @return string|FALSE Identificador de binding o FALSE si no se puede determinar.
+     * @access public
+     */
+    public function bind_id($bind)
+    {
+        if (is_int($bind) || is_bool($bind)) {
+            $id = 'i';
+        } elseif (is_string($bind)) {
+            $id = 's';
+        } elseif (is_float($bind)) {
+            $id = 'd';
+        } elseif (is_numeric($bind)) {
+            if (intval($bind) == $bind) {
+                $id = 'i';
+            } elseif (floatval($bind) == $bind) {
+                $id = 'd';
+            }
+        } else {
+            $id = FALSE;
+        }
+        
+        return $id;
     }
 }

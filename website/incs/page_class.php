@@ -94,7 +94,7 @@ class Page
     /**
      * Tiempo de vida de un token de página, en segundos.
      */
-    const TOKEN_LIFETIME = 3600;
+    const TOKEN_LIFETIME = 60;
     
     /**
      * Extensiones permitidas, separadas por coma.
@@ -176,6 +176,7 @@ class Page
     {
         if (!empty($loc)
             && is_string($loc)
+            && preg_match("/\./", $loc)
         ) {
             //$ext = pathinfo($loc, PATHINFO_EXTENSION);
             list($url, $ext) = explode('.', $loc, 2);
@@ -627,15 +628,17 @@ class Page
     {
         $now = time();
         
-        if (!empty($this->pageToken) 
+        if (!empty($this->token) 
             && !empty($this->timestamp)
             && !empty($this->randToken)
             && ($now >= $this->timestamp) 
             && ($now < ($this->timestamp + self::TOKEN_LIFETIME))
         ) {
             // Verifico que getToken no sea FALSE.
-            $pageToken = $this->tokenMake($this->randToken, 
-                                            $this->timestamp, 
+            $pageToken = self::tokenMake($this->randToken,
+                                            SMP_TKN_PAGE,
+                                            $this->timestamp,
+                                            self::TOKEN_LIFETIME,
                                             $this->pageLoc);
             if ($pageToken && ($this->token === $pageToken)) {
                 return TRUE;
@@ -667,9 +670,9 @@ class Page
      * FALSE si no.
      * @see setLocation
      */
-    public function go($params = NULL, $intlink = NULL)
+    public function go($params = NULL, $intLink = NULL)
     {
-        return self::go_to($this->pageLoc, $params, $intlink);
+        return self::go_to($this->pageLoc, $params, $intLink);
     }
     
     /**
