@@ -177,28 +177,37 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
                             Session::retrieve(SMP_SESSINDEX_FORM_RANDOMTOKEN), 
                             Session::retrieve(SMP_SESSINDEX_FORM_TIMESTAMP));
             if ($formToken->authenticateToken()) {
-                $newpasswd = array_map('trim', Sanitizar::glPOST('frm_pwdLogin'));
-                if ($newpasswd[0] === $newpasswd[1]) {
-                    $usuario->retrieve_fromDB();
-                    if ($usuario->setPassword($newpasswd[0], SMP_PASSWORD_REQUIRESTRONG)) {
-                        $display = LOGIN_DISPLAY_NEWPWD_ERROR;
-                        if ($usuario->encryptPassword()) {
-                            if ($usuario->store_inDB()) {
-                                // nueva contraseña establecida
-                                // borrar tokens de restablecimiento
-                                $usuario->remove_fromDB_PwdRestore();     
-                                $display = LOGIN_DISPLAY_NEWPWD_OK;
+                // Pruebo captcha primero
+                // si aun no hay captcha, ambos seran equivalentes (NULL y STRING NULL)
+                if (Session::retrieve(LOGIN_SESSINDEX_CAPTCHA) == Sanitizar::glPOST('frm_txtCaptcha'))
+                {
+                    // captcha OK
+                    $newpasswd = array_map('trim', Sanitizar::glPOST('frm_pwdLogin'));
+                    if ($newpasswd[0] === $newpasswd[1]) {
+                        $usuario->retrieve_fromDB();
+                        if ($usuario->setPassword($newpasswd[0], SMP_PASSWORD_REQUIRESTRONG)) {
+                            $display = LOGIN_DISPLAY_NEWPWD_ERROR;
+                            if ($usuario->encryptPassword()) {
+                                if ($usuario->store_inDB()) {
+                                    // nueva contraseña establecida
+                                    // borrar tokens de restablecimiento
+                                    $usuario->remove_fromDB_PwdRestore();     
+                                    $display = LOGIN_DISPLAY_NEWPWD_OK;
+                                }
                             }
+                        } else {
+                            Session::store(SMP_SESSINDEX_NOTIF_ERR, 
+                                "La contrase&ntilde;a ingresada no cumple con los "
+                                . "requisitos m&iacute;nimos de seguridad "
+                                . "establecidos, por lo que no puede ser aceptada");
                         }
                     } else {
                         Session::store(SMP_SESSINDEX_NOTIF_ERR, 
-                            "La contrase&ntilde;a ingresada no cumple con los "
-                            . "requisitos m&iacute;nimos de seguridad "
-                            . "establecidos, por lo que no puede ser aceptada");
+                                "Las contrase&ntilde;as ingresadas no coinciden");
                     }
                 } else {
-                    Session::store(SMP_SESSINDEX_NOTIF_ERR, 
-                            "Las contrase&ntilde;as ingresadas no coinciden");
+                    // captcha err
+                    Session::store(SMP_SESSINDEX_NOTIF_ERR, LOGIN_ERR_CAPTCHA);
                 }
             }
         }
@@ -314,6 +323,33 @@ switch ($display) {
              . "maxlength='" . SMP_PWD_MAXLEN . "' />";
         echo "\n\t\t\t\t\t\t</td>";
         echo "\n\t\t\t\t\t</tr>";
+        // mostrar captcha
+        echo "\n\t\t\t\t\t<tr>";
+        echo "\n\t\t\t\t\t\t<td style='text-align:left;'>";
+        echo "\n\t\t\t\t\t\t\t<br />";
+        echo "\n\t\t\t\t\t\t\t<span style='font-style:italic;' >"
+             . "&iquest;Cu&aacute;nto d&aacute; ";
+        $captcha = rand(30, 99);
+        $captcha_string = $captcha . " + ";
+        for ($i = 0; $i < 2; $i++) {
+            $value = rand(1, 9);
+            $captcha += $value;
+            $captcha_string .= $value . " + ";
+        }
+        Session::store(LOGIN_SESSINDEX_CAPTCHA, $captcha);
+        $captcha_string = substr($captcha_string, 0, 
+                            strlen($captcha_string) - 3);
+        echo $captcha_string . "?";
+        echo "</span>";
+        echo "\n\t\t\t\t\t\t</td>";
+        echo "\n\t\t\t\t\t\t<td style='text-align:left;'>";
+        echo "\n\t\t\t\t\t\t\t<br />";
+        echo "\n\t\t\t\t\t\t\t<input name='frm_txtCaptcha' type='number' "
+                . "title='Ingrese el resultado de la operaci&oacute;n' "
+                . "maxlength='3' />";
+        echo "\n\t\t\t\t\t\t</td>";
+        echo "\n\t\t\t\t\t</tr>";
+        // -- fin captcha
         echo "\n\t\t\t\t\t<tr>";
         echo "\n\t\t\t\t\t\t<td colspan='2' style='text-align: center;' >";
         echo "\n\t\t\t\t\t\t\t<br />";
