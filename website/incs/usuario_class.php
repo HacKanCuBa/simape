@@ -32,7 +32,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.83
+ * @version 0.84
  */
 class Usuario extends Empleado
 {    
@@ -787,7 +787,7 @@ class Usuario extends Empleado
      * </ul>
      * <i>IMPORTANTE: Es posible que se recuperen todos los datos del usuario 
      * desde la DB, pisando los existentes si hubieran.</i>
-     * @return TRUE si tuvo éxito, FALSE si no.
+     * @return boolean TRUE si tuvo éxito, FALSE si no.
      */
     public function passwordRestore()
     {
