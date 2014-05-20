@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.62
+ * @version 0.63
  */
 
 trait Token
@@ -343,21 +343,13 @@ trait Token
     }
     
     /**
-     * Crea una nueva tabla Token en la DB, y devuelve el ID de ésta.
+     * Crea una nueva tabla Token vacía en la DB, y almacena el ID de ésta.
      * 
-     * @return int|boolean ID de la nueva tabla, o FALSE en caso de error.
+     * @return boolean TRUE si tuvo éxito, o FALSE en caso de error.
      */
-    public function create_tblToken()
+    public function table_new_Token()
     {
         $db = new DB(TRUE);
-        $db->setQuery('INSERT INTO Token () VALUES ()');
-        if ($db->queryExecute()) {
-            $db->setQuery('SELECT DISTINCT LAST_INSERT_ID() FROM Token');
-            if($db->queryExecute()) {
-                return $db->getQueryData();
-            }
-        }
-        
-        return FALSE;
+        return $this->setTokenId($db->insert('Token'));
     }
 }

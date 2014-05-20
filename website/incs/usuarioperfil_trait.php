@@ -31,53 +31,29 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.1 untested
- * @deprecated
+ * @version 0.2
  */
 
 trait UsuarioPerfil
-{   
-    /**
-     * Tabla UsuarioPerfil de la DB.
-     * @var array
-     */
-    protected $UsuarioPerfil = array('UsuarioPerfilId' => '',
-                                     'Nombre' => '',
-                                     'Timestamp' => ''
-                                    );
-    
+{       
     protected $UsuarioPerfilId = 0;
-    protected $Nombre = '';
-    protected $Timestamp = 0;
-
+    protected $UsuarioPerfilNombre = '';
+    protected $UsuarioPerfilTimestamp = 0;
+    
     // __ SPECIALS
-    function __construct()
-    {
-        
-    }
+
     // __ PRIV
     
     // __ PROT
+    /**
+     * Inserta una nueva tabla de Perfil de Usuario vacía en la DB y guarda el ID.
+     * @return boolean TRUE si tuvo éxito, FALSE si no.
+     */
+    protected function table_new_UsuarioPerfil()
+    {
+        $db = new DB(TRUE);
+        return $this->setTokenId($db->insert('UsuarioPerfil'));
+    }
     
     // __ PUB
-    public function getId() 
-    {
-        if (isset($this->UsuarioPerfil['UsuarioPerfilId'])) {
-            return $this->UsuarioPerfil['UsuarioPerfilId'];
-        }
-    }
-    
-    public function getNombre() 
-    {
-        if (isset($this->UsuarioPerfil['Nombre'])) {
-            return $this->UsuarioPerfil['Nombre'];
-        }
-    }
-    
-    public function getTimestamp() 
-    {
-        if (isset($this->UsuarioPerfil['Timestamp'])) {
-            return $this->UsuarioPerfil['Timestamp'];
-        }
-    }
 }

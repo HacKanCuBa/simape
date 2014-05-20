@@ -32,12 +32,12 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.84
+ * @version 0.9
  */
 class Usuario extends Empleado
 {    
     // SessionToken ya incorpora UID.
-    use SessionToken, Passwordt {        
+    use SessionToken, Passwordt, UsuarioPerfil {        
         SessionToken::authenticateToken as protected SessionToken_authenticateToken;
         
         Passwordt::authenticateToken as protected Password_authenticateToken;
@@ -64,25 +64,6 @@ class Usuario extends Empleado
      */
     private $isLoggedIn;
 
-    /**
-     * Tabla Usuario de la DB.
-     * @var array
-     */
-    protected $tblUsuario = array ('UsuarioId' => 0,
-                                'EmpleadoId' => 0,
-                                'UsuarioPerfilId' => 0,
-                                'TokenId' => 0,
-                                'Nombre' => '',
-                                'UID' => '',
-                                'PasswordSalted' => '',
-                                'PasswordTimestamp' => 0,
-                                'Activo' => FALSE,
-                                'PrivKey' => '',
-                                'PubKey' => '',
-                                'CreacionTimestamp' => 0,
-                                'ModificacionTimestamp' => 0
-                                );
-    
     protected $UsuarioId = 0;
     protected $UsuarioNombre = '';
     protected $Activo = FALSE;
@@ -91,43 +72,14 @@ class Usuario extends Empleado
     protected $UsuarioCreacionTimestamp = 0;
     protected $UsuarioModificacionTimestamp = 0;
     protected $EmpleadoId = 0;
-
-
-//    /**
-//     * Tabla UsuarioPerfil de la DB.
-//     * @var array
-//     */
-//    protected $UsuarioPerfil = array('UsuarioPerfilId' => 0,
-//                                     'Nombre' => '',
-//                                     'Timestamp' => 0
-//                                    );
-    
-    protected $UsuarioPerfilId = 0;
-    protected $UsuarioPerfilNombre = '';
-    protected $UsuarioPerfilTimestamp = 0;
     
     /**
      * Indica si el usuario es nuevo o ya existe.  Importante para determinar
      * si se debe cambiar CreacionTimestamp.
      * @var boolean
      */
-    protected $esNuevoUsuario;
-    
-    /**
-     * Determina si al grabar en la DB se escribirá el ID de la tabla (TRUE)
-     * o no (FALSE, por defecto) al crear un nuevo Usuario, dado que la DB
-     * maneja este valor automáticamente.
-     * @var boolean
-     */
-    protected $write_id = FALSE;
-    
-//    /**
-//     * Sesion a emplear
-//     * @var Session
-//     */
-//    protected $session;
-
-
+    protected $esNuevoUsuario = FALSE;
+       
     // Metodos
     // __ SPECIALS
     /**
@@ -153,7 +105,7 @@ class Usuario extends Empleado
         $this->setNombre($Nombre);
         $this->setUID($UID);
         $this->setUsuarioId($UsuarioId);
-        $this->esNuevoUsuario = !$this->retrieve_fromDB();
+        $this->retrieve_fromDB();
         
         // Búsqueda de empleado
         parent::__construct(NULL, NULL, $this->EmpleadoId);
@@ -277,10 +229,10 @@ class Usuario extends Empleado
      * UsuarioId, UID o Nombre.
      * 
      * @param mixed (int) UsuarioId, (string) UID o (string) Nombre.
-     * @return mixed Todos los valores en un array, FALSE si se produjo
+     * @return array|boolean Todos los valores en un array, FALSE si se produjo
      * un error.
      */
-    protected static function retrieve_fromDB_tbl($searchParam) {
+    protected static function retrieve_tblUsuario($searchParam) {
         if (!empty($searchParam)) {
             $db = new DB;
             if (DB::isValid_TblId($searchParam)) {
@@ -312,7 +264,7 @@ class Usuario extends Empleado
      * nuevo, deben tener el mismo valor.
      * 
      * @param int $NuevoTimestamp CreacionTimestamp.
-     * @return TRUE si tuvo éxito, FALSE si no.
+     * @return boolean TRUE si tuvo éxito, FALSE si no.
      */
     protected function setCreacionTimestamp($NuevoTimestamp)
     {
@@ -355,6 +307,54 @@ class Usuario extends Empleado
         }
                
         return FALSE;
+    }
+    
+    /**
+     * Devuelve un array asociativo donde los índices corresponden a las 
+     * columnas de la tabla Usuario de la DB y los valores, a los establecidos 
+     * en el objeto.
+     * @return array Tabla Usuario.
+     */
+    protected function get_table_array()
+    {
+        return array ('UsuarioId' => $this->UsuarioId,
+                'EmpleadoId' => $this->EmpleadoId,
+                'UsuarioPerfilId' => $this->UsuarioPerfilId,
+                'TokenId' => $this->TokenId,
+                'Nombre' => $this->UsuarioNombre,
+                'UID' => $this->uid,
+                'PasswordSalted' => $this->passwordEC,
+                'PasswordTimestamp' => $this->passwordModificationTimestamp,
+                'Activo' => $this->Activo,
+                'PrivKey' => $this->PrivKey,
+                'PubKey' => $this->PubKey,
+                'CreacionTimestamp' => $this->UsuarioCreacionTimestamp,
+                'ModificacionTimestamp' => $this->UsuarioModificacionTimestamp
+            );
+    }
+
+    /**
+     * Inserta en la DB una nueva tabla de usuario con los parámetros 
+     * establecidos y guarda la ID de ésta.  Deben cumplirse las restricciones 
+     * previamente.
+     * @return boolean TRUE si tuvo éxito, FALSE si no.
+     * @access protected
+     */
+    protected function table_new_Usuario()
+    {       
+        $result = FALSE;
+        
+        if ($this->isDataReady()) {
+            $tblUsuario = $this->get_table_array();
+            
+            $db = new DB(TRUE);
+            $result = $this->setUsuarioId($db->insert('Nombre', 
+                                                array_keys($tblUsuario), 
+                                                array_values($tblUsuario)));
+            unset($db);
+        }
+       
+        return $result;
     }
     // __ PUB
     /**
@@ -487,6 +487,17 @@ class Usuario extends Empleado
 //    }
 
     /**
+     * Indica que el usuario es nuevo.  Se emplea al guardar en la DB.
+     * @see store_inDB
+     * @param boolean $value TRUE para indicar que el usuario es nuevo, 
+     * FALSE para actualizar.
+     */
+    public function setNuevoUsuario($value = TRUE)
+    {
+        $this->esNuevoUsuario = boolval($value);
+    }
+
+    /**
      * Devuelve el nombre de usuario, si hay.
      * 
      * @return string Nombre de usuario o string vacío
@@ -599,10 +610,10 @@ class Usuario extends Empleado
     public function retrieve_fromDB()
     {
         $searchParams = array($this->UsuarioId, 
-                            $this->UsuarioNombre, 
-                            $this->uid);
+                                $this->UsuarioNombre, 
+                                $this->uid);
         foreach ($searchParams as $searchP) {
-            $usuario = self::retrieve_fromDB_tbl($searchP);
+            $usuario = static::retrieve_tblUsuario($searchP);
             if (is_array($usuario) && !empty($usuario)) {
                 //$this->Usuario = $usuario;
                 list($this->UsuarioId, 
@@ -620,52 +631,80 @@ class Usuario extends Empleado
                         $this->UsuarioModificacionTimestamp) = array_values($usuario);
 //                $this->password->setPasswordEncrypted($usuario['PasswordSalted']);
 //                $this->password->setModificationTimestamp($usuario['PasswordTimestamp']);
-                $this->esNuevoUsuario = FALSE;
-                return TRUE;
+                return parent::retrieve_fromDB();
             }
         }
+
         return FALSE;
     }
     
     /**
-     * Guarda el usuario en la DB.  Devuelve TRUE si tuvo éxito, 
-     * FALSE si no.
-     * 
+     * Guarda el usuario en la DB.  Solo se almacenan los
+     * cambios realizados, o bien todo si se trata de uno nuevo.
+     * @see setNuevoUsuario
      * @return boolean TRUE si tuvo éxito, FALSE si no.
+     * @access public
      */
-    public function store_inDB($createTables = TRUE) 
+    public function store_inDB()
     {
-        $newUsuario = array($this->UsuarioId, 
-                                $this->EmpleadoId, 
-                                $this->UsuarioPerfilId, 
-                                $this->TokenId, 
-                                $this->UsuarioNombre, 
-                                $this->uid, 
-                                $this->passwordEC, 
-                                $this->passwordModificationTimestamp, 
-                                $this->Activo, 
-                                $this->PrivKey, 
-                                $this->PubKey, 
-                                $this->UsuarioCreacionTimestamp, 
-                                $this->UsuarioModificacionTimestamp);
         if ($this->esNuevoUsuario) {
             /*
              *  Crear nuevo usuario
-             * 1- crear tabla token
-             * 2- crear tabla usuario y popularla
+             * 1- tabla token: nueva
+             * 2- tabla usuarioperfil: ya debe existir
+             * 3- tabla empleado: ya debe existir
+             * 4- crear tabla usuario y popularla
              */
             // 1
-            $TokenId = $createTables ? $this->create_tblToken() : $this->TokenId;
+            $this->table_new_Token();
             
             // 2
+            // ToDo
             
+            // 3
+            // ToDo
             
+            // 4
+            $this->UsuarioCreacionTimestamp = time();
+            $this->UsuarioModificacionTimestamp = $this->UsuarioCreacionTimestamp;
+            $this->passwordModificationTimestamp = $this->UsuarioCreacionTimestamp;
+            $this->table_new_Usuario();
         } else {
             /*
              * 1- recuperar los datos de la DB
              * 2- verificar cuáles cambiaron
              * 3- escribir los cambios
              */
+            // recupero datos db
+            $searchParams = array($this->UsuarioId, 
+                                    $this->UsuarioNombre, 
+                                    $this->uid);
+            foreach ($searchParams as $searchP) {
+                $olddata = static::retrieve_tblUsuario($searchP);
+                if (is_array($olddata) && !empty($olddata)) {
+                    //encontrado
+                    break;
+                }
+            }
+            if (is_array($olddata) && !empty($olddata)) {
+                // busco cambios
+                $this->UsuarioId = $olddata['UsuarioId'];
+                $newdata = $this->get_table_array();
+                $writedata = array();
+                foreach ($newdata as $key => $value) {
+                    if ($olddata[$key] != $value) {
+                        $writedata[$key] = $value;
+                    }
+                }
+                if (!empty($writedata)) {
+                    // escribo datos
+                    $db = new DB(TRUE);
+                    return $db->update('Usuario', 
+                                array_keys($writedata), 
+                                array_values($writedata), 
+                                'UsuarioId=' . $this->UsuarioId);
+                }
+            }            
         }
         return FALSE;
     }
@@ -714,7 +753,7 @@ class Usuario extends Empleado
                     $fingerprint->generateToken();
                     // Guardarlo en DB
                     $fingerprint->setTokenId($this->getTokenId());
-                    $fingerprint->store_inDB(); //acá lo considero, pero si falla, como proceder?
+                    $fingerprint->store_inDB(); // si falla, cómo proceder?
                     unset($fingerprint);
                 }
             }
@@ -883,26 +922,5 @@ class Usuario extends Empleado
                 return $this->Password_authenticateToken();
             }
         }
-    }
-    
-    protected function create_tblUsuario()
-    {
-        if ($this->isDataReady()) {
-            $db = new DB(TRUE);
-            $columns = '';
-            $values = '';
-            $bind = '';
-            foreach ($this->tblUsuario as $key => $value) {
-                $columns .= $key . ',';
-                $values .= $value . ',';
-            }
-            // Elimino última ','
-            $columns = substr($columns, 0, -1);
-            $values = substr($values, 0, -1);
-            $db->setQuery('INSERT INTO Usuario (' 
-                            . $columns . ') VALUES (' . $values . ')');
-            
-        }
-        
     }
 }

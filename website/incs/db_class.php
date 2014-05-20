@@ -47,7 +47,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.3
+ * @version 1.31
  */
 class DB extends mysqli
 {     
@@ -224,7 +224,7 @@ class DB extends mysqli
         } else {
             $this->change_user(SMP_DB_USER_RO, SMP_DB_PASS_RO, SMP_DB_NAME);
         }
-        
+        $this->clearParams();
         return $this->conexionInicializar();
     }
     
@@ -245,8 +245,7 @@ class DB extends mysqli
         $stmt = $this->prepare($queryPrepared);
         if($stmt) {
             $this->queryStmt = $stmt;
-            unset($this->bindParam);
-            unset($this->queryParams);
+            $this->clearParams();
             return TRUE;
         }
         
@@ -296,6 +295,15 @@ class DB extends mysqli
         }
         
         return FALSE;
+    }
+    
+    /**
+     * Limpia los parámetros almacenados: queryParams y bindParams.
+     */
+    public function clearParams() 
+    {
+        unset($this->bindParam);
+        unset($this->queryParams);
     }
     // --
     // Get
@@ -378,9 +386,9 @@ class DB extends mysqli
                     $$bind_name = $this->queryParams[$i];
                     $bind_names[] = &$$bind_name;
                 }
-                $result = call_user_func_array(array($this->queryStmt, 
+                $result = boolval(call_user_func_array(array($this->queryStmt, 
                                                      'bind_param'), 
-                                               $bind_names);
+                                                     $bind_names));
             } else {
                 // Continuar, no hay que bindear la query
                 $result = TRUE;
@@ -393,8 +401,8 @@ class DB extends mysqli
                     $this->querySaveData();
                 } else {
                     $this->rollback();
+                    $this->clearParams();
                     $result = $this->queryStmt->errno;
-                    
                 }
             }
             $this->affectedRows = $this->queryStmt->affected_rows;
@@ -541,7 +549,8 @@ class DB extends mysqli
     
     /**
      * Identifica una variable a fin de determinar qué identificador de 
-     * binding le corresponde.<br />
+     * binding le corresponde.  Puede pasarse un array, y devolverá un string 
+     * de binding.<br />
      * Identificadores: 
      * <ul>
      * <li>i (integer): int | bool</li>
@@ -550,12 +559,18 @@ class DB extends mysqli
      * <li>b (blob): no es posible determinar</li>
      * </ul>
      * @param mixed $bind Variable a identificar.
-     * @return string|FALSE Identificador de binding o FALSE si no se puede determinar.
+     * @return string|FALSE Identificador de binding o FALSE si no se puede 
+     * determinar.
      * @access public
      */
     public function bind_id($bind)
     {
-        if (is_int($bind) || is_bool($bind)) {
+        if (is_array($bind)) {
+            $id = '';
+            foreach ($bind as $value) {
+                $id .= $this->bind_id($value);
+            }
+        } elseif (is_int($bind) || is_bool($bind)) {
             $id = 'i';
         } elseif (is_string($bind)) {
             $id = 's';
@@ -572,5 +587,112 @@ class DB extends mysqli
         }
         
         return $id;
+    }
+    
+    /**
+     * Inserta una nueva tabla en la DB.  Si la cantidad de columnas no es igual
+     * a la de valores, completa automáticamente con NULL.  
+     * Si se indica NULL a las columnas, se insertará una tabla vacía 
+     * (el parámetro values no será tenido en cuenta).  
+     * NOTA: algunas tablas tienen restricciones, que podrían devolver error 
+     * al hacer esto.
+     * 
+     * @param string $tableName Nombre de la tabla a insertar.
+     * @param string|array $columns Nombre de las columnas que recibiran un 
+     * valor.  Si se trata de un único valor, puede ser string.  Si no, debe 
+     * ser array.
+     * @param string|array $values Valores que le corresponden a las columnas. 
+     * Si se trata de un único valor, puede ser string.  Si no, debe 
+     * ser array.
+     * @return int|boolean ID de la tabla creada, o FALSE en caso de error.
+     */
+    public function insert($tableName, $columns = NULL, $values = NULL)
+    {
+        if (is_string($tableName) && !empty($tableName)) {
+            if (is_null($columns)) {
+                $this->setQuery('INSERT INTO ' . $tableName . ' () VALUES ()');
+            } else {
+                is_array($columns) ?: $columns = array($columns);
+                is_array($values) ?: $values = array($values);
+                // creo que este bucle se puede implementar mas eficientemente
+                // con otras funciones de php
+                while (count($values) != count($columns)) {
+                    array_push($values, NULL);
+                }
+
+                $qmark = substr(str_repeat('?,', count($values)), 0, -1);
+                $cols = implode(',', $columns) ;
+                
+                $this->setQuery('INSERT INTO ' . $tableName . ' (' . $cols
+                                . ') VALUES (' . $qmark . ')');
+                
+                $this->setBindParam($this->bind_id($values));
+                $this->setQueryParams($values);
+            }
+
+            $this->queryExecute();
+            if ($this->queryGetData()) {
+                $this->setQuery('SELECT DISTINCT LAST_INSERT_ID() FROM ' 
+                                    . $tableName);
+                $this->queryExecute();
+                return $this->getQueryData();
+            }
+        }
+             
+        return FALSE;
+    }
+    
+    /**
+     * Actualiza una tabla de la DB.  Si la cantidad de columnas no es igual
+     * a la de valores, completa automáticamente con NULL.
+     * 
+     * @param string $tableName Nombre de la tabla a actualizar.
+     * @param string|array $columns Nombre de las columnas que recibiran un 
+     * valor.  Si se trata de un único valor, puede ser string.  Si no, debe 
+     * ser array.
+     * @param string|array $values Valores que le corresponden a las columnas. 
+     * Si se trata de un único valor, puede ser string.  Si no, debe 
+     * ser array.
+     * @param string $where [opcional]<br />
+     * Cláusula WHERE, que especifica qué registros deben actualizarse, o se 
+     * actualizarán todos los existentes.
+     * @param string $limit [opcional]<br />
+     * Límite de registros a actualizar o todos los registros encontrados.
+     * @return boolean TRUE si tuvo éxito, FALSE si no.
+     * @access public
+     */
+    public function update($tableName, $columns, $values, 
+                            $where = NULL, $limit = NULL)
+    {
+        if (is_string($tableName) && !empty($tableName) 
+                && !empty($columns)
+        ) {
+            is_array($columns) ?: $columns = array($columns);
+            is_array($values) ?: $values = array($values);
+            $limit = is_int($limit) ? ' LIMIT ' . $this->sanitizar($limit)
+                                        : NULL;
+            $where = is_string($where) ? ' WHERE ' . $this->sanitizar($where) 
+                                        : NULL;
+            
+            // creo que este bucle se puede implementar mas eficientemente
+            // con otras funciones de php
+            while (count($values) != count($columns)) {
+                array_push($values, NULL);
+            }
+            
+            $set = implode('=?,', $columns) . '=?'; 
+            $this->setQuery('UPDATE TABLE ' . $tableName 
+                                . ' SET ' . $set
+                                . $where
+                                . $limit);
+            
+            $this->setBindParam($this->bind_id($values));
+            $this->setQueryParams($values);            
+            
+            $this->queryExecute();
+            return $this->getQueryData();
+        }
+             
+        return FALSE;
     }
 }
