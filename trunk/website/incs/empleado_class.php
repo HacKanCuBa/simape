@@ -33,7 +33,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.1 untested
+ * @version 0.11
  */
 class Empleado 
 {
@@ -216,7 +216,7 @@ class Empleado
      * @return mixed Todos los valores en un array o FALSE si se produjo
      * un error.
      */
-    protected static function retrieve_fromDB_tbl($searchParam)
+    protected static function retrieve_tblEmpleado($searchParam)
     {
         if (!empty($searchParam)) {
             $db = new DB;
@@ -348,13 +348,13 @@ class Empleado
      * 
      * @return boolean TRUE si se recuperó correctamente, FALSE si no.
      */
-    public function retrieve_fromDB()
+    public function retrieve_fromDB_Empleado()
     {
         $searchParams = array($this->Empleado['EmpleadoId'], 
                             $this->Empleado['Legajo'], 
                             $this->Empleado['Email']);
         foreach ($searchParams as $searchP) {
-            $empleado = self::retrieve_fromDB_tbl($searchP);
+            $empleado = static::retrieve_tblEmpleado($searchP);
             if (is_array($empleado) && !empty($empleado)) {
                 $this->Empleado = $empleado;
                 return TRUE;
