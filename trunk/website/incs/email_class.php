@@ -41,7 +41,7 @@ class Email
          * No extiendo la clase PHPMailer porque me resulta insoportable
          * y horrible que todas las propiedades sean public
          */
-        require_once SMP_INC_ROOT . SMP_LOC_INCS . 'phpmailer/PHPMailerAutoload.php';
+        require_once SMP_FS_ROOT . SMP_LOC_INCS . 'phpmailer/PHPMailerAutoload.php';
         
         $this->phpmailer = new PHPMailer(FALSE);
         $this->phpmailer->isSMTP();

@@ -120,10 +120,10 @@ const SMP_WEB_ROOT = '/';
 // NOTA: Solo puede moverse este archivo a otro directorio superior al del 
 // sitio.  Si se lo mueve a otro directorio no superior, loadconfig.php no 
 // podrá encontrar este archivo.  Ver loadconfig.php para más información.
-define('SMP_INC_ROOT', dirname(__FILE__) .'/');
+define('SMP_FS_ROOT', dirname(__FILE__) .'/');
 
 // Definir las siguientes rutas en forma relativa, tal de poder emplear luego
-// SMP_INC_ROOT o SMP_WEB_ROOT según sea necesario.
+// SMP_FS_ROOT o SMP_WEB_ROOT según sea necesario.
 const SMP_LOC_CSS = 'css/';
 const SMP_LOC_IMGS = 'imgs/';
 const SMP_LOC_PAGS = 'pags/';

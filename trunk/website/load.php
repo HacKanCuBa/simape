@@ -43,7 +43,7 @@ include 'configverify.php';
 
 // Autocarga de dependencias
 set_include_path(get_include_path() 
-                 . PATH_SEPARATOR . SMP_INC_ROOT . SMP_LOC_INCS);
+                 . PATH_SEPARATOR . SMP_FS_ROOT . SMP_LOC_INCS);
 spl_autoload_extensions('_class.php,_trait.php,_interface.php');
 spl_autoload_register();
 // --

@@ -712,7 +712,7 @@ class Page
     public static function pageExists($relativeURL)
     {
         if (self::isValid_loc($relativeURL)
-            && file_exists(SMP_INC_ROOT . $relativeURL)) {
+            && file_exists(SMP_FS_ROOT . $relativeURL)) {
             return TRUE;
         }
         
