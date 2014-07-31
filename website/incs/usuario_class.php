@@ -32,7 +32,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.9
+ * @version 0.91
  */
 class Usuario extends Empleado
 {    
@@ -58,7 +58,7 @@ class Usuario extends Empleado
     const TOKEN_SESSION = FALSE;
 
     /**
-     * El método authenticateSession fija el valor de esta variable, 
+     * El método sesionAutenticar fija el valor de esta variable, 
      * que determina si el usuario está loggeado (TRUE) o no (FALSE).
      * @var boolean
      */
@@ -252,6 +252,7 @@ class Usuario extends Empleado
             $db->queryExecute();
             $result = $db->getQueryData();
             unset($db);
+            
             return $result;
         }
         
@@ -376,7 +377,7 @@ class Usuario extends Empleado
     }
     
     public function setNombre($NuevoNombreUsuario) {
-        if ($this->isValid_username($NuevoNombreUsuario)) {
+        if (static::isValid_username($NuevoNombreUsuario)) {
             $this->UsuarioNombre = strtolower(trim($NuevoNombreUsuario));
             return TRUE;
         }
@@ -629,8 +630,7 @@ class Usuario extends Empleado
                         $this->PubKey, 
                         $this->UsuarioCreacionTimestamp, 
                         $this->UsuarioModificacionTimestamp) = array_values($usuario);
-//                $this->password->setPasswordEncrypted($usuario['PasswordSalted']);
-//                $this->password->setModificationTimestamp($usuario['PasswordTimestamp']);
+                
                 return parent::retrieve_fromDB();
             }
         }
@@ -777,7 +777,7 @@ class Usuario extends Empleado
         $this->token = NULL;
         $this->isLoggedIn = FALSE;
         !empty($this->TokenId) ?: $this->retrieve_fromDB_TokenId($this->UsuarioNombre);
-        $this->remove_fromDB_PwdRestore();
+        $this->remove_fromDB_SessionToken();
     }
     
     /**
@@ -788,11 +788,9 @@ class Usuario extends Empleado
      * está loggeado; FALSE si no.
      * @access public
      */
-    public function authenticateSession()
+    public function sesionAutenticar()
     {
-        if (isset($this->isLoggedIn) && is_bool($this->isLoggedIn)) {
-            return $this->isLoggedIn;
-        } else {
+        if (!(isset($this->isLoggedIn) && is_bool($this->isLoggedIn))) {
             $this->isLoggedIn = FALSE;
 
             if ($this->setToken(Session::retrieve(SMP_SESSINDEX_SESSIONKEY_TOKEN))) {
@@ -806,14 +804,12 @@ class Usuario extends Empleado
                         if ($this->retrieve_fromDB_SessionToken()) {
                             $this->isLoggedIn = $this->SessionToken_authenticateToken();
                         }
-                    } else {
-                        // fallo el fingerprint
-                        $this->sesionFinalizar();
                     }
                 }
             }
         }
         
+        $this->isLoggedIn ?: $this->sesionFinalizar();
         return $this->isLoggedIn;
     }
     

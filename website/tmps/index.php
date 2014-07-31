@@ -21,28 +21,5 @@
  * 
  *****************************************************************************/
 
-include 'load.php';
-
-echo Page::getHead('SiMaPe - Error 403');
-echo Page::getBody();
-echo Page::getHeader();
-echo Page::getHeaderClose();
-echo Page::getMain();
-
-echo "\n\t\t<h2 style='text-align: center;font-weight: bold'>"
-     . "Error 403: Acceso denegado</h2>";
-echo "\n\t\t<br />";
-echo "\n\t\t<p style='text-align: center;font-style: italic'>No tiene permiso "
-     . "para acceder a la p&aacute;gina requerida.";
-echo "\n\t\t<p style='text-align: center; font-style: italic'>Si lleg&oacute; "
-     . "aqu&iacute; por medio de un enlace, contacte con un administrador del "
-     . "sistema.</p>";
-
-echo "\n\t\t<form style='text-align: center;' action='" . SMP_WEB_ROOT . 'login.php' . "' method='post'>";
-echo "\n\t\t\t<p><input name='frm_buttonLogin' type='submit' "
-     . "style='font-style:italic;' "
-     . "value='Ingresar al sistema - Iniciar sesi&oacute;n' /></p>";
-echo "\n\t\t</form>";
-
-echo Page::getMainClose();
-echo Page::getFooter();
+exit;
+?>

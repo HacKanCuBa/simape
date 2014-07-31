@@ -56,7 +56,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.31
+ * @version 1.32
  */
 class Page
 {  
@@ -94,7 +94,7 @@ class Page
     /**
      * Tiempo de vida de un token de página, en segundos.
      */
-    const TOKEN_LIFETIME = 60;
+    const TOKEN_LIFETIME = 1800;
     
     /**
      * Extensiones permitidas, separadas por coma.
@@ -409,8 +409,13 @@ class Page
     {
         $navbar = new Navbar;
         $navbar->setIndent(1);
+        
+        $session = new Session;
+        $session->useSystemPassword();
+        $username = $session->retrieveEnc(SMP_SESSINDEX_USERNAME);
+        
         $btns = array ('&iexcl;Bienvenido <i>' 
-                       . Session::retrieve(SMP_SESSINDEX_USERNAME) . '</i>!',
+                       . $username . '</i>!',
                        'Mensajes',
                        'Mi perfil de empleado',
                        'Mi perfil de usuario',
@@ -695,11 +700,7 @@ class Page
      */
     public static function indent($level = 1)
     {
-        if (is_int($level)) {
-            return str_repeat("\t", $level);
-        }
-        
-        return NULL;
+        return (is_int($level) ? str_repeat("\t", $level) : '');
     }
     
     /**
@@ -728,5 +729,26 @@ class Page
     {
         // No difiere de un token estandard
         return self::isValid_token($pageToken);
+    }
+    
+    /**
+     * Formatea el valor indicado para ser impreso como código, 
+     * indentado y/o en nueva línea.  Imprime dicho valor por defecto.
+     * NO agrega código HTML adicional.
+     * @param mixed $value Valor a formatear.
+     * @param type $indent [opcional]<br />
+     * Nivel de indentado (0/sin indentado por defecto).
+     * @param type $newline [opcional]<br />
+     * TRUE para insertar el texto en nueva línea (por defecto), FALSE para no.
+     * @param boolean $print [opcional]<br />
+     * TRUE para imprimir en pantalla (por defecto), 
+     * FALSE para no hacerlo.
+     * @return string Devuelve el string formateado.
+     */
+    public static function _e($value, $indent = 0, $newline = TRUE, $print = TRUE)
+    {
+        $str = ($newline ? "\n" : "") . static::indent($indent) . strval($value);
+        echo ($print ? $str : NULL);
+        return $str;
     }
 }

@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.11
+ * @version 1.12
  */
 trait Passwordt
 {   
@@ -362,7 +362,7 @@ trait Passwordt
         if (!empty($this->TokenId)) {
             $this->randToken = NULL;
             $this->timestamp = 0;
-            return $this->store_inDB_SessionToken();
+            return $this->store_inDB_PwdRestore();
         }
         
         return FALSE;
