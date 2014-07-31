@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.63
+ * @version 0.64
  */
 
 trait Token
@@ -159,6 +159,17 @@ trait Token
      * Estructura del método para generar y almacenar el token especial.
      */
     abstract public function generateToken();
+    
+    /**
+     * Genera todos los tokens
+     */
+    public function generate()
+    {
+        $this->generateRandomToken();
+        $this->generateTimestamp();
+        method_exists($this, 'generateUID') ? $this->{'generateUID'}() : NULL;
+        $this->generateToken();
+    }
 
     /**
      * Devuelve el Token aleatorio almacenado, si existe.
@@ -231,20 +242,23 @@ trait Token
     }
     
     /**
-     * Almacena en el objeto el valor de Timestamp.  Emplearlo para la función
-     * de autenticación.
+     * Almacena en el objeto el valor de Timestamp.  
+     * Si el valor pasado no es entero, almacenará su valor equivalente.  
+     * Emplearlo para la función de autenticación.
      * 
-     * @param float $timestamp Timestamp.
+     * @param int $timestamp Timestamp.
      * @return boolean TRUE si se almacenó correctamente, FALSE si no.
      */
     public function setTimestamp($timestamp)
     {
-        if (self::isValid_timestamp($timestamp)) {
-            $this->timestamp = $timestamp;
-            return TRUE;
-        }
-        
-        return FALSE;
+        $this->timestamp = intval($timestamp);
+        return TRUE;
+//        if (self::isValid_timestamp($timestamp)) {
+//            $this->timestamp = $timestamp;
+//            return TRUE;
+//        }
+//        
+//        return FALSE;
     }
         
     /**

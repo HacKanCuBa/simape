@@ -30,7 +30,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.1
+ * @version 1.22
  */
 
 class Crypto
@@ -309,14 +309,9 @@ class Crypto
     public static function getRandomHexStr($lenght)
     {
         if (!empty($lenght) && is_int($lenght)) {
-            if ($lenght < 64) {
-                // Fuerza un mínimo criptográficamente seguro
-                $byteLen = 32;
-            } else {
-                $byteLen = (int) ($lenght / 2) + 1;
-            }
-            return substr(bin2hex(self::getRandomBytes($byteLen)), 
-                          0, $lenght);
+            // Fuerza un mínimo criptográficamente seguro
+            $byteLen = ($lenght < 64) ? 32 : intval(($lenght / 2) + 1);
+            return substr(bin2hex(self::getRandomBytes($byteLen)), 0, $lenght);
         }
         
         return FALSE;
@@ -362,6 +357,59 @@ class Crypto
     public static function getRandomIV()
     {
         return self::getRandomHexStr(self::IV_LEN);
+    }
+    
+    /**
+     * Devuelve un string de nombre de archivo aleatorio.<br />
+     * NOTA: NO crea el archivo, solo genera el nombre.
+     * 
+     * @param string $prefix [opcional]<br />
+     * Prefijo para el nombre de archivo.
+     * @param int $len [opcional]<br />
+     * Longitud de la parte aleatoria (sin considerar el prefijo).
+     * @param string $path [opcional]<br />
+     * Ruta completa a donde estará el archivo.
+     * @param boolean $secure [opcional]<br />
+     * Determina si se empleará una función aleatoria segura (lenta) o no (por defecto).
+     * @return string Nombre completo de archivo.
+     */
+    public static function getRandomFilename($prefix = '', 
+                                                $len = 9,
+                                                $path = '',                                               
+                                                $secure = FALSE
+    ) {
+        $len = intval($len);
+        $path = print_r($path, TRUE);
+        $prefix = print_r($prefix, TRUE);
+        $rand = $secure ? static::getRandomHexStr($len) : substr(str_shuffle(md5(mt_rand())), 0, $len);
+        return (($path ? ((substr($path, -1, 1) == '/') ? $path : $path . '/')  : '')
+                . $prefix
+                . $rand);
+    }
+
+    /**
+     * Devuelve la base de la contraseña de sistema, empleando los tokens fijos.
+     * @return string Base de la contraseña de sistema.
+     */
+    public static function getSystemPassword_base()
+    {
+        return static::getHash(SMP_TKN_SESSIONKEY 
+                                . SMP_TKN_FINGERPRINT 
+                                . SMP_TKN_FORM 
+                                . SMP_TKN_PAGE 
+                                . SMP_TKN_PWDRESTORE, 5);
+    }
+    
+    /**
+     * Devuelve la sal de la contraseña de sistema.  Si la misma no había sido 
+     * definida, genera una nueva.
+     * @return string Salt de la contraseña de sistema.
+     */
+    public static function getSystemPassword_salt()
+    {
+        Session::retrieve(SMP_SESSINDEX_SYSTEMPASSWORDSALT) ?: 
+            Session::store(SMP_SESSINDEX_SYSTEMPASSWORDSALT, static::getRandomTkn());
+        return Session::retrieve(SMP_SESSINDEX_SYSTEMPASSWORDSALT);
     }
 
     /**
@@ -411,24 +459,26 @@ class Crypto
      */
     public static function decrypt($encString, $password, $salt = NULL)
     {
-        if (isset($encString) && isset($password)
-            && is_string($password)
-            && is_string($salt)
-            && self::isEncrypted($encString)
-        ) {
-            $iv = self::getIV_fromEncParts(self::getEncParts($encString));
-            $encStr = self::getENC_fromEncParts(self::getEncParts($encString));
-            $password = self::makePasswdSalt($password, $salt);
-            
-            $decData = self::decryptStr($encStr, 
-                                         $password, 
-                                         $iv);
-            if ($decData) {
-                return self::decodeData($decData);
-            }
-            
+        if (self::isEncrypted($encString)) {
+            if (isset($encString) && isset($password)
+                && is_string($password)
+                && is_string($salt)
+            ) {
+                $iv = self::getIV_fromEncParts(self::getEncParts($encString));
+                $encStr = self::getENC_fromEncParts(self::getEncParts($encString));
+                $password = self::makePasswdSalt($password, $salt);
+
+                $decData = self::decryptStr($encStr, 
+                                             $password, 
+                                             $iv);
+                if ($decData) {
+                    return self::decodeData($decData);
+                }
+            }  
             return FALSE;
-        }  
+        }
+        // no es un string encriptado
+        return $encString;
     }
     
     /**

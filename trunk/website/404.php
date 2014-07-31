@@ -30,11 +30,16 @@ echo Page::getHeaderClose();
 echo Page::getMain();
 
 echo "\n\t\t<h2 style='text-align: center;font-weight: bold'>Error 404: P&aacute;gina no encontrada</h2>";
-echo "\n\t\t<br /><br />";
+echo "\n\t\t<br />";
 echo "\n\t\t<p style='text-align: center;font-style: italic'>La p&aacute;gina que est&aacute; "
      . "buscando no se encuentra en esta direcci&oacute;n.</p>";
 echo "\n\t\t<p style='text-align: center; font-style: italic'>Si lleg&oacute; aqu&iacute; "
      . "por medio de un enlace, contacte con un administrador del sistema.</p>";
+
+echo "\n\t\t<form style='text-align: center;' action='" . SMP_WEB_ROOT . "' method='post'>";
+echo "\n\t\t\t<p><input name='frm_btnCancelLogin' value='Ir a la p&aacute;gina inicial' " 
+             . "title='Ir a la p&aacute;gina inicial' type='submit' /></p>";
+echo "\n\t\t</form>";
 
 echo Page::getMainClose();
 echo Page::getFooter();

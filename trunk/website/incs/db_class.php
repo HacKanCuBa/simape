@@ -47,7 +47,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.31
+ * @version 1.32
  */
 class DB extends mysqli
 {     
@@ -285,12 +285,8 @@ class DB extends mysqli
     public function setQueryParams($queryParams)
     {    
         if (!empty($queryParams)) {
-            if (is_array($queryParams)) {
-                $queryP = $queryParams;
-            } else {
-                $queryP = array($queryParams);
-            }
-            $this->queryParams = $queryP;
+            $this->queryParams = is_array($queryParams) ? $queryParams : 
+                                                            array($queryParams);
             return TRUE;
         }
         

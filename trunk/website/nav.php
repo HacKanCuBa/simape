@@ -53,7 +53,7 @@ switch($action) {
     case SMP_LOGOUT:
         $usuario->sesionFinalizar();
         $page->setLocation('login.php');
-        $params = SMP_LOGOUT . "=true";
+        $params = [SMP_LOGOUT => 'TRUE'];
         break;
     
     case NULL:
@@ -90,7 +90,7 @@ switch($action) {
             // Si el usuario está loggeado, dirigirse a la pag solicitada con un
             // page token.
             // Si no esta loggeado, darán error las comprobaciones
-            if ($usuario->authenticateSession()) {
+            if ($usuario->sesionAutenticar()) {
                 // Login OK
                 // Page Token
                 $page->generateRandomToken();
@@ -105,7 +105,7 @@ switch($action) {
                                                 $page->getTimestamp());
                 
                 // Paso por GET el Page Token
-                $params = "pagetkn=" . $page->getToken();
+                $params = SMP_SESSINDEX_PAGE_TOKEN . '=' . $page->getToken();
             } else {
                 $page->setLocation('403.php');
             }

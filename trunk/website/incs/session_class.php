@@ -45,7 +45,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.42
+ * @version 1.44
  */
 class Session
 {
@@ -158,18 +158,6 @@ class Session
         //return $name;
     }
     
-    /**
-     * Devuelve la base de la contraseña de sistema, empleando los tokens fijos.
-     * @return string Base de la contraseña de sistema.
-     */
-    protected static function getSystemPassword_base()
-    {
-        return Crypto::getHash(SMP_TKN_SESSIONKEY 
-                                . SMP_TKN_FINGERPRINT 
-                                . SMP_TKN_FORM 
-                                . SMP_TKN_PAGE 
-                                . SMP_TKN_PWDRESTORE, 1);
-    }
     // __ PUB
     /**
      * Inicia o continúa una sesión.  Ante cada inicio, regenera el ID 
@@ -233,7 +221,7 @@ class Session
                     }
                 }
                 
-                $_SESSION[$key] = $value;
+                $_SESSION[$key] = serialize($value);
                 return TRUE;     
             }
         }
@@ -302,7 +290,7 @@ class Session
                 && (is_int($key) || is_string($key))
             ) {
                 if (isset($_SESSION[$key])) {
-                    $retVal = $_SESSION[$key];
+                    $retVal = unserialize($_SESSION[$key]);
                     if (Crypto::isEncrypted($retVal)) {
                         if (!empty($password)) {
                             $retVal = Crypto::decrypt($retVal, $password, $salt);
@@ -475,13 +463,9 @@ class Session
      * @tutorial https://code.google.com/p/simape/wiki/ModeloSeguridad
      */
     public function useSystemPassword()
-    {
-        // en la primer ejecución, se guardará una nueva random salt
-        self::retrieve(SMP_SESSINDEX_SYSTEMPASSWORDSALT) ?: 
-                self::store(SMP_SESSINDEX_SYSTEMPASSWORDSALT, Crypto::getRandomTkn());
-        
-        $this->password = self::getSystemPassword_base();
-        $this->password_salt = self::retrieve(SMP_SESSINDEX_SYSTEMPASSWORDSALT);
+    {        
+        $this->password = Crypto::getSystemPassword_base();
+        $this->password_salt = Crypto::getSystemPassword_salt();
     }
 
     /**

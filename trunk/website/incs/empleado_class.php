@@ -33,7 +33,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.11
+ * @version 0.12
  */
 class Empleado 
 {
@@ -348,18 +348,19 @@ class Empleado
      * 
      * @return boolean TRUE si se recuperó correctamente, FALSE si no.
      */
-    public function retrieve_fromDB_Empleado()
+    public function retrieve_fromDB()
     {
-        $searchParams = array($this->Empleado['EmpleadoId'], 
-                            $this->Empleado['Legajo'], 
-                            $this->Empleado['Email']);
-        foreach ($searchParams as $searchP) {
-            $empleado = static::retrieve_tblEmpleado($searchP);
-            if (is_array($empleado) && !empty($empleado)) {
-                $this->Empleado = $empleado;
-                return TRUE;
-            }
-        }
-        return FALSE;
+        return TRUE;
+//        $searchParams = array($this->Empleado['EmpleadoId'], 
+//                            $this->Empleado['Legajo'], 
+//                            $this->Empleado['Email']);
+//        foreach ($searchParams as $searchP) {
+//            $empleado = static::retrieve_tblEmpleado($searchP);
+//            if (is_array($empleado) && !empty($empleado)) {
+//                $this->Empleado = $empleado;
+//                return TRUE;
+//            }
+//        }
+//        return FALSE;
     }
 }

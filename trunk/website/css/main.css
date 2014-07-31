@@ -32,7 +32,7 @@ body {
     	width: auto;
 	/*margin: 100px;*/
 	color: #666;
-        font: normal .8em/1.5em Arial, Helvetica, sans-serif;
+        font: normal 1em/1.5em Arial, Helvetica, sans-serif;
         background: #e0e0e0; /*url('/simape/imgs/simape_logo_text.png') no-repeat center center; */   
         height: 100%;
 }
@@ -63,6 +63,34 @@ body {
     position: relative;
 }
 
+/**/
+
+/* Tablas */
+thead {
+    font-size: medium;
+}
+/**/
+
+/* Tabla ficha */
+.ficha {
+    border: 1px solid black;
+    border-spacing: 0px;
+    text-align: center; 
+    margin: auto; 
+    width: auto;
+}
+
+.ficha thead {
+    font-size: medium;
+}
+
+.ficha td {
+    border: 1px solid black;
+    border-spacing: 0px;
+    padding: 3px;
+    font-family: sans-serif;
+    font-size: small;
+}
 /**/
 
 /* Error msg */ 

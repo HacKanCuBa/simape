@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.33
+ * @version 1.34
  */
 
 /*
@@ -66,9 +66,14 @@ const LOGIN_SESSINDEX_CAPTCHA = 'CAPTCHA';
 const LOGIN_ERR_RESTORETKN = '&iexcl;El token de restablecimiento de contrase&ntilde;a no es v&aacute;lido!';
 
 /**
+ * Página por defecto al loggearse.
+ */
+define('LOGIN_LOC_LOGEDIN', SMP_LOC_PAGS . 'saper.php');
+
+/**
  * Constantes que manejan lo que será mostrado al usuario.
  */
-const LOGIN_DISPLAY_DEFAULT = NULL;
+const LOGIN_DISPLAY_DEFAULT = 0;
 const LOGIN_DISPLAY_PWDRESTORE_FORM = 1;
 const LOGIN_DISPLAY_PWDRESTORE_ERROR = 2;
 const LOGIN_DISPLAY_PWDRESTORE_OK = 3;
@@ -92,11 +97,12 @@ $session = new Session;
 $formToken = new FormToken;
 
 // Recuperar el nombre de usuario
-$username = trim(Sanitizar::glPOST('frm_txtLogin'));
-if (empty($username)) {
-    $username = trim(Sanitizar::glGET('username'));
-}
+$session->useSystemPassword();
+$username = trim(Sanitizar::glPOST('frm_txtLogin')) ?: 
+                $session->retrieveEnc(SMP_SESSINDEX_USERNAME);
 
+// TODO hay un error en esta funcion! si el nombre de usuario es valido, se cuelga todo y no se ve ningun error :S
+// error en metodo rtreive_fromDB
 $usuario = new Usuario($username);
 
 if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
@@ -111,7 +117,6 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
         $formToken->prepare_to_auth(Sanitizar::glPOST(SMP_SESSINDEX_FORM_TOKEN), 
                             $session->retrieve(SMP_SESSINDEX_FORM_RANDOMTOKEN), 
                             $session->retrieve(SMP_SESSINDEX_FORM_TIMESTAMP));
-        
         // Ejecuto la autenticación de la contraseña aún si el form
         // token no valida, para evitar Timing Oracle.
         if($usuario->authenticatePassword() 
@@ -120,7 +125,7 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
             // Login OK 
             if($usuario->sesionIniciar()) {
                 // Sesion iniciada, ir a la pagina de inicio del usuario
-                $nav = SMP_HOME;
+                $nav = LOGIN_LOC_LOGEDIN;
             } else {
                 // Falló
                 Session::store(SMP_SESSINDEX_NOTIF_ERR, 'Ha ocurrido un error '
@@ -232,9 +237,7 @@ if (isset($login_atempt)) {
 }
 
 // Token de formulario
-$formToken->generateRandomToken();
-$formToken->generateTimestamp();
-$formToken->generateToken();
+$formToken->generate();
 Session::store(SMP_SESSINDEX_FORM_RANDOMTOKEN, $formToken->getRandomToken());
 Session::store(SMP_SESSINDEX_FORM_TIMESTAMP, $formToken->getTimestamp());
 // -- --

@@ -32,14 +32,12 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @uses excel_reader2 Clase lectora de archivos XLS
- * @version 0.1
+ * @uses PHPExcel Clase lectora de archivos XLS
+ * @version 0.12
  */
 
-include SMP_FS_ROOT  . SMP_LOC_INCS . 'phpexcel/PHPExcel/IOFactory.php';
-
 class Saper extends Curl
-{
+{   
     // URL = PROTOCOL://SERVER/ROOT/<page>
     const PROTOCOL = 'http';
     const SERVER = '10.1.0.7:7778';
@@ -50,35 +48,62 @@ class Saper extends Curl
     const USR_TIPO = 'A';
     
     const P_LOGIN = 'ValidaLoginAction.do';
-    const P_CARGOSAGENTES = 'MenuPrincipal.do'; // http://10.1.0.7:7778/saper/MenuPrincipal.do?apellidoABuscar=...
-    const P_CARGOSAGENTES2 = 'ConsultasAgenteAction.do';
+    //const P_CARGOSAGENTES = 'MenuPrincipal.do'; // http://10.1.0.7:7778/saper/MenuPrincipal.do?apellidoABuscar=...
+    const P_CARGOSAGENTES = 'ConsultasAgenteAction.do';
     const P_ACTION = 'SistemaDigitalAction.do';
+    const P_DETALLE = 'verDetalleAgenteSeleccionado.do';
     
     const LOGIN_FORM_USR = 'usuario';
     const LOGIN_FORM_PWD = 'password';
     const LOGIN_FORM_TYPE = 'tipoUsuario';
     
     // URL = PROTOCOL://SERVER/ROOT/P_ACTION/CMD_ACTION+PARAM;
-    // http://10.1.0.7:7778/saper/SistemaDigitalAction.do?method=exportarInformeIndividual&fichajeMes=Calendario&tipo=PDF&legajo=...&interno=1&anio=2014&mes=Febrero
-    const METHOD_CMD = 'method';
-    const METHOD_ACTION_INFINDIVIDUAL = 'exportarInformeIndividual'; /* method= */
-    
+    // http://10.1.0.7:7778/saper/SistemaDigitalAction.do?method=exportarInformeIndividual&fichajeMes=Calendario&tipo=XLS&legajo=...&interno=1&anio=2014&mes=Febrero    
+    // NOTA: el parámetro legajo= debe llevar construirse así: <N> . <DNI>
+    // (un nro seguido del nro de documento, dnd ese nro es el tipo de doc (DNI/LC/LE/etc))
+    // quien hizo esa bosta!?
+    const FORMAT_XLS = 'XLS';
+    const FORMAT_PDF = 'PDF';
+
     const FICHAJE_CMD = 'fichajeMes';
     const FICHAJE_ACTION = 'Calendario'; /* fichajeMes= */
     const FICHAJE_PARAM_ANIO = 'anio';
     const FICHAJE_PARAM_MES = 'mes';
     
-    const BUSQUEDA_PARAM_DNI = 'dniABuscar';
-    const BUSQUEDA_PARAM_NOMBRE = 'nombreABuscar';
-    const BUSQUEDA_PARAM_APELLIDO = 'apellidoABuscar';
-    const BUSQUEDA_PARAM_LEGAJO = 'legajoMostrarABuscar';
-    const BUSQUEDA_PARAM_ESTADO = 'estadoABuscar';
-    const BUSQUEDA_BTN = 'bus';
+    const BUSCAR_DNI = 0;
+    const BUSCAR_NOMBRE = 1;
+    const BUSCAR_APELLIDO = 2;
+    const BUSCAR_LEGAJO = 3;
     
+    const ESTADO_ACTIVO = 'A';
+    const ESTADO_BAJA = 'B';
+    
+    const DNI_SEARCH_STR = "onchange='eleccionOpcion(this,";
+    
+    /**
+     * Array de agentes encontrados por la búsqueda.
+     * @var array
+     */
+    protected $Agentes = array();
+    
+    /**
+     * Ruta al archivo de ficha.
+     * @var string
+     */
+    protected $Ficha_fname = '';
+    
+    /**
+     * Ficha del agente como objeto.
+     * @var SaperFicha
+     */
+    protected $Ficha;
+
     // __SPECIALS
     function __construct() 
     {
         parent::__construct();
+        require_once SMP_FS_ROOT . SMP_LOC_INCS . 'phpexcel/PHPExcel.php';
+        $this->Ficha = new SaperFicha;
     }
     // __PRIV
     
@@ -95,6 +120,17 @@ class Saper extends Curl
                 . $page;
     }
     
+    // __PUB
+    /**
+     * Array de agentes encontrados por buscarAgentes.
+     * @return array Agentes.
+     * @see buscarAgentes
+     */
+    public function getAgentes()
+    {
+        return $this->Agentes;
+    }
+    
     public function login()
     {
         $url = static::urlMake(self::P_LOGIN);
@@ -103,10 +139,221 @@ class Saper extends Curl
                         self::LOGIN_FORM_PWD => urlencode(self::USR_PWD),
                         self::LOGIN_FORM_TYPE => urlencode(self::USR_TIPO)
         );
+        $options = array(
+            CURLOPT_FRESH_CONNECT => 1,
+            CURLOPT_FORBID_REUSE => 0,
+            CURLOPT_COOKIESESSION => 1,
+            CURLOPT_HEADER => 1
+        );
         
-        $this->post($url, $post);
+        return $this->post($url, $post, $options);
+    }
+    
+    /**
+     * Busca agentes en base a un parámetro determinado y el estado del mismo.
+     * El resultado se almancena en el objeto.
+     * @param int $tipobusqueda Tipo de búsqueda:<br />
+     * <ul>
+     * <li>BUSCAR_DNI</li>
+     * <li>BUSCAR_NOMBRE</li>
+     * <li>BUSCAR_APELLIDO</li>
+     * <li>BUSCAR_LEGAJO</li>
+     * </ul>
+     * @param mixed $valor Valor del parámetro buscado.  
+     * <i>INT</i> para DNI y Legajo, <i>STRING</i> para Nombre y Apellido.
+     * @param bool $estado [opcional]<br />
+     * Estado del agente buscado: ESTADO_ACTIVO para Activo (por defecto), 
+     * ESTADO_BAJA para Baja.
+     * @return boolean TRUE si tuvo éxito, FALSE si no.
+     * @see getAgentes
+     */
+    public function buscarAgentes($tipobusqueda, 
+                                    $valor, 
+                                    $estado = self::ESTADO_ACTIVO)
+    {        
+        $estado = ($estado == self::ESTADO_ACTIVO) ? $estado : 
+                    (($estado == self::ESTADO_BAJA) ? $estado : self::ESTADO_ACTIVO);
+        $url = static::urlMake(self::P_CARGOSAGENTES);
+        $options = array(
+                        CURLOPT_FRESH_CONNECT => 0,
+                        CURLOPT_FORBID_REUSE => 0,
+                        CURLOPT_COOKIESESSION => 0,
+                        CURLOPT_FOLLOWLOCATION => 1,
+                        CURLOPT_HEADER => 1,
+        );
+        
+        $post = array(
+                        'apellidoABuscar' => urlencode(NULL),
+                        'cargosABuscar' => urlencode('A'),
+                        'dniABuscar' => urlencode(NULL),
+                        'estadoABuscar' => urlencode($estado),
+                        'idCodigoDependecia' => urlencode('23'),
+                        'legajo' => urlencode(NULL),
+                        'legajoMostrarABuscar' => urlencode(NULL),
+                        'nombreABuscar' => urlencode(NULL),
+                        'tipoBusquedaAgente' => urlencode('porAgente'),
+                        'tipoDocumentoABuscar' => urlencode(1)
+        );
+        
+        switch ($tipobusqueda) {
+            case self::BUSCAR_DNI:
+                $post['dniABuscar'] = urlencode($valor);
+                break;
+
+            case self::BUSCAR_NOMBRE:
+                $post['nombreABuscar'] = urlencode($valor);
+                break;
+
+            case self::BUSCAR_APELLIDO:
+                $post['apellidoABuscar'] = urlencode($valor);
+                break;
+
+            case self::BUSCAR_LEGAJO:
+                $post['legajoMostrarABuscar'] = urlencode($valor);
+                break;
+
+            default :
+                return FALSE;
+        }
+
+        if ($this->post($url, $post, $options)) {
+            // recuperar los resultados de la busqueda
+            $raw_data = array_values(
+                            array_filter(
+                                explode(' ', 
+                                    str_ireplace("\r", ' ', 
+                                        str_ireplace("\n", ' ', 
+                                            str_ireplace("\t", ' ', 
+                                                trim(
+                                                    filter_var($this->result,
+                                                                FILTER_SANITIZE_STRING, 
+                                                                    FILTER_FLAG_STRIP_LOW 
+                                                                    || FILTER_FLAG_STRIP_HIGH))))))));
+            //var_dump($raw_data);
+            $this->Agentes = array();
+            $agentes_index = 0;
+            
+            foreach ($raw_data as $key => $value) {
+                if(strstr($value, 'B&uacute;squeda:')) {
+                    // BASE de búsqueda
+                    // 1° resultado (legajo): BASE + 9
+                    // 2° resultado (legajo): Fin_1° (Activo/No Activo) + 32
+                    // 3° resultado (legajo): Fin_2° (Activo/No Activo) + 32
+                    // ...
+                    // i° resultado: Fin_(i-1)° + 32
+                    $raw_data_index = $key + 9;
+                    while (isset($raw_data[$raw_data_index]) 
+                            && (intval($raw_data[$raw_data_index]) > 0)
+                    ) {
+                        while ($raw_data[$raw_data_index] != 'Ver') {
+                            $this->Agentes[$agentes_index][] = $raw_data[$raw_data_index];
+                            $raw_data_index++;
+                        }
+                        $raw_data_index += 31; // se incrementó en 1 previamente
+                        $agentes_index++; 
+                    }
+                    break;
+                }
+            }
+            
+            if ($agentes_index > 0) {
+                // recuperar DNI
+                //buscar: "onchange='eleccionOpcion(this,1,"
+                //hasta: ","
+                //lo del medio será el DNI
+                $len = strlen($this->result);
+                $dni_fpos = 0;
+                $agentes_index = 0;
+                for ($ipos = 0; $ipos < $len; $ipos = $dni_fpos) {
+                    $dni_ipos = strpos($this->result, self::DNI_SEARCH_STR, $ipos) + strlen(self::DNI_SEARCH_STR);
+                    if($dni_ipos > strlen(self::DNI_SEARCH_STR)) {
+                        $dni_fpos = strpos($this->result, ',', $dni_ipos + 2);
+                        $dni = explode(',', substr($this->result, $dni_ipos, $dni_fpos - $dni_ipos));
+                        $this->Agentes[$agentes_index][] = $dni[0];
+                        $this->Agentes[$agentes_index][] = $dni[1];
+                        $agentes_index++;
+                    } else {
+                        break;
+                    }
+                }
+                return TRUE;
+            }
+        }
+        
+        return FALSE;
     }
 
+    /**
+     * Recupera la ficha el agente seleccionado y la almacena en el objeto.
+     * 
+     * @see getFicha
+     * @see printFicha
+     * @param int $doc Tipo y nro. de documento.
+     * @param int $year Nro. del año.
+     * @param int $month Nro. del mes.
+     * @param string $format Formato exportado: FORMAT_XLS (por defecto) o 
+     * FORMAT_PDF.
+     * @return boolean TRUE si tuvo éxito, FALSE si no.
+     */
+    public function retrieveFicha($doc, $year, $month, $format = self::FORMAT_XLS)
+    {
+        $format = ($format == self::FORMAT_XLS) ? $format : 
+                    (($format == self::FORMAT_PDF) ? $format : self::FORMAT_XLS);
 
-    // __PUB
+        $url = static::urlMake(self::P_ACTION);
+        
+        $options = array(
+                    CURLOPT_FRESH_CONNECT => 0,
+                    CURLOPT_FORBID_REUSE => 0,
+                    CURLOPT_COOKIESESSION => 0,
+                    CURLOPT_FOLLOWLOCATION => 1,
+                    CURLOPT_HEADER => 0,
+                    CURLOPT_TIMEOUT => 120,
+        );
+        $params = array(
+                        'method' => urlencode('exportarInformeIndividual'),
+                        'fichajeMes' => urlencode('Calendario'),
+                        'interno' => urlencode(1),
+                        'tipo' => urlencode($format),
+                        'legajo' => urlencode($doc),
+                        'anio' => urlencode($year),
+                        'mes' => urlencode($month)
+        );
+        
+        if ($this->get($url, $params, $options)) {
+            $fname = Crypto::getRandomFilename('SMPFICHAJE', 9, SMP_FS_ROOT . SMP_LOC_TMPS);
+            if(file_put_contents($fname, $this->result, LOCK_EX)) {
+                unset($this->result);
+                $this->Ficha->read_xls($fname);
+                unlink($fname);
+                return TRUE;
+            }
+        }
+        
+        return FALSE;        
+    }
+    
+    /**
+     * Devuelve la ficha previamente cargada del agente como array.
+     * @return SaperFicha La ficha como objeto SaperFicha o NULL.
+     */
+    public function getFicha()
+    {
+        return (isset($this->Ficha) ? $this->Ficha : NULL);
+    }
+    
+    /**
+     * Almacena la ficha si es un objeto.
+     * @param SaperFicha $ficha Objeto a almacenar.
+     * @return boolean TRUE si se almacenó correctamente, FALSE si no.
+     */
+    public function setFicha($ficha)
+    {
+        if (isset($ficha) && is_a($ficha, 'SaperFicha')) {
+            $this->Ficha = $ficha;
+            return TRUE;
+        }
+        
+        return FALSE;
+    }
 }
