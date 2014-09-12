@@ -27,33 +27,60 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.5
+ * @version 0.6
  */
 
 /**
  * Calcula las horas extras del agente.
  * 
  * @param array $ficha ficha del SAPER del agente.
- * @param array $entrada array con la hora de entrada por dia (formato HH:MM:SS), 
+ * @param array $entrada_diaria array con la hora de entrada por dia (formato HH:MM:SS), 
  * donde lunes es 0 viernes 4.
  * 
  * @return array|NULL array de horas extra por día, 
  * donde el total se ubica en la última posición, o NULL en caso de error.
  */
-function calcExtras(SaperFicha $ficha, array $entrada)
+function calcExtras(SaperFicha $ficha, array $entrada_diaria)
 {
     try {
         $extras = array();
         $total = 0;
         
         foreach ($ficha->get_asArray() as $dia) {
+            // insertar en un unico array las hs de entrada y salida y las 
+            // leidas del descargo (si hubiese), en cualquier orden.
+            // luego determinar la mayor y la menor y realizar la operación.
+            $fichajes_raw = array_merge(
+                                preg_split('/[\s,\x0B,\x0D,\x0A,.]+/i', $dia[1]), 
+                                preg_split('/[\s,\x0B,\x0D,\x0A,.]+/i', $dia[2]),
+                                explode(" ", $dia[8])
+            );
+//            var_dump($fichajes_raw);
+            $entro = 0;
+            $salio = 0;
+            foreach ($fichajes_raw as $fichaje) {
+                $fichaje_obj = DateTime::createFromFormat("Y-m-d e H#i#s", 
+                                            "1970-01-01 -0000 " . $fichaje) ?: 
+                                DateTime::createFromFormat("Y-m-d e H#i", 
+                                            "1970-01-01 -0000 " . $fichaje);
+                    
+//                var_dump($fichaje_obj);
+                // sera FALSE si no habia fichaje valido
+                if ($fichaje_obj) {
+                    $fichaje = $fichaje_obj->getTimestamp();
+                    if ($fichaje < $entro || empty($entro)) {
+                        $entro = $fichaje;
+                    } elseif ($fichaje > $salio || empty($salio)) {
+                        $salio = $fichaje;
+                    }
+                }
+            }
+
             $extra = 0;
-            $entro = DateTime::createFromFormat("Y-m-d e H#i#s", "1970-01-01 -0000 " . $dia[1]);
-            $salio = DateTime::createFromFormat("Y-m-d e H#i#s", "1970-01-01 -0000 " . $dia[2]);
-            // descarto dias donde falte algun fichaje
+            // descarto dias donde no se encuentre ningun fichaje valido
             if ($entro && $salio) {
                 $fecha = DateTime::createFromFormat("d#m#Y", $dia[0]);
-                $entra = $entrada[intval(date("N", $fecha->getTimestamp())) - 1];
+                $entra = $entrada_diaria[intval(date("N", $fecha->getTimestamp())) - 1];
                 // si x algun motivo no figura la hra de entrada, fijo a 7:30
                 $horaEntrada = DateTime::createFromFormat("Y-m-d e H#i#s", "1970-01-01 -0000 " . $entra) ?: (DateTime::createFromFormat("Y-m-d e H#i", "1970-01-01 -0000 " . $entra) ?: new DateTime);
                 $horaEntrada = ($horaEntrada->getTimestamp() > 0) ? $horaEntrada->getTimestamp() : 27000;
@@ -63,7 +90,7 @@ function calcExtras(SaperFicha $ficha, array $entrada)
                 // siempre y cuando haya cumplido mas de 6hs de trabajo
                 // debe ser mayor a 1h
                 // no se cuenta el tiempo antes de la hr de entrada
-                $extra = $salio->getTimestamp() - (($entro->getTimestamp() < $horaEntrada) ? $horaEntrada : $entro->getTimestamp()) - 21600;
+                $extra = $salio - (($entro < $horaEntrada) ? $horaEntrada : $entro) - 21600;
             }
             $extras[] = ($extra <= 0) ? '-' : (($extra >= 3600) ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $extra)->format('H:i:s') : '&lt; 1h');
             $total += ($extra >= 3600) ? $extra : 0;
@@ -81,7 +108,7 @@ function calcExtras(SaperFicha $ficha, array $entrada)
     }
 }
 
-require_once 'load.php';
+require_once '../load.php';
 
 $session = new Session;
 
@@ -138,7 +165,7 @@ if ($page->authenticateToken()
                     $display = SAPER_DISPLAY_NORESULT;
                 }
             } else {
-                Session::store(SMP_SESSINDEX_NOTIF_ERR, 'Error: SAPER login.  Contacte a un administrador');
+                Session::store(SMP_SESSINDEX_NOTIF_ERR, 'Error grave en SAPER login: ' . $saper->getError() . '. Contacte a un administrador.');
             }
         } elseif (!empty(Sanitizar::glPOST('frm_btnCalcular'))) {
             $ficha = Session::retrieve(SAPER_SESSINDEX_FICHA);
@@ -148,7 +175,7 @@ if ($page->authenticateToken()
                 $saper = new Saper;
                 if ($saper->login()) { 
                     if($saper->retrieveFicha(Sanitizar::glPOST('frm_radAgente'), 
-                                                    Sanitizar::glPOST('frm_txtYear'), 
+                                                    (Sanitizar::glPOST('frm_txtYear') ?: date("Y")), 
                                                     Sanitizar::glPOST('frm_optMes'))
                     ) {
                         $ficha = $saper->getFicha();
@@ -162,6 +189,7 @@ if ($page->authenticateToken()
                 Session::store(SAPER_SESSINDEX_HINI, $entrada);
             }
             if (is_a($ficha, 'SaperFicha')) {
+//                var_dump($ficha);
                 $extras = calcExtras($ficha, $entrada);
                 $ficha->add_column('Horas Extra', $extras);
                 $fichaje = $ficha->get_asArray();
@@ -239,12 +267,12 @@ switch($display) {
         echo "\n\t\t\t\t\t\t</td>";
         echo "\n\t\t\t\t\t</tr>";
         
-        foreach ($agentes as $agente) {
+        foreach ($agentes as $ord => $agente) {
             echo "\n\t\t\t\t\t<tr>";
             echo "\n\t\t\t\t\t\t<td colspan='2' style='text-align: center;'>";
             end($agente);
             $doc_key = key($agente) - 1;
-            echo "\n\t\t\t\t\t\t\t<input type='radio' name='frm_radAgente' value='" . $agente[$doc_key] . $agente[$doc_key + 1] . "'>";
+            echo "\n\t\t\t\t\t\t\t<input type='radio' name='frm_radAgente' value='" . $agente[$doc_key] . $agente[$doc_key + 1] . "'" . (empty($ord) ? ' checked' : '') . ">";
             foreach ($agente as $key => $valor) {
                 if ($key < $doc_key) {
                     echo $valor . "\t";
@@ -268,7 +296,7 @@ switch($display) {
         echo "\n\t\t\t\t\t\t<td style='text-align: center;'>";
         echo "\n\t\t\t\t\t\t\t<br />";
         echo "\n\t\t\t\t\t\t\t<select name='frm_optMes'>";
-        for ($i = 1; $i < 13; $i ++) {
+        for ($i = 1; $i < 13; $i ++) {  
             $mes = ucfirst(strftime('%B', strtotime($i . '/01/2014')));
             echo "\n\t\t\t\t\t\t\t\t<option value='" . $mes . "'>" . $mes . "</option>";
         }
@@ -276,7 +304,7 @@ switch($display) {
         echo "\n\t\t\t\t\t\t</td>";
         echo "\n\t\t\t\t\t\t<td style='text-align: center;'>";
         echo "\n\t\t\t\t\t\t\t<br />";
-        echo "\n\t\t\t\t\t\t\t<input type='number' name='frm_txtYear' placeholder='A&ntilde;o'>";
+        echo "\n\t\t\t\t\t\t\t<input type='number' name='frm_txtYear' placeholder='A&ntilde;o' value='" . date("Y") . "'>";
         echo "\n\t\t\t\t\t\t</td>";
         echo "\n\t\t\t\t\t</tr>";
         
@@ -335,7 +363,7 @@ switch($display) {
         echo "\n\t\t\t\t\t<tr>";
         $horaInicio = Session::retrieve(SAPER_SESSINDEX_HINI) ?: ["07:30:00", "07:30:00", "07:30:00", "07:30:00", "07:30:00"];
         for ($i = 0; $i < 5; $i++) {
-            echo "\n\t\t\t\t\t\t<td><input type='time' name='frm_txtHoraIni[" . $i . "]' placeholder='Hora inicio' value='" . $horaInicio[$i] . "'>";
+            echo "\n\t\t\t\t\t\t<td><input type='time' size='5' name='frm_txtHoraIni[" . $i . "]' placeholder='Hora inicio' value='" . $horaInicio[$i] . "'>";
             echo "\n\t\t\t\t\t\t</td>";
         }
         echo "\n\t\t\t\t\t</tr>";
