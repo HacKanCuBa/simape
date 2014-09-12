@@ -33,7 +33,7 @@
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @uses PHPExcel Clase lectora de archivos XLS
- * @version 0.12
+ * @version 0.2
  */
 
 class Saper extends Curl
@@ -192,7 +192,7 @@ class Saper extends Curl
                         'legajoMostrarABuscar' => urlencode(NULL),
                         'nombreABuscar' => urlencode(NULL),
                         'tipoBusquedaAgente' => urlencode('porAgente'),
-                        'tipoDocumentoABuscar' => urlencode(1)
+                        'tipoDocumentoABuscar' => urlencode(NULL)
         );
         
         switch ($tipobusqueda) {
@@ -257,10 +257,11 @@ class Saper extends Curl
             }
             
             if ($agentes_index > 0) {
-                // recuperar DNI
-                //buscar: "onchange='eleccionOpcion(this,1,"
+                // recuperar DNI/CI/LC/LE
+                //buscar: "onchange='eleccionOpcion(this,1/2/3/4," 
+                //segun tipo doc respectivamente
                 //hasta: ","
-                //lo del medio será el DNI
+                //lo del medio será el doc
                 $len = strlen($this->result);
                 $dni_fpos = 0;
                 $agentes_index = 0;
