@@ -56,7 +56,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.32
+ * @version 1.34
  */
 class Page
 {  
@@ -307,18 +307,28 @@ class Page
 
     // __ PUB
     /**
+     * Devuelve la ruta completa a la hoja de estilos por defecto.
+     * @return string Ruta completa a la hoja de estilos por defecto.
+     */
+    public static function getDefaultStylesheet() 
+    {
+        return SMP_LOC_CSS . self::STYLESHEET_DEFAULT . '.css';
+    }
+
+    /**
     * Devuelve el head del documento HTML.
     * Debe continuarse con getBody, que cierra head y abre body.
     * 
     * @see getBody()
     * @param string $title Título de la página.
-    * @param array $stylesheet Array de nombres de hojas de estilos que serán 
-    * cargadas, con la forma: ['miCss1', 'miCss2',...].<br />
+    * @param array|string $stylesheet Array de nombres de hojas de estilos que serán 
+    * cargadas, con la forma: ['miCss1', 'miCss2', ...]. <br />
+    * O bien, un string de nombres separado por comas: "miCss1,miCss2,..."<br />
     * De no indicar ninguna, se cargará STYLESHEET_DEFAULT.<br />
     * @return string Encabezado del documento HTML debidamente formateado para
     * ser usado con echo().
     */
-    public static function getHead($title, array $stylesheet = NULL) 
+    public static function getHead($title, $stylesheet = NULL) 
     {
         if (isset($title) && self::isValid_title($title)) {
             $titulo = $title;
@@ -336,26 +346,38 @@ class Page
                 . "\n\t<link rel='icon' type='image/ico' href='" 
                 . SMP_WEB_ROOT . self::FAVICON . ".ico' />";
           
-        if (empty($stylesheet)) {
-            $code .= "\n\t<link rel='stylesheet' type='text/css' ";
-            $code .= "href='" . SMP_WEB_ROOT . SMP_LOC_CSS;
-            $code .= self::STYLESHEET_DEFAULT . ".css' />";
-        } else {/*elseif (is_array($stylesheet)) {*/
-            foreach ($stylesheet as $css) {
+        if (is_string($stylesheet)) {
+            $stylesheets = explode(',', $stylesheet);
+        } elseif (empty($stylesheet)) {
+            $stylesheets = [ self::STYLESHEET_DEFAULT ];
+        }
+        
+        // si no es un array, es pq el argumento recibido es invalido.
+        if (is_array($stylesheets)) {
+            foreach ($stylesheets as $css) {
                 if (self::isValid_cssFName($css)) {
-                    $cssFullName = SMP_WEB_ROOT . SMP_LOC_CSS . $css . '.css';
-                    if (file_exists($cssFullName)) {
+                    $cssFullName = SMP_LOC_CSS . $css . '.css';
+                    if (file_exists(SMP_FS_ROOT . $cssFullName)) {
                         $code .= "\n\t<link rel='stylesheet' type='text/css' ";
-                        $code .= "href='" . $cssFullName . "' />";
+                        $code .= "href='" . SMP_WEB_ROOT . $cssFullName . "' />";
+                    } else {
+                        throw new Exception('No se encuentra el archivo de hoja de estilos indicado: ' . SMP_FS_ROOT . $cssFullName, E_USER_NOTICE);
                     }
                 }
             }
         }
-        
+               
         return $code;
     }
+    
+//    public function getStylesheet()
+//    {
+//        foreach ($this->stylesheet as $css) {
+//            
+//        }
+//    }
 
-   /**
+    /**
     * Devuelve el cierre de head y apertura de body.
     * Debe continuarse con getHeader, que carga el encabezado.
     * 
@@ -381,8 +403,7 @@ class Page
                 . self::HEADER_IMG . "' alt='CSJN - CMF - SIMAPE' "
                 . "title='Corte Suprema de Justicia de la Naci&oacute;n - "
                 . "A&ntilde;o de su Sesquicentenario - Cuerpo "
-                . "M&eacute;dico Forense - SiMaPe' id='img_header' "
-                . "height='120px' width='850px'/>";
+                . "M&eacute;dico Forense - SiMaPe' id='img_header' />";
     }
 
     /**
@@ -535,7 +556,7 @@ class Page
      * Cierra el cuerpo de la página.<br />
      * Debe ir antes de getFooter() y después de getMain().
      * 
-     * @return string Código HTML de cierre de la página.
+     * @return string Código HTML de cierre del cuerpo de la página.
      */
     public static function getMainClose() 
     {
@@ -543,9 +564,9 @@ class Page
     }
 
     /**
-     * Cierra por completo la página, no debe haber nada despues de éste.
+     * Agrega el pie de página.  Debe continuarse con getBodyClose().
      * 
-     * @return string Código HTML de cierre completo de la página.
+     * @return string Código HTML de pie de página.
      */
     public static function getFooter() 
     {
@@ -553,8 +574,17 @@ class Page
                 . "\n\t\t<span class='pi_hidden'>"
                 . "SiMaPe: GNU GPL v3.0 (C) 2013 Iv&aacute;n Ariel Barrera Oro"
                 . "</span><span class='pi_visible'>π</span>"
-                . "\n\t</p>"
-                . "\n</body>"
+                . "\n\t</p>";
+    }
+    
+    /**
+     * Cierra por completo la página, no debe haber nada despues de éste.
+     * 
+     * @return string Código HTML de cierre completo de la página.
+     */
+    public static function getBodyClose() 
+    {
+        return "\n</body>"
                 . "\n</html>";
     }
     

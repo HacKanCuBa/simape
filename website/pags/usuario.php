@@ -29,7 +29,7 @@
  * - Separar errores y mostrar mensajes apropiados
  */
 
-if (!defined('CONFIG')) { require_once 'loadconfig.php'; }
+require_once '../load.php';
     
 session_start();
 

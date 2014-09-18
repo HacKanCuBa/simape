@@ -27,8 +27,37 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.6
+ * @version 0.7
  */
+
+/**
+ * 
+ * @param string $string String conteniendo la hora en la forma de "HH#MM#SS" 
+ * o "HH#MM" donde # es un simbolo separador cualquiera.
+ * @param boolean $getAsObject TRUE para devolver resultado como objeto, 
+ * FALSE para hacerlo como Unix Timestamp (por defecto).
+ * @return mixed Hora como objeto DateTime si $getAsObject = TRUE, 
+ * si no como int Unix Timestamp.  En caso de error, FALSE.
+ */
+function readHour($string, $getAsObject = FALSE)
+{
+    try {
+        $time = (DateTime::createFromFormat("Y-m-d e H#i#s", 
+                                            "1970-01-01 -0000 " . $string) ?: 
+                DateTime::createFromFormat("Y-m-d e H#i", 
+                                            "1970-01-01 -0000 " . $string));
+    
+        if ($getAsObject) {
+            return $time;
+        } else {
+            return ($time ? $time->getTimestamp() : FALSE);
+        }
+    } catch (Exception $e) {
+        
+    }
+    
+    return FALSE;
+}
 
 /**
  * Calcula las horas extras del agente.
@@ -47,6 +76,8 @@ function calcExtras(SaperFicha $ficha, array $entrada_diaria)
         $total = 0;
         
         foreach ($ficha->get_asArray() as $dia) {
+            $fecha = DateTime::createFromFormat("d#m#Y", $dia[0]);
+            
             // insertar en un unico array las hs de entrada y salida y las 
             // leidas del descargo (si hubiese), en cualquier orden.
             // luego determinar la mayor y la menor y realizar la operación.
@@ -59,31 +90,27 @@ function calcExtras(SaperFicha $ficha, array $entrada_diaria)
             $entro = 0;
             $salio = 0;
             foreach ($fichajes_raw as $fichaje) {
-                $fichaje_obj = DateTime::createFromFormat("Y-m-d e H#i#s", 
-                                            "1970-01-01 -0000 " . $fichaje) ?: 
-                                DateTime::createFromFormat("Y-m-d e H#i", 
-                                            "1970-01-01 -0000 " . $fichaje);
+                $fichaje = readHour($fichaje);
                     
-//                var_dump($fichaje_obj);
                 // sera FALSE si no habia fichaje valido
-                if ($fichaje_obj) {
-                    $fichaje = $fichaje_obj->getTimestamp();
+                if ($fichaje) {
                     if ($fichaje < $entro || empty($entro)) {
                         $entro = $fichaje;
-                    } elseif ($fichaje > $salio || empty($salio)) {
+                    } 
+                    if ($fichaje > $salio || empty($salio)) {
                         $salio = $fichaje;
                     }
                 }
+//                var_dump($fecha, $fichaje, $entro, $salio);
             }
 
             $extra = 0;
             // descarto dias donde no se encuentre ningun fichaje valido
             if ($entro && $salio) {
-                $fecha = DateTime::createFromFormat("d#m#Y", $dia[0]);
-                $entra = $entrada_diaria[intval(date("N", $fecha->getTimestamp())) - 1];
+
+                $entra = readHour($entrada_diaria[intval(date("N", $fecha->getTimestamp())) - 1]);
                 // si x algun motivo no figura la hra de entrada, fijo a 7:30
-                $horaEntrada = DateTime::createFromFormat("Y-m-d e H#i#s", "1970-01-01 -0000 " . $entra) ?: (DateTime::createFromFormat("Y-m-d e H#i", "1970-01-01 -0000 " . $entra) ?: new DateTime);
-                $horaEntrada = ($horaEntrada->getTimestamp() > 0) ? $horaEntrada->getTimestamp() : 27000;
+                $horaEntrada = $entra ?: 27000;
 
                 // extra = salio - entro - 6hs 
                 // condiciones:
@@ -209,6 +236,33 @@ if ($page->authenticateToken()
                 Session::store(SMP_SESSINDEX_NOTIF_ERR, 'No se ha podido recuperar la ficha del agente seleccionado: al menos un par&aacute;metro inv&aacute;lido o bien no hay resultados para la b&uacute;squeda');
                 Session::remove(SAPER_SESSINDEX_FICHA);
             }
+        } elseif (!empty(Sanitizar::glPOST('frm_btnImprimir'))) {
+            $ficha = Session::retrieve(SAPER_SESSINDEX_FICHA);
+            if (is_a($ficha, 'SaperFicha')) {
+                $html = Page::getHeader() .
+                        Page::getHeaderClose() .
+                        Page::getMain() .
+                        $ficha->imprimir(2, 'ficha', FALSE) .
+                        Page::getMainClose();                
+//                echo $html;
+//                die();
+//                
+                require_once SMP_FS_ROOT . SMP_LOC_LIBS . 'mpdf/mpdf.php';
+                ob_start(); // necesario pq la libreria mpdf es una cagada...
+                $mpdf = new mPDF('utf-8', 'A4', '','' , 0 , 0 , 0 , 0 , 0 , 0);
+                $mpdf->SetDisplayMode('fullpage');
+                $css = file_get_contents(SMP_FS_ROOT . SMP_LOC_CSS . 'pdf.css');
+                //$mpdf->shrink_tables_to_fit = 1;
+                //$mpdf->keep_table_proportions = TRUE;
+                $mpdf->WriteHTML($css, 1);
+                $mpdf->WriteHTML($ficha->imprimir(0, 'ficha', FALSE), 2);
+                $mpdf->Output('Fichaje SiMaPe.pdf', 'D');
+                unset($css, $html, $ficha);
+                ob_end_flush();
+                exit;
+            } else {
+                die('No hay ficha para imprimir!');
+            }
         }
     }
 } else {
@@ -326,6 +380,12 @@ switch($display) {
         $ficha->imprimir(7);
         echo "\n\t\t\t\t\t\t</td>";
         echo "\n\t\t\t\t\t</tr>";
+        echo "\n\t\t\t\t\t<tr>";
+        echo "\n\t\t\t\t\t\t<td style='text-align: center;'>";
+        echo "\n\t\t\t\t\t\t\t<br />";
+        echo "\n\t\t\t\t\t\t\t<input type='submit' name='frm_btnImprimir' value='Imprimir ficha' />";
+        echo "\n\t\t\t\t\t\t</td>";
+        echo "\n\t\t\t\t\t</tr>";
         echo "\n\t\t\t\t</tbody>";
         echo "\n\t\t\t</table>";
         
@@ -341,8 +401,11 @@ switch($display) {
         echo "\n\t\t\t<table style='text-align: center; margin: auto; width: auto;' >";
         
         echo "\n\t\t\t\t<thead>";
-        echo "\n\t\t\t\t\t\t<td colspan='5'><h2>C&aacute;lculo de horas extras</h2>";
+        echo "\n\t\t\t\t\t<tr>";
+        echo "\n\t\t\t\t\t\t<td colspan='5'>";
+        echo "\n\t\t\t\t\t\t\t<h2>C&aacute;lculo de horas extras</h2>";
         echo "\n\t\t\t\t\t\t</td>";
+        echo "\n\t\t\t\t\t</tr>";
         echo "\n\t\t\t\t</thead>";
         
         echo "\n\t\t\t\t<tbody>";
@@ -363,7 +426,7 @@ switch($display) {
         echo "\n\t\t\t\t\t<tr>";
         $horaInicio = Session::retrieve(SAPER_SESSINDEX_HINI) ?: ["07:30:00", "07:30:00", "07:30:00", "07:30:00", "07:30:00"];
         for ($i = 0; $i < 5; $i++) {
-            echo "\n\t\t\t\t\t\t<td><input type='time' size='5' name='frm_txtHoraIni[" . $i . "]' placeholder='Hora inicio' value='" . $horaInicio[$i] . "'>";
+            echo "\n\t\t\t\t\t\t<td><input type='time' size='5' name='frm_txtHoraIni[" . $i . "]' value='" . $horaInicio[$i] . "'>";
             echo "\n\t\t\t\t\t\t</td>";
         }
         echo "\n\t\t\t\t\t</tr>";
@@ -408,6 +471,7 @@ switch($display) {
         echo "\n\t\t\t\t\t<tr>";
         echo "\n\t\t\t\t\t\t<td style='text-align: center;'>";
         echo "\n\t\t\t\t\t\t\t<select name='tipoBusqueda'>";
+        echo "\n\t\t\t\t\t\t\t\t<option value='BUSCAR_AUTO'>Autom&aacute;tico</option>";
         echo "\n\t\t\t\t\t\t\t\t<option value='BUSCAR_APELLIDO'>Apellido</option>";
         echo "\n\t\t\t\t\t\t\t\t<option value='BUSCAR_NOMBRE'>Nombre</option>";
         echo "\n\t\t\t\t\t\t\t\t<option value='BUSCAR_DNI'>DNI</option>";
@@ -435,3 +499,4 @@ echo "\n\t\t</form>";
 
 echo Page::getMainClose();
 echo Page::getFooter();
+echo Page::getBodyClose();

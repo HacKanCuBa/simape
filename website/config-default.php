@@ -32,7 +32,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.0
+ * @version 1.01
  */
 
 // << Config
@@ -128,6 +128,7 @@ const SMP_LOC_CSS = 'css/';
 const SMP_LOC_IMGS = 'imgs/';
 const SMP_LOC_PAGS = 'pags/';
 const SMP_LOC_INCS = 'incs/';
+const SMP_LOC_LIBS = 'libs/';
 const SMP_LOC_TMPS = 'tmps/';
 const SMP_LOC_UPLOAD = 'upload/';
 define('SMP_LOC_UPLOAD_FOTOSPERFIL', SMP_LOC_UPLOAD . 'perfil/');

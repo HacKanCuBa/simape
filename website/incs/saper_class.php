@@ -70,10 +70,12 @@ class Saper extends Curl
     const FICHAJE_PARAM_ANIO = 'anio';
     const FICHAJE_PARAM_MES = 'mes';
     
-    const BUSCAR_DNI = 0;
-    const BUSCAR_NOMBRE = 1;
-    const BUSCAR_APELLIDO = 2;
-    const BUSCAR_LEGAJO = 3;
+    // IMPORTANTE: ninguna de estas BUSCAR_ puede ser nula!
+    const BUSCAR_DNI = 1;
+    const BUSCAR_NOMBRE = 2;
+    const BUSCAR_APELLIDO = 3;
+    const BUSCAR_LEGAJO = 4;
+    const BUSCAR_AUTO = 5;
     
     const ESTADO_ACTIVO = 'A';
     const ESTADO_BAJA = 'B';
@@ -102,7 +104,7 @@ class Saper extends Curl
     function __construct() 
     {
         parent::__construct();
-        require_once SMP_FS_ROOT . SMP_LOC_INCS . 'phpexcel/PHPExcel.php';
+        require_once SMP_FS_ROOT . SMP_LOC_LIBS . 'phpexcel/PHPExcel.php';
         $this->Ficha = new SaperFicha;
     }
     // __PRIV
@@ -158,7 +160,9 @@ class Saper extends Curl
      * <li>BUSCAR_NOMBRE</li>
      * <li>BUSCAR_APELLIDO</li>
      * <li>BUSCAR_LEGAJO</li>
+     * <li>BUSCAR_AUTO</li>
      * </ul>
+     * Esta última determina automáticamente el tipo de parámetro buscado.
      * @param mixed $valor Valor del parámetro buscado.  
      * <i>INT</i> para DNI y Legajo, <i>STRING</i> para Nombre y Apellido.
      * @param bool $estado [opcional]<br />
@@ -171,7 +175,7 @@ class Saper extends Curl
                                     $valor, 
                                     $estado = self::ESTADO_ACTIVO)
     {        
-        $estado = ($estado == self::ESTADO_ACTIVO) ? $estado : 
+        $status = ($estado == self::ESTADO_ACTIVO) ? $estado : 
                     (($estado == self::ESTADO_BAJA) ? $estado : self::ESTADO_ACTIVO);
         $url = static::urlMake(self::P_CARGOSAGENTES);
         $options = array(
@@ -181,105 +185,114 @@ class Saper extends Curl
                         CURLOPT_FOLLOWLOCATION => 1,
                         CURLOPT_HEADER => 1,
         );
-        
-        $post = array(
+                        
+        $busqueda = [NULL, self::BUSCAR_APELLIDO, self::BUSCAR_DNI, self::BUSCAR_NOMBRE, self::BUSCAR_LEGAJO];
+        do {
+            if ($tipobusqueda == self::BUSCAR_AUTO) {
+                $buscar = next($busqueda);
+            } else {
+                $buscar = $tipobusqueda;
+            }
+            
+            $post = array(
                         'apellidoABuscar' => urlencode(NULL),
                         'cargosABuscar' => urlencode('A'),
                         'dniABuscar' => urlencode(NULL),
-                        'estadoABuscar' => urlencode($estado),
+                        'estadoABuscar' => urlencode($status),
                         'idCodigoDependecia' => urlencode('23'),
                         'legajo' => urlencode(NULL),
                         'legajoMostrarABuscar' => urlencode(NULL),
                         'nombreABuscar' => urlencode(NULL),
                         'tipoBusquedaAgente' => urlencode('porAgente'),
                         'tipoDocumentoABuscar' => urlencode(NULL)
-        );
-        
-        switch ($tipobusqueda) {
-            case self::BUSCAR_DNI:
-                $post['dniABuscar'] = urlencode($valor);
-                break;
-
-            case self::BUSCAR_NOMBRE:
-                $post['nombreABuscar'] = urlencode($valor);
-                break;
-
-            case self::BUSCAR_APELLIDO:
-                $post['apellidoABuscar'] = urlencode($valor);
-                break;
-
-            case self::BUSCAR_LEGAJO:
-                $post['legajoMostrarABuscar'] = urlencode($valor);
-                break;
-
-            default :
-                return FALSE;
-        }
-
-        if ($this->post($url, $post, $options)) {
-            // recuperar los resultados de la busqueda
-            $raw_data = array_values(
-                            array_filter(
-                                explode(' ', 
-                                    str_ireplace("\r", ' ', 
-                                        str_ireplace("\n", ' ', 
-                                            str_ireplace("\t", ' ', 
-                                                trim(
-                                                    filter_var($this->result,
-                                                                FILTER_SANITIZE_STRING, 
-                                                                    FILTER_FLAG_STRIP_LOW 
-                                                                    || FILTER_FLAG_STRIP_HIGH))))))));
-            //var_dump($raw_data);
-            $this->Agentes = array();
-            $agentes_index = 0;
+            );
             
-            foreach ($raw_data as $key => $value) {
-                if(strstr($value, 'B&uacute;squeda:')) {
-                    // BASE de búsqueda
-                    // 1° resultado (legajo): BASE + 9
-                    // 2° resultado (legajo): Fin_1° (Activo/No Activo) + 32
-                    // 3° resultado (legajo): Fin_2° (Activo/No Activo) + 32
-                    // ...
-                    // i° resultado: Fin_(i-1)° + 32
-                    $raw_data_index = $key + 9;
-                    while (isset($raw_data[$raw_data_index]) 
-                            && (intval($raw_data[$raw_data_index]) > 0)
-                    ) {
-                        while ($raw_data[$raw_data_index] != 'Ver') {
-                            $this->Agentes[$agentes_index][] = $raw_data[$raw_data_index];
-                            $raw_data_index++;
-                        }
-                        $raw_data_index += 31; // se incrementó en 1 previamente
-                        $agentes_index++; 
-                    }
+            switch ($buscar) {
+                case self::BUSCAR_DNI:
+                    $post['dniABuscar'] = urlencode($valor);
                     break;
-                }
+
+                case self::BUSCAR_NOMBRE:
+                    $post['nombreABuscar'] = urlencode($valor);
+                    break;
+
+                case self::BUSCAR_APELLIDO:
+                    $post['apellidoABuscar'] = urlencode($valor);
+                    break;
+
+                case self::BUSCAR_LEGAJO:
+                    $post['legajoMostrarABuscar'] = urlencode($valor);
+                    break;
+
+                default :
+                    return FALSE;
             }
-            
-            if ($agentes_index > 0) {
-                // recuperar DNI/CI/LC/LE
-                //buscar: "onchange='eleccionOpcion(this,1/2/3/4," 
-                //segun tipo doc respectivamente
-                //hasta: ","
-                //lo del medio será el doc
-                $len = strlen($this->result);
-                $dni_fpos = 0;
+
+            if ($this->post($url, $post, $options)) {
+                // recuperar los resultados de la busqueda
+                $raw_data = array_values(
+                                array_filter(
+                                    explode(' ', 
+                                        str_ireplace("\r", ' ', 
+                                            str_ireplace("\n", ' ', 
+                                                str_ireplace("\t", ' ', 
+                                                    trim(
+                                                        filter_var($this->result,
+                                                                    FILTER_SANITIZE_STRING, 
+                                                                        FILTER_FLAG_STRIP_LOW 
+                                                                        || FILTER_FLAG_STRIP_HIGH))))))));
+//                var_dump($raw_data);
+                $this->Agentes = array();
                 $agentes_index = 0;
-                for ($ipos = 0; $ipos < $len; $ipos = $dni_fpos) {
-                    $dni_ipos = strpos($this->result, self::DNI_SEARCH_STR, $ipos) + strlen(self::DNI_SEARCH_STR);
-                    if($dni_ipos > strlen(self::DNI_SEARCH_STR)) {
-                        $dni_fpos = strpos($this->result, ',', $dni_ipos + 2);
-                        $dni = explode(',', substr($this->result, $dni_ipos, $dni_fpos - $dni_ipos));
-                        $this->Agentes[$agentes_index][] = $dni[0];
-                        $this->Agentes[$agentes_index][] = $dni[1];
-                        $agentes_index++;
-                    } else {
+
+                foreach ($raw_data as $key => $value) {
+                    if(strstr($value, 'B&uacute;squeda:')) {
+                        // BASE de búsqueda
+                        // 1° resultado (legajo): BASE + 9
+                        // 2° resultado (legajo): Fin_1° (Activo/No Activo) + 32
+                        // 3° resultado (legajo): Fin_2° (Activo/No Activo) + 32
+                        // ...
+                        // i° resultado: Fin_(i-1)° + 32
+                        $raw_data_index = $key + 9;
+                        while (isset($raw_data[$raw_data_index]) 
+                                && (intval($raw_data[$raw_data_index]) > 0)
+                        ) {
+                            while ($raw_data[$raw_data_index] != 'Ver') {
+                                $this->Agentes[$agentes_index][] = $raw_data[$raw_data_index];
+                                $raw_data_index++;
+                            }
+                            $raw_data_index += 31; // se incrementó en 1 previamente
+                            $agentes_index++; 
+                        }
                         break;
                     }
                 }
-                return TRUE;
+
+                if ($agentes_index > 0) {
+                    // recuperar DNI/CI/LC/LE
+                    //buscar: "onchange='eleccionOpcion(this,1/2/3/4," 
+                    //segun tipo doc respectivamente
+                    //hasta: ","
+                    //lo del medio será el doc
+                    $len = strlen($this->result);
+                    $dni_fpos = 0;
+                    $agentes_index = 0;
+                    for ($ipos = 0; $ipos < $len; $ipos = $dni_fpos) {
+                        $dni_ipos = strpos($this->result, self::DNI_SEARCH_STR, $ipos) + strlen(self::DNI_SEARCH_STR);
+                        if($dni_ipos > strlen(self::DNI_SEARCH_STR)) {
+                            $dni_fpos = strpos($this->result, ',', $dni_ipos + 2);
+                            $dni = explode(',', substr($this->result, $dni_ipos, $dni_fpos - $dni_ipos));
+                            $this->Agentes[$agentes_index][] = $dni[0];
+                            $this->Agentes[$agentes_index][] = $dni[1];
+                            $agentes_index++;
+                        } else {
+                            break;
+                        }
+                    }
+                    return TRUE;
+                }
             }
-        }
+        } while ($tipobusqueda == self::BUSCAR_AUTO && $buscar);
         
         return FALSE;
     }

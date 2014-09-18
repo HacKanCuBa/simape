@@ -30,7 +30,7 @@
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @uses PHPExcel Clase lectora de archivos XLS
- * @version 0.3
+ * @version 0.4
  */
 
 class SaperFicha
@@ -149,67 +149,73 @@ class SaperFicha
     
     /**
      * Imprime la ficha del agente, que debe haber sido previamente cargada.
-     * @param int $indent Indentado del código.
+     * @param int $indent [opcional]<br />
+     * Indentado del código (0 por defecto).
+     * @param boolean $class [opcional]<br />
+     * Clase de la tabla.
+     * @param boolean $print [opcional]<br />
+     * TRUE para imprimir en pantalla (por defecto), FALSE para no hacerlo.
+     * @return string Devuelve el string armado de la ficha del agente.
      */
-    public function imprimir($indent = 0)
+    public function imprimir($indent = 0, $class = 'ficha', $print = TRUE)
     {
-        Page::_e("<table class='ficha'>", $indent);
-        Page::_e("<thead>", $indent + 1);
+        $str = Page::_e("<table class='" . $class . "'>", $indent, TRUE, FALSE);
+        $str .= Page::_e("<thead>", $indent + 1, TRUE, FALSE);
 
-        Page::_e("<tr>", $indent + 2);
-        Page::_e("<td colspan='" . count($this->titulos) . "'><h2>Fichaje mensual</h2>", $indent + 3);
-        Page::_e("</td>", $indent + 3);
-        Page::_e("</tr>", $indent + 2);
+        $str .= Page::_e("<tr>", $indent + 2, TRUE, FALSE);
+        $str .= Page::_e("<td colspan='" . count($this->titulos) . "'><h2>Fichaje mensual</h2>", $indent + 3, TRUE, FALSE);
+        $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
+        $str .= Page::_e("</tr>", $indent + 2, TRUE, FALSE);
         
-        Page::_e("<tr>", $indent + 2);
+        $str .= Page::_e("<tr>", $indent + 2, TRUE, FALSE);
         $cols = 0;
         if (isset($this->nombre) || isset($this->apellido)) {
-            Page::_e("<td style='text-align: center;'>", $indent + 3);
-            Page::_e("<h3>" . (isset($this->apellido) ? $this->apellido : '') 
+            $str .= Page::_e("<td style='text-align: center;'>", $indent + 3, TRUE, FALSE);
+            $str .= Page::_e("<h3>" . (isset($this->apellido) ? $this->apellido : '') 
                         . ", " . (isset($this->nombre) ? $this->nombre : '') 
-                        . "</h3>", $indent + 4);
-            Page::_e("</td>", $indent + 3);
+                        . "</h3>", $indent + 4, TRUE, FALSE);
+            $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
             $cols++;
         }
 
         if (isset($this->dni)) {
-            Page::_e("<td style='text-align: center;'>", $indent + 3);
-            Page::_e("<h4>DNI " . $this->dni . "</h4>", $indent + 4);
-            Page::_e("</td>", $indent + 3);
+            $str .= Page::_e("<td style='text-align: center;'>", $indent + 3, TRUE, FALSE);
+            $str .= Page::_e("<h4>DNI " . $this->dni . "</h4>", $indent + 4, TRUE, FALSE);
+            $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
             $cols++;
         }
 
         if (isset($this->cargo)) {
-            Page::_e("<td style='text-align: center;'>", $indent + 3);
-            Page::_e("<h4>" . $this->cargo . "</h4>", $indent + 4);
-            Page::_e("</td>", $indent + 3);
+            $str .= Page::_e("<td style='text-align: center;'>", $indent + 3, TRUE, FALSE);
+            $str .= Page::_e("<h4>" . $this->cargo . "</h4>", $indent + 4, TRUE, FALSE);
+            $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
             $cols++;
         }
 
         if (isset($this->dependencia)) {
-            Page::_e("<td colspan='" . (count($this->titulos) - $cols) . "' style='text-align: center;'>", $indent + 3);
-            Page::_e("<h4>" . $this->dependencia . "</h4>", $indent + 4);
-            Page::_e("</td>", $indent + 3);
+            $str .= Page::_e("<td colspan='" . (count($this->titulos) - $cols) . "' style='text-align: center;'>", $indent + 3, TRUE, FALSE);
+            $str .= Page::_e("<h4>" . $this->dependencia . "</h4>", $indent + 4, TRUE, FALSE);
+            $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
         }
         unset($cols);
-        Page::_e("</tr>", $indent + 2);
+        $str .= Page::_e("</tr>", $indent + 2, TRUE, FALSE);
             
         if (isset($this->titulos)) {
-            Page::_e("<tr>", $indent + 2);
+            $str .= Page::_e("<tr>", $indent + 2, TRUE, FALSE);
             foreach ($this->titulos as $col) {
-                Page::_e("<td><b>", $indent + 3);
-                Page::_e($col, 0, FALSE);
-                Page::_e("</b></td>", 0, FALSE);
+                $str .= Page::_e("<td><b>", $indent + 3, TRUE, FALSE);
+                $str .= Page::_e($col, 0, FALSE, FALSE);
+                $str .= Page::_e("</b></td>", 0, FALSE, FALSE);
             }
-            Page::_e("</tr>", $indent + 2);
+            $str .= Page::_e("</tr>", $indent + 2, TRUE, FALSE);
         }
 
-        Page::_e("</thead>", $indent + 1);
-        Page::_e("<tbody>", $indent + 1);
+        $str .= Page::_e("</thead>", $indent + 1, TRUE, FALSE);
+        $str .= Page::_e("<tbody>", $indent + 1, TRUE, FALSE);
         
         if (isset($this->ficha) && is_array($this->ficha)) {
             foreach ($this->ficha as $fila) {
-                Page::_e("<tr>", $indent + 2);
+                $str .= Page::_e("<tr>", $indent + 2, TRUE, FALSE);
                 foreach ($fila as $n => $col) {
                     $html_opn = "<td>";
                     $html_cls = "</td>";
@@ -227,15 +233,18 @@ class SaperFicha
                         default:
                             break;
                     }
-                    Page::_e($html_opn, $indent + 3);
-                    Page::_e($col, 0, FALSE);
-                    Page::_e($html_cls, 0, FALSE);
+                    $str .= Page::_e($html_opn, $indent + 3, TRUE, FALSE);
+                    $str .= Page::_e($col, 0, FALSE, FALSE);
+                    $str .= Page::_e($html_cls, 0, FALSE, FALSE);
                 }
-                Page::_e("</tr>", $indent + 2);
+                $str .= Page::_e("</tr>", $indent + 2, TRUE, FALSE);
             }
         }
         
-        Page::_e("</tbody>", $indent + 1);
-        Page::_e("</table>", $indent);
+        $str .= Page::_e("</tbody>", $indent + 1, TRUE, FALSE);
+        $str .= Page::_e("</table>", $indent, TRUE, FALSE);
+        
+        echo($print ? $str : '');
+        return $str;
     }
 }

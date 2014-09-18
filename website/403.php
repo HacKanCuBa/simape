@@ -46,3 +46,4 @@ echo "\n\t\t</form>";
 
 echo Page::getMainClose();
 echo Page::getFooter();
+echo Page::getBodyClose();
