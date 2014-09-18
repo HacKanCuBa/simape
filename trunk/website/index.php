@@ -96,3 +96,4 @@ echo "\n\t\t\t</ul>";
                         
 echo Page::getMainClose();
 echo Page::getFooter();
+echo Page::getBodyClose();
