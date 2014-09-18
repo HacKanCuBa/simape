@@ -30,7 +30,7 @@
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @uses PHPExcel Clase lectora de archivos XLS
- * @version 0.4
+ * @version 0.41
  */
 
 class SaperFicha
@@ -76,6 +76,7 @@ class SaperFicha
         try {
             $csv = PHPExcel_IOFactory::load($fname);
             //var_dump($csv->getActiveSheet()->toArray(NULL, TRUE, TRUE, FALSE));
+            $csv->getActiveSheet()->removeColumn('H');  //elimino col de hs extras
             $xls = $csv->getActiveSheet()->toArray(NULL, TRUE, TRUE, FALSE);
         } catch (PHPExcel_Exception $e) {
             trigger_error("Error en PHPExcel, desde " . __CLASS__ . "::" 
@@ -132,17 +133,17 @@ class SaperFicha
      */
     public function add_column($title, $value)
     {
-        is_array($value) ?: $value = array($value);
-        $title = strval($title);
+        $valor = is_array($value) ? $value : array($value);
+        $titulo = strval($title);
         
         if (empty($this->ficha)) {
-            $this->titulos = array($title);
-            $this->ficha = $value;
+            $this->titulos = array($titulo);
+            $this->ficha = $valor;
         } else {
-            $this->titulos[] = $title;
-            $last = (count($this->ficha) > count($value)) ? count($this->ficha) : count($value);
+            $this->titulos[] = $titulo;
+            $last = (count($this->ficha) > count($valor)) ? count($this->ficha) : count($valor);
             for ($i = 0; $i < $last; $i++) {
-                $this->ficha[$i][] = isset($value[$i]) ? $value[$i] : NULL;
+                $this->ficha[$i][] = isset($valor[$i]) ? $valor[$i] : NULL;
             }
         }
     }
@@ -170,31 +171,31 @@ class SaperFicha
         $str .= Page::_e("<tr>", $indent + 2, TRUE, FALSE);
         $cols = 0;
         if (isset($this->nombre) || isset($this->apellido)) {
-            $str .= Page::_e("<td style='text-align: center;'>", $indent + 3, TRUE, FALSE);
+            $str .= Page::_e("<td colspan='3'>", $indent + 3, TRUE, FALSE);
             $str .= Page::_e("<h3>" . (isset($this->apellido) ? $this->apellido : '') 
                         . ", " . (isset($this->nombre) ? $this->nombre : '') 
                         . "</h3>", $indent + 4, TRUE, FALSE);
             $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
-            $cols++;
+            $cols+=3;
         }
 
         if (isset($this->dni)) {
-            $str .= Page::_e("<td style='text-align: center;'>", $indent + 3, TRUE, FALSE);
+            $str .= Page::_e("<td colspan='2'>", $indent + 3, TRUE, FALSE);
             $str .= Page::_e("<h4>DNI " . $this->dni . "</h4>", $indent + 4, TRUE, FALSE);
             $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
-            $cols++;
+            $cols +=2;
         }
 
         if (isset($this->cargo)) {
-            $str .= Page::_e("<td style='text-align: center;'>", $indent + 3, TRUE, FALSE);
+            $str .= Page::_e("<td  colspan='2'>", $indent + 3, TRUE, FALSE);
             $str .= Page::_e("<h4>" . $this->cargo . "</h4>", $indent + 4, TRUE, FALSE);
             $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
-            $cols++;
+            $cols += 2;
         }
 
         if (isset($this->dependencia)) {
             $str .= Page::_e("<td colspan='" . (count($this->titulos) - $cols) . "' style='text-align: center;'>", $indent + 3, TRUE, FALSE);
-            $str .= Page::_e("<h4>" . $this->dependencia . "</h4>", $indent + 4, TRUE, FALSE);
+            $str .= Page::_e("<h3>" . $this->dependencia . "</h3>", $indent + 4, TRUE, FALSE);
             $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
         }
         unset($cols);

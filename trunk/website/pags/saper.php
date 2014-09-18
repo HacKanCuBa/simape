@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.7
+ * @version 0.71
  */
 
 /**
@@ -64,7 +64,7 @@ function readHour($string, $getAsObject = FALSE)
  * 
  * @param array $ficha ficha del SAPER del agente.
  * @param array $entrada_diaria array con la hora de entrada por dia (formato HH:MM:SS), 
- * donde lunes es 0 viernes 4.
+ * donde lunes es 0 y viernes, 4.
  * 
  * @return array|NULL array de horas extra por día, 
  * donde el total se ubica en la última posición, o NULL en caso de error.
@@ -84,7 +84,7 @@ function calcExtras(SaperFicha $ficha, array $entrada_diaria)
             $fichajes_raw = array_merge(
                                 preg_split('/[\s,\x0B,\x0D,\x0A,.]+/i', $dia[1]), 
                                 preg_split('/[\s,\x0B,\x0D,\x0A,.]+/i', $dia[2]),
-                                explode(" ", $dia[8])
+                                explode(" ", $dia[7])
             );
 //            var_dump($fichajes_raw);
             $entro = 0;
@@ -239,6 +239,9 @@ if ($page->authenticateToken()
         } elseif (!empty(Sanitizar::glPOST('frm_btnImprimir'))) {
             $ficha = Session::retrieve(SAPER_SESSINDEX_FICHA);
             if (is_a($ficha, 'SaperFicha')) {
+                $extras = calcExtras($ficha, Sanitizar::glPOST('frm_txtHoraIni'));
+                $ficha->add_column('Horas Extra', $extras);
+                // mpdf no interpreta bien el css
                 $html = Page::getHeader() .
                         Page::getHeaderClose() .
                         Page::getMain() .
@@ -252,10 +255,10 @@ if ($page->authenticateToken()
                 $mpdf = new mPDF('utf-8', 'A4', '','' , 0 , 0 , 0 , 0 , 0 , 0);
                 $mpdf->SetDisplayMode('fullpage');
                 $css = file_get_contents(SMP_FS_ROOT . SMP_LOC_CSS . 'pdf.css');
-                //$mpdf->shrink_tables_to_fit = 1;
-                //$mpdf->keep_table_proportions = TRUE;
+                $mpdf->shrink_tables_to_fit = 1;
+                $mpdf->keep_table_proportions = TRUE;
                 $mpdf->WriteHTML($css, 1);
-                $mpdf->WriteHTML($ficha->imprimir(0, 'ficha', FALSE), 2);
+                $mpdf->WriteHTML($html, 2);
                 $mpdf->Output('Fichaje SiMaPe.pdf', 'D');
                 unset($css, $html, $ficha);
                 ob_end_flush();
@@ -389,13 +392,13 @@ switch($display) {
         echo "\n\t\t\t\t</tbody>";
         echo "\n\t\t\t</table>";
         
-        echo "\n\t\t\t<br />";
-        if (($ordinaria + $extraTotal) < $prevista) {
-            echo "\n\t\t\t<b>Considerando el tiempo adeudado en el mes, las horas extras no alcanzan a cubrir el mismo</b>"; //: " . sprintf('-%02d:%02d:%02d', (abs($extraReal)/3600),(abs($extraReal)/60%60), abs($extraReal)%60) . "</b>";
-        } else {
-            echo "\n\t\t\t<b>Considerando el tiempo adeudado en el mes, las horas extras reales son: " . sprintf('%02d:%02d:%02d', ($extraReal/3600),($extraReal/60%60), $extraReal%60) . "</b>";
-        }
-        echo "\n\t\t\t<br />";
+//        echo "\n\t\t\t<br />";
+//        if (($ordinaria + $extraTotal) < $prevista) {
+//            echo "\n\t\t\t<b>Considerando el tiempo adeudado en el mes, las horas extras no alcanzan a cubrir el mismo</b>"; //: " . sprintf('-%02d:%02d:%02d', (abs($extraReal)/3600),(abs($extraReal)/60%60), abs($extraReal)%60) . "</b>";
+//        } else {
+//            echo "\n\t\t\t<b>Considerando el tiempo adeudado en el mes, las horas extras reales son: " . sprintf('%02d:%02d:%02d', ($extraReal/3600),($extraReal/60%60), $extraReal%60) . "</b>";
+//        }
+//        echo "\n\t\t\t<br />";
         
         echo "\n\t\t\t<br />";
         echo "\n\t\t\t<table style='text-align: center; margin: auto; width: auto;' >";
@@ -450,7 +453,7 @@ switch($display) {
         echo "\n\t\t\t\t<li>Se mostrará un \"-\" cuando las horas trabajadas sean menor a 6.</li>";
         echo "\n\t\t\t\t<li>Se mostrará \"&lt; 1h\" cuando las horas extras sean menor que 1, y no se sumará al total.</li>";
         echo "\n\t\t\t\t<li>El total indicado al final de la planilla NO tiene en cuenta si el agente adeuda horas en el mes.</li>";
-        echo "\n\t\t\t\t<li>La operación matemática realizada para las horas extras reales (total) es: Horas Ordinarias + Horas Extras - Horas Previstas</li>";
+//        echo "\n\t\t\t\t<li>La operación matemática realizada para las horas extras reales (total) es: Horas Ordinarias + Horas Extras - Horas Previstas</li>";
         echo "\n\t\t\t</ul>";
         break;
     
