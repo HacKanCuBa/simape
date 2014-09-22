@@ -62,7 +62,7 @@ trait UID
      */
     public function generateUID()
     {
-        $this->uid = $this->getRandom();
+        $this->uid = $this->getRandomUID();
     }
     
     /**
