@@ -6,7 +6,7 @@
   * /adm
   * /content
    * /perfil
-   * /
+   * /uploads
 
  * /media
   * /img
@@ -16,16 +16,30 @@
   * /php
    * /inc
    * /ext
-   * /func
   * /java
   * /ajax
 
  * /tmp
 
 
-= Details =
+= Descripción =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+
+ * /usr _Páginas accesibles por los usuarios que han iniciado sesión._
+  * /adm _Páginas de carácter administrativos, para usuarios con permisos elevados._
+  * /content _Contiene subdirectorios donde se incluyen los archivos subidos por los usuarios, documentos adjuntos, fotos de perfil, etc._
+   * /perfil _Fotos de perfil._
+   * /uploads _Aún a definir..._
+
+ * /media _Contiene subdirectorios de medios._
+  * /css _Hojas de estilo._
+  * /img _Imágenes propias del sistema (NO archivos subidos por el usuario)._
+
+ * /lib _Contiene subdirectorios de archivos para inclusión (librerías)._
+  * /php
+   * /inc _Librerías de clases, traits, interfaces y funciones internas._
+   * /ext _Librerías externas._
+  * /java
+  * /ajax
+
+ * /tmp _Archivos temporales._
