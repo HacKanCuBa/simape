@@ -57,6 +57,14 @@ $formToken = new FormToken;
 $formToken->generateRandomToken();
 $formToken->generateTimestamp();
 $formToken->generateToken();
+}}}
+O bien
+{{{
+$formToken = new FormToken;
+$formToken->generate();
+}}}
+Luego
+{{{
 Session::store(SMP_SESSINDEX_FORM_RANDOMTOKEN, $formToken->getRandomToken());
 Session::store(SMP_SESSINDEX_FORM_TIMESTAMP, $formToken->getTimestamp());
 }}}
