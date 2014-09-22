@@ -17,4 +17,4 @@ Paquetes a instalar (nombres válidos para Debian y similar):
  * apache2-mpm-prefork
  * mysql-server V > 5.5 
  * mysql-client
-
+ * php-gd
