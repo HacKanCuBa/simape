@@ -2,6 +2,8 @@
 
 = Estructura =
 
+ * /etc
+
  * /usr
   * /adm
   * /content
@@ -24,6 +26,7 @@
 
 = Descripción =
 
+ * /etc _Contiene archivos de configuración_
 
  * /usr _Páginas accesibles por los usuarios que han iniciado sesión._
   * /adm _Páginas de carácter administrativos, para usuarios con permisos elevados._
