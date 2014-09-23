@@ -4,8 +4,16 @@
 = Modelo de Seguridad =
 
 Los datos almacenados en la cookie y en `$_SESSION` deben estar encriptados en todo momento.  Para ello, se genera una contraseña aleatoria al comienzo, y se encripta con una de dos contraseñas, dependiendo de si el usuario está loggeado o no.
+Asimismo, para reforzar la seguridad, se emplea la ID de sesión como sal criptográfica.
 
 Resulta de vital importancia que el campo UID de la tabla Usuario NUNCA sea modificado, y sea asimismo único y totalmente aleatorio.  Se emplea por defecto un valor UUIDv4 por human-friendly readability.  Este parámetro se empleará en funciones de encriptación así como también de manejo de archivos.
+
+En términos generales, se puede emplear cualquier contraseña en la sesión de la siguiente manera:
+{{{
+$session = new Session;
+$session->setPassword('contraseña');
+$session->setPasswordSalt('sal_criptográfica');
+}}}
 
 === Contraseña de sistema con usuario loggeado ===
 
@@ -14,8 +22,7 @@ Cuando el usuario _está autenticado_, se emplea una contraseña que se forma co
 $usuario = new Usuario('nombre');
 ...
 $session = new Session;
-$session->setPassword($usuario->getUID());
-$session->setPasswordSalt($usuario->getRandomToken());
+$session->useUserPassword($usuario->getUID());
 
 $session->storeEnc($key, $value);
 $session->retrieveEnc($key, $value);
