@@ -3,9 +3,9 @@
 
 = Modelo de Seguridad =
 
-Los datos almacenados en la cookie y en `$_SESSION` deben estar encriptados en todo momento.  Para ello, la contraseña que se emplea depende de si el usuario está loggeado o no.
+Los datos almacenados en la cookie y en `$_SESSION` deben estar encriptados en todo momento.  Para ello, se genera una contraseña aleatoria al comienzo, y se encripta con una de dos contraseñas, dependiendo de si el usuario está loggeado o no.
 
-Resulta de vital importancia que el campo UID de la tabla Usuario NUNCA sea modificado, y sea asimismo único y totalmente aleatorio.  Se emplea por defecto un valor UUIDv4 por human-friendly readability.  Este parámetro se empleará en funciones de encriptación así como tambien de manejo de archivos.
+Resulta de vital importancia que el campo UID de la tabla Usuario NUNCA sea modificado, y sea asimismo único y totalmente aleatorio.  Se emplea por defecto un valor UUIDv4 por human-friendly readability.  Este parámetro se empleará en funciones de encriptación así como también de manejo de archivos.
 
 === Contraseña de sistema con usuario loggeado ===
 
