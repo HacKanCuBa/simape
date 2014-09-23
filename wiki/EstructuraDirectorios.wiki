@@ -4,24 +4,24 @@
 
  * /etc
 
- * /usr
-  * /adm
-  * /content
-   * /perfil
-   * /uploads
+ * /lib
+  * /php
+   * /ext
+   * /inc
+  * /java
+  * /ajax
 
  * /media
   * /img
   * /css
 
- * /lib
-  * /php
-   * /inc
-   * /ext
-  * /java
-  * /ajax
-
  * /tmp
+
+ * /usr
+  * /adm
+  * /content
+   * /perfil
+   * /upload
 
 
 = Descripción =
