@@ -3,5 +3,5 @@
 
 == Fotos de Perfil ==
  * Subirlas a SMP_LOC_UPLOAD_FOTOSPERFIL, que por defecto es /usr/content/perfil
- * Nombre del fichero: _EmpleadoId_`_`_UUIDv4_`.`_extension_
- * P.E.: 1_102d8c62-b41e-4fce-bdf6-6a9c141082a2.jpg
+ * Nombre del fichero: `Perfil_`_EmpleadoId_`_`_`RandHex[5]`_._extension_
+ * P.E.: Perfil_1_ab052.jpg
