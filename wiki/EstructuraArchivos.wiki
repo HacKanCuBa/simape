@@ -1,0 +1,15 @@
+#summary Estructura de las páginas
+
+= Estructura =
+
+Para facilitar la escalabilidad, las páginas que se encuentren en el directorio raíz y sean ejecutables por el usuario, deben simplemente:
+{{{
+require_once 'load.php';
+}}}
+
+Mientras que las que estén en algún subdirectorio (_/usr_ normalmente) deben:
+{{{
+require_once 'autoload.php';
+}}}
+
+* Cada subdirectorio que contenga páginas ejecutables por el usuario debe contener una copia del archivo _autoload.php_. *
