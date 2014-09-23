@@ -5,6 +5,8 @@
 
 Los datos almacenados en la cookie y en `$_SESSION` deben estar encriptados en todo momento.  Para ello, la contraseña que se emplea depende de si el usuario está loggeado o no.
 
+Resulta de vital importancia que el campo UID de la tabla Usuario NUNCA sea modificado, y sea asimismo único y totalmente aleatorio.  Se emplea por defecto un valor UUIDv4 por human-friendly readability.  Este parámetro se empleará en funciones de encriptación así como tambien de manejo de archivos.
+
 === Contraseña de sistema con usuario loggeado ===
 
 Cuando el usuario _está autenticado_, se emplea una contraseña que se forma con el SESSION_RANDOMTOKEN y el UID del usuario.
