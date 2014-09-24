@@ -51,7 +51,11 @@ $session->storeEnc($key, $value);
 $value = $session->retrieveEnc($key);
 }}}
 
-Debe tenerse cuidado, dado que estos valores impactan directamente en la seguridad del sistema.  Es conveniente dejar que el sistema los maneje.  Para encriptar y desencriptar valores cualesquiera, referirse a la clase _Crypto_.
+Incluso puede usarse directamente sin declarar objeto:
+{{{
+Session::store($key, $sanitizar, 'contraseña', 'sal_criptográfica');
+$value = Session::store($key, $value, $sanitizar, 'contraseña', 'sal_criptográfica');
+}}}
 
 === Contraseña de sistema con usuario loggeado ===
 
