@@ -55,7 +55,7 @@ Debe tenerse cuidado, dado que estos valores impactan directamente en la segurid
 
 === Contraseña de sistema con usuario loggeado ===
 
-Cuando el usuario _está autenticado_, se emplea una contraseña que se forma con el SESSION_RANDOMTOKEN y el UID del usuario.
+Cuando el usuario _está autenticado_, se emplea una contraseña que se forma con el UID del usuario y el identificador de sesión.
 {{{
 $usuario = new Usuario('nombre');
 ...
@@ -67,7 +67,7 @@ $value = $session->retrieveEnc($key);
 }}}
 
 === Contraseña de sistema ===
-Cuando el usuario no está autenticado, o bien se debe encriptar un valor que es requerido para autenticar al usuario, se emplea esta contraseña denominada _SystemPassword_.  La misma se forma en base a los tokens fijos que se encuentran en el archivo config.php y un string aleatorio que se genera la primera vez que el método apropiado es llamado.
+Cuando el usuario no está autenticado, o bien se debe encriptar un valor que es requerido para autenticar al usuario, se emplea esta contraseña denominada _SystemPassword_.  La misma se forma en base a los tokens fijos que se encuentran en el archivo config.php y el identificador de sesión.
 P. E.: el nombre de usuario se almacena en `$_SESSION` de esta manera.
 
 {{{
