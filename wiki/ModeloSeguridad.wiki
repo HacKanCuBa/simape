@@ -47,15 +47,18 @@ $session = new Session;
 $session->setPassword('contraseña');
 $session->setPasswordSalt('sal_criptográfica');
 
-$session->storeEnc($key, $value);
-$value = $session->retrieveEnc($key);
+$session->storeEnc($key, $value, $sanitizar);
+$value = $session->retrieveEnc($key, $sanitizar);
 }}}
 
 Incluso puede usarse directamente sin declarar objeto:
 {{{
-Session::store($key, $sanitizar, 'contraseña', 'sal_criptográfica');
-$value = Session::store($key, $value, $sanitizar, 'contraseña', 'sal_criptográfica');
+Session::store($key, $value, $sanitizar, 'contraseña', 'sal_criptográfica');
+$value = Session::retrieve($key, $sanitizar, 'contraseña', 'sal_criptográfica');
 }}}
+Con idéntico resultado.
+
+`$sanitizar` determina si los datos serán sanitizados (TRUE) o no.
 
 === Contraseña de sistema con usuario loggeado ===
 
