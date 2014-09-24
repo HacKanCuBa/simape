@@ -3,17 +3,55 @@
 
 = Modelo de Seguridad =
 
-Los datos almacenados en la cookie y en `$_SESSION` deben estar encriptados en todo momento.  Para ello, se genera una contraseña aleatoria al comienzo, y se encripta con una de dos contraseñas, dependiendo de si el usuario está loggeado o no.
-Asimismo, para reforzar la seguridad, se emplea la ID de sesión como sal criptográfica.
-
 Resulta de vital importancia que el campo UID de la tabla Usuario NUNCA sea modificado, y sea asimismo único y totalmente aleatorio.  Se emplea por defecto un valor UUIDv4 por human-friendly readability.  Este parámetro se empleará en funciones de encriptación así como también de manejo de archivos.
+
+== Encriptar, desencriptar y demás ==
+
+A este fin se integran todas las funciones adecuadas en la clase _Crypto_, así como también la generación de valores aleatorios criptográficamente seguros.
+Se emplean por defecto las funciones de [http://php.net/manual/es/ref.openssl.php OpenSSL].
+Puede (des)encriptarse sin problemas tanto strings como valores numéricos, objetos, arrays, etc.  Cualquier tipo de datos soportado por PHP sin requerir procesamiento previo, y se asegura que el valor recuperado no será dañado.  Se emplea _(un)serialize_ y _base64`_`(en/de)code_ para almacenar todo como string.
+
+{{{
+$myPwd = 'password';
+$mySalt = 'salt'; //opcional
+
+$secStr = 'string secreto';
+$encStr = Crypto::encrypt($secStr, $myPwd, $mySalt);
+$decStr = Crypto::decrypt($encStr, $myPwd, $mySalt);
+// $secStr == $decStr
+
+$secObj = new ObjetoSecreto;
+$encObj = Crypto::encrypt($secObj, $myPwd, $mySalt);
+$decObj = Crypto::decrypt($encObj, $myPwd, $mySalt);
+// $secObj == $decObj
+
+// Puede omitirse la sal si no se desea emplearla
+$encStr = Crypto::encrypt($secStr, $myPwd);
+$decStr = Crypto::decrypt($encStr, $myPwd);
+// $secStr == $decStr
+}}}
+
+Las funciones son inteligentes, y devolverán FALSE en caso de error.  P. E.: desencriptar algo que no estaba encriptado, o con la clave y/o sal incorrecta; encriptar algo con clave nula.
+Puede encriptarse repetidas veces sin límite dentro de un bucle, pero esto no será más o menos seguro en absoluto, por lo que solo resulta en un gran gasto de procesador y tiempo.
+Tanto la contraseña como la sal deben ser strings, o valores convertidos a strings.
+Nota: se desaconseja emplear arrays, objetos u otros tipos de datos como contraseña/sal dado que el resultado puede ser totalmente inesperado.
+
+== Sesión ==
+
+Los datos almacenados en la cookie y en `$_SESSION` deben estar encriptados en todo momento.  Para ello, se genera una contraseña aleatoria al comienzo, y se encripta con una de dos contraseñas, dependiendo de si el usuario está loggeado o no.
+Asimismo, para reforzar la seguridad, se emplea la ID de sesión como sal criptográfica, dado que la misma cambia (o no; por defecto lo hace) cada vez que se inicializa la sesión, esto es, en cada página cargada.
 
 En términos generales, se puede emplear cualquier contraseña en la sesión de la siguiente manera:
 {{{
 $session = new Session;
 $session->setPassword('contraseña');
 $session->setPasswordSalt('sal_criptográfica');
+
+$session->storeEnc($key, $value);
+$value = $session->retrieveEnc($key);
 }}}
+
+Debe tenerse cuidado, dado que estos valores impactan directamente en la seguridad del sistema.  Es conveniente dejar que el sistema los maneje.  Para encriptar y desencriptar valores cualesquiera, referirse a la clase _Crypto_.
 
 === Contraseña de sistema con usuario loggeado ===
 
@@ -25,7 +63,7 @@ $session = new Session;
 $session->useUserPassword($usuario->getUID());
 
 $session->storeEnc($key, $value);
-$session->retrieveEnc($key, $value);
+$value = $session->retrieveEnc($key);
 }}}
 
 === Contraseña de sistema ===
@@ -37,7 +75,7 @@ $session = new Session;
 $session->useSystemPassword();
 
 $session->storeEnc($key, $value);
-$session->retrieveEnc($key, $value);
+$value = $session->retrieveEnc($key);
 }}}
 
 == Tokens ==
