@@ -1,0 +1,9 @@
+# Apache configuration file (see httpd.apache.org/docs/2.2/mod/quickreference.html)
+
+# disable directory listing
+Options -Indexes
+IndexIgnore .htaccess */.??* *~ *# */HEADER* */README* */_vti*
+
+Order deny,allow
+Deny from all
+Allow from 127.0.0.1
