@@ -23,34 +23,35 @@
 
 /**
  * configload.php
- * Busca y carga config.php
- * Sirve para poder rediseñar el sitio con facilidad, y mover config.php a 
- * otro directorio (superior) fuera del alcance del usuario de apache, por 
- * seguridad.  Si se desea poner config.php en un directorio determinado, 
- * comentar las lineas indicadas y forzar la ruta como se especifica.
+ * Busca 'etc' y carga config.php
+ * Sirve para poder rediseñar el sitio con facilidad, y mover el directorio
+ * de configuraciones 'etc' a otro directorio (superior) fuera del alcance del 
+ * usuario de apache, por seguridad.
  * 
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.4
+ * @version 0.61
  */
 
 // Para forzar la ruta de config.php, borrar '//' de las siguientes 2 lineas:
-//require_once '/mi/ruta/a/config.php';
+//const SMP_LOC_ETC = 'etc/';
 ///* Buscar config.php
-$location = dirname(__FILE__);
-do {
-    if (file_exists($location . '/config.php')) {
-        require_once $location . '/config.php';
-        $location = '/';
-    } else {
-        $location = dirname($location);
-    }
-} while ($location != '/');
-// -- */
+// Primero probar el valor por defecto, para mayor velocidad
+if (file_exists('etc/config.php')) {
+    define('SMP_LOC_ETC', 'etc/');
+} else {
+    $location = dirname(__FILE__);
+    do {
+        $dirs = scandir($location);
+        foreach ($dirs as $dir) {
+            if ($dir == 'etc' && file_exists($location . '/etc/config.php')) {
+                define('SMP_LOC_ETC', $location . '/etc/');
+                break;
+            }
+        }
+        $location = dirname($location);    
+    } while (!defined('SMP_LOC_ETC') && $location != '/');  
+}// -- */
 
-if (!defined('SMP_CONFIG')) { 
-    die("No se puede encontrar el archivo config.php"); 
-}
-
-define('SMP_CONFIGLOAD', TRUE);
+require_once SMP_LOC_ETC . 'config.php';
