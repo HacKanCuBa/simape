@@ -29,8 +29,7 @@ require_once 'load.php';
 
 Session::terminate();
 
-if(!empty(Sanitizar::glPOST('frm_buttonLogin')))
-{
+if(!empty(Sanitizar::glPOST('frm_buttonLogin'))) {
     Page::nav(SMP_LOGIN);
     exit();
 }

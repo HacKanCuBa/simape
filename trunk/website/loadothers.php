@@ -40,7 +40,7 @@
  * - - - $_SESSION['req_o'] = ['arch1', 'arch2', ...]
  * 
  * Reconoce todos los parámetros, y cargará el archivo pedido desde:
- * SMP_FS_ROOT . SMP_LOC_INCS . [calificador] . ".php"
+ * SMP_FS_ROOT . SMP_LOC_INC . [calificador] . ".php"
  * Los calificadores solo pueden tener letras, nros, - y _, ningún otro símbolo
  * está admitido.  
  * Longitud máxima: SMP_LOAD_MAXLEN caracteres.
@@ -105,7 +105,7 @@ if (Session::status() == PHP_SESSION_ACTIVE) {
                             // ATENCION: Debe representarse al archivo con la 
                             // ruta completa!!
                             // De otra manera, se habilita un LFI
-                            $file = SMP_FS_ROOT . SMP_LOC_INCS
+                            $file = SMP_FS_ROOT . SMP_LOC_INC
                                     . $calificador . '.php';
 
                             switch ($action) {
