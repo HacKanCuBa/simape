@@ -1,0 +1,486 @@
+/*****************************************************************************
+ *  Este archivo forma parte de SiMaPe
+ *  Sistema Integrado de Manejo de Personal
+ *  Copyright (C) <2013>  <Ivan Ariel Barrera Oro>
+ *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ *
+ *  SiMaPe is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ * 
+ *  SiMaPe is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
+ * 
+ *****************************************************************************/
+/* 
+    Created on : 25/11/2013, 00:06:43
+    Author     : Ivan Ariel Barrera Oro
+
+    Todos los css en uno...
+*/
+
+/* HEADER */
+body {
+    	width: auto;
+	/*margin: 100px;*/
+	color: #666;
+        font: normal 0.8em/1.5em Arial, Helvetica, sans-serif;
+        background: #e0e0e0; /*url('/simape/imgs/simape_logo_text.png') no-repeat center center; */   
+        height: 100%;
+}
+
+.header { 
+    position: fixed;
+    width: 100%;
+    height: auto;  /* la img es de 120px */
+    top: 0px; 
+    left: 0px;
+    background:#e0e0e0; /*url('/simape/imgs/header_small.png') no-repeat center center;*/
+    /*alignment-adjust: middle;*/
+    text-align: center;
+    z-index: 100;
+    overflow: hidden;
+}
+
+.header img {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
+    height: 120px; 
+    width: 850px;
+}
+
+.data { 
+    margin-top: 150px;
+    z-index: 0;
+    margin-left: 200px; /* tener en cuenta la vert nav bar */
+    margin-right: 200px;
+    position: relative;
+}
+
+/**/
+
+/* Tablas */
+thead {
+    font-size: medium;
+}
+/**/
+
+/* Tabla ficha */
+.ficha {
+    border: 1px solid black;
+    border-spacing: 0px;
+    text-align: center; 
+    margin: auto; 
+    width: auto;
+}
+
+.ficha thead {
+    font-size: medium;
+}
+
+.ficha td {
+    border: 1px solid black;
+    border-spacing: 0px;
+    padding: 3px;
+    font-family: sans-serif;
+    font-size: small;
+}
+/**/
+
+/* Error msg */ 
+.blink2 {
+    animation-duration: 1s;
+    animation-name: blink2;
+    animation-iteration-count: 5;
+    animation-direction: alternate;
+    animation-timing-function: ease-in-out;
+}
+@keyframes blink2 {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;                    
+    }
+}
+
+.fadeout {
+    animation-duration: 7s;
+    animation-name: fadeout;
+    animation-iteration-count: 1;
+    animation-direction: alternate;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
+    -webkit-animation-duration: 7s;
+    -webkit-animation-name: fadeout;
+    -webkit-animation-iteration-count: 1;
+    -webkit-animation-direction: alternate;
+    -webkit-animation-timing-function: ease-in-out;
+    -webkit-animation-fill-mode: forwards;
+}
+@keyframes fadeout {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;                    
+    }
+}
+@-webkit-keyframes fadeout {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;                    
+    }
+}
+.hide {
+    display: none;
+}
+
+/**/
+
+/* Nav bar horizontal */ 
+/* http://webdesignerwall.com/tutorials/css3-dropdown-menu */
+
+.nav_horbox {
+    text-align: center; 
+    margin-top: 135px;
+    top: auto; 
+    height: auto;
+}
+a {
+	color: #333;
+}
+#nav_hor {
+	margin: 0;
+             
+	padding: 7px 6px 0;
+	line-height: 100%;
+	border-radius: 2em;
+
+	-webkit-border-radius: 2em;
+	-moz-border-radius: 2em;
+	
+	-webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+	-moz-box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+
+	background: #8b8b8b; /* for non-css3 browsers */
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#a9a9a9', endColorstr='#7a7a7a'); /* for IE */
+	background: -webkit-gradient(linear, left top, left bottom, from(#a9a9a9), to(#7a7a7a)); /* for webkit browsers */
+	background: -moz-linear-gradient(top,  #a9a9a9,  #7a7a7a); /* for firefox 3.6+ */
+
+	border: solid 1px #6d6d6d;
+}
+#nav_hor li {
+	margin: 0 5px;
+	padding: 0 0 8px;
+	float: left;
+	position: relative;
+	list-style: none;
+}
+/* main level link */
+#nav_hor a {
+	font-weight: bold;
+	color: #e7e5e5;
+	text-decoration: none;
+	display: block;
+	padding:  8px 20px;
+	margin: 0;
+	-webkit-border-radius: 1.6em;
+	-moz-border-radius: 1.6em;
+        border-radius: 1.6em;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, .3);
+}
+/* main level link hover */
+#nav_hor .current a, #nav_hor li:hover > a {
+	background: #d1d1d1; /* for non-css3 browsers */
+	filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#ebebeb', endColorstr='#a1a1a1'); /* for IE */
+	background: -webkit-gradient(linear, left top, left bottom, from(#ebebeb), to(#a1a1a1)); /* for webkit browsers */
+	background: -moz-linear-gradient(top,  #ebebeb,  #a1a1a1); /* for firefox 3.6+ */
+
+	color: #444;
+	border-top: solid 1px #f8f8f8;
+	-webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .2);
+	-moz-box-shadow: 0 1px 1px rgba(0, 0, 0, .2);
+	box-shadow: 0 1px 1px rgba(0, 0, 0, .2);
+	text-shadow: 0 1px 0 rgba(255, 255, 255, .8);
+}
+/* sub levels link hover */
+#nav_hor ul li:hover a, #nav_hor li:hover li a {
+	background: none;
+	border: none;
+	color: #666;
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+        box-shadow: none;
+}
+#nav_hor ul a:hover {
+	background: #0399d4 !important; /* for non-css3 browsers */
+	filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#04acec', endColorstr='#0186ba'); /* for IE */
+	background: -webkit-gradient(linear, left top, left bottom, from(#04acec), to(#0186ba)) !important; /* for webkit browsers */
+	background: -moz-linear-gradient(top,  #04acec,  #0186ba) !important; /* for firefox 3.6+ */
+
+	color: #fff !important;
+	-webkit-border-radius: 0;
+	-moz-border-radius: 0;
+        border-radius: 0;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, .1);
+}
+/* level 2 list */
+#nav_hor ul {
+	background: #ddd; /* for non-css3 browsers */
+	filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#cfcfcf'); /* for IE */
+	background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#cfcfcf)); /* for webkit browsers */
+	background: -moz-linear-gradient(top,  #fff,  #cfcfcf); /* for firefox 3.6+ */
+
+	display: none;
+	margin: 0;
+	padding: 0;
+	width: 185px;
+	position: absolute;
+	top: 35px;
+	left: 0;
+	border: solid 1px #b4b4b4;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+	-webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, .3);
+	-moz-box-shadow: 0 1px 3px rgba(0, 0, 0, .3);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, .3);
+}
+/* dropdown */
+#nav_hor li:hover > ul {
+	display: block;
+}
+#nav_hor ul li {
+	float: none;
+	margin: 0;
+	padding: 0;
+}
+#nav_hor ul a {
+	font-weight: normal;
+	text-shadow: 0 1px 1px rgba(255, 255, 255, .9);
+}
+/* level 3+ list */
+#nav_hor ul ul {
+	left: 181px;
+	top: -3px;
+}
+/* rounded corners for first and last child */
+#nav_hor ul li:first-child > a {
+	-webkit-border-top-left-radius: 9px;
+	-moz-border-radius-topleft: 9px;
+	-webkit-border-top-right-radius: 9px;
+	-moz-border-radius-topright: 9px;
+        border-top-left-radius: 9px;
+        border-top-right-radius: 9px;
+}
+#nav_hor ul li:last-child > a {
+	-webkit-border-bottom-left-radius: 9px;
+	-moz-border-radius-bottomleft: 9px;
+	-webkit-border-bottom-right-radius: 9px;
+	-moz-border-radius-bottomright: 9px;
+        border-bottom-left-radius: 9px;
+        border-bottom-right-radius: 9px;       
+}
+/* clearfix */
+#nav_hor:after {
+	content: ".";
+	display: block;
+	clear: both;
+	visibility: hidden;
+	line-height: 0;
+	height: 0;
+}
+#nav_hor {
+	display: inline-block;
+}
+html[xmlns] #nav_hor {
+	display: block;
+}
+* html #nav_hor {
+	height: 1%;
+}
+/**/
+
+/* Nav bar vertical */
+/* http://www.tobypitman.com/jquery-style-menu-with-css3/ */
+/* agregada la clase category, corregidos errores varios */
+
+.nav_vertbox {
+    position: absolute;
+    float: left;
+    margin-top: 70px;
+    top: 0px;
+    margin-left: 0px;
+    left: 0px;
+    height: auto;
+    overflow: hidden;
+    z-index: 10;
+}
+
+ul.nav_vert {
+    list-style: none;
+    display: block;
+    width: 200px;
+    position: relative;
+    /*top: 100px;
+    left: 100px;*/
+    padding: 60px 0 60px 0;
+    background: url(/imgs/navbar_shade.png) no-repeat;
+    -webkit-background-size: 50% 100%;
+    -moz-background-size: 50% 100%;
+    background-size: 50% 100%;
+}
+
+ul.nav_vert li.category a {
+    font-weight: bolder;
+    /*background: #666 url(/imgs/navbar_border.png) no-repeat;*/
+    filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#a9a9a9', endColorstr='#7a7a7a'); /* for IE */
+    background: -webkit-gradient(linear, left top, left bottom, from(#a9a9a9), to(#7a7a7a)); /* for webkit browsers */
+    background: -moz-linear-gradient(top,  #a9a9a9,  #7a7a7a); /* for firefox 3.6+ */
+    color: #e7e5e5;
+    /*padding: 7px 15px 7px 30px;*/
+    text-shadow: 0 1px 1px rgba(0, 0, 0, .3);
+    margin-top: 5px
+}
+
+ul.nav_vert li.category a:hover {
+    /*background: #666 url(/imgs/navbar_border.png) no-repeat;*/
+    filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#a9a9a9', endColorstr='#7a7a7a'); /* for IE */
+    background: -webkit-gradient(linear, left top, left bottom, from(#a9a9a9), to(#7a7a7a)); /* for webkit browsers */
+    background: -moz-linear-gradient(top,  #a9a9a9,  #7a7a7a); /* for firefox 3.6+ */
+    color: #e7e5e5;
+}
+
+ul.nav_vert li {
+    margin: 5px 0 0 0;
+}
+
+ul.nav_vert li a {
+    -webkit-transition: all 0.3s ease-out;
+    -moz-transition: all 0.3s ease-out;
+    background: #cbcbcb url(/imgs/navbar_border.png) no-repeat;
+    color: #174867;
+    padding: 4px 15px 4px 15px;
+    -webkit-border-top-right-radius: 8px;
+    -moz-border-top-right-radius: 8px;
+    border-top-right-radius: 8px;
+    -webkit-border-bottom-right-radius: 8px;
+    -moz-border-radius-bottomright: 8px;
+    border-bottom-right-radius: 8px; 
+    width: 150px;
+    display: block;
+    text-decoration: none;
+    -webkit-box-shadow: 2px 2px 4px #888;
+    -moz-box-shadow: 2px 2px 4px #888;
+    box-shadow: 2px 2px 4px #888;
+}
+
+ul.nav_vert li a:hover {
+    background: #ebebeb url(/imgs/navbar_border.png) no-repeat;
+    color: #67a5cd;
+    padding: 4px 15px 4px 30px;
+}
+/**/
+
+/* TABS */
+/* http://css-tricks.com/examples/CSSTabs */
+/** { margin: 0; padding: 0; }*/
+
+.w3cTabs { 
+    height: 300px;
+    /*min-height: 100px;*/
+    position: relative; 
+    width: auto;
+    resize: none;
+    /*margin-left: auto;*/
+    text-align: center;
+}
+.w3cTabs > div { display: inline; }
+.w3cTabs > div > a { 
+    margin-left: -1px; 
+    position: relative; 
+    left: 1px; 
+    text-decoration: none; 
+    color: black; 
+    background: white; 
+    display: block; 
+    float: left; 
+    padding: 5px 10px; 
+    border: 1px solid #ccc; 
+    border-bottom: 1px solid white; 
+}
+.w3cTabs > div:not(:target) > a { 
+    border-bottom: 0; 
+    background: -moz-linear-gradient(top, #fff, #eee);
+    background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#eee)); /* corregido por hackan */
+}	
+.w3cTabs > div:target > a { 
+    background: white; 
+    font-style: italic; /* agregado por hackan */
+}	
+.w3cTabs > div > div { 
+    background: white; 
+    z-index: -2; 
+    left: 0; 
+    top: 30px; 
+    bottom: 0; 
+    right: 0; 
+    padding: 20px; 
+    border: 1px solid #ccc;
+    height: auto;
+    /*max-height: auto;*/
+    resize: none;
+    overflow-y: scroll;
+}	
+.w3cTabs > div:not(:target) > div { position: absolute }
+.w3cTabs > div:target > div { position: absolute; z-index: -1; }
+/**/
+
+/** PI **/
+#pi {
+    width: auto; 
+    text-align: right; 
+    height: auto;
+    margin-right: 0px;
+    position: fixed;
+    right: 1px;
+    margin-right: 1%;
+    bottom: 0px;
+    margin-bottom: 0px;
+}
+#pi .pi_visible {
+    position:relative;
+    visibility: visible;
+    font-style: normal;
+    color: #d4d4d4;
+    font: normal .8em/1.5em sans-serif;
+}
+#pi .pi_hidden {
+    position:relative;
+    visibility: hidden;
+    font-style: italic;
+    font-family: sans-serif;
+    font-size: .8em;
+    /*color: #c0c0c0;*/
+}
+
+#pi:hover .pi_hidden {
+    visibility:visible;
+}
+
+#pi:hover .pi_visible{
+    visibility: hidden;    
+}
+/**/

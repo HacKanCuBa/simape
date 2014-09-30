@@ -31,7 +31,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.44
+ * @version 1.45
  */
 
 require_once 'load.php';
@@ -72,18 +72,17 @@ switch($action) {
 //        $session->store(SMP_SESSINDEX_PAGE_RANDOMTOKEN, $page->getRandomToken());
 //        $session->store(SMP_SESSINDEX_PAGE_TIMESTAMP, $page->getTimestamp());
         
-        $params = Sanitizar::glGET(Sanitizar::ALL);
+          $params = Sanitizar::glGET(Sanitizar::ALL);
 //        $params[SMP_SESSINDEX_PAGE_TOKEN] = $page->getToken();
         break;
     
     case SMP_LOGIN:
         $page->setLocation('login.php');
         break;
-    
-    case SMP_HOME:  // por ahora, mensajes.php
-        $action = SMP_LOC_PAGS . 'mensajes.php';
-    case SMP_LOC_PAGS . 'mensajes.php':
-        $intLink = "tabR"; // no uso break para que ejecute default
+           
+    case SMP_LOC_USR . 'mensajes.php':
+        $intLink = "tabR"; 
+        // omito break para que ejecute default
     default:
         // si la página no existe, 404...
         if (Page::pageExists($action)) {

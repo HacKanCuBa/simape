@@ -26,13 +26,15 @@
  * Todas las opciones pueden modificarse acorde a la necesidad; prestar
  * especial atención a la categorizada como "Config interna".
  * 
- * !!! IMPORTANTE: Una vez definida la configuración, debe ser renombrado a 
+ * !!! 
+ * IMPORTANTE: Una vez definida la configuración, debe ser renombrado a 
  * config.php
+ * !!!
  * 
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.01
+ * @version 1.2
  */
 
 // << Config
@@ -102,6 +104,10 @@ const SMP_TKN_PWDRESTORE =
 // Tiempo de vida, en segundos
 const SMP_SESSIONKEY_LIFETIME = 28800; // 8hs
 // --
+//
+// Página por defecto al iniciar sesión
+define('SMP_HOME', 'usr/index.php');
+// --
 // 
 // >>
 
@@ -114,24 +120,33 @@ const SMP_SESSIONKEY_LIFETIME = 28800; // 8hs
 // Debe corresponder a la configuración de apache, y siempre comenzar con '/'.
 const SMP_WEB_ROOT = '/';
 
-// Raiz para inclusion de archivos
-// Si se mueve este archivo a otro directorio, modificar esta definición 
-// apropiadamente.
-// NOTA: Solo puede moverse este archivo a otro directorio superior al del 
-// sitio.  Si se lo mueve a otro directorio no superior, loadconfig.php no 
-// podrá encontrar este archivo.  Ver loadconfig.php para más información.
-define('SMP_FS_ROOT', dirname(__FILE__) .'/');
+// Raíz para inclusión de archivos
+// Definida en load.php
 
 // Definir las siguientes rutas en forma relativa, tal de poder emplear luego
 // SMP_FS_ROOT o SMP_WEB_ROOT según sea necesario.
-const SMP_LOC_CSS = 'css/';
-const SMP_LOC_IMGS = 'imgs/';
-const SMP_LOC_PAGS = 'pags/';
-const SMP_LOC_INCS = 'incs/';
-const SMP_LOC_LIBS = 'libs/';
-const SMP_LOC_TMPS = 'tmps/';
-const SMP_LOC_UPLOAD = 'upload/';
-define('SMP_LOC_UPLOAD_FOTOSPERFIL', SMP_LOC_UPLOAD . 'perfil/');
+
+// Directorios principales
+// El directorio que contiene este archivo es el mismo que contiene otros
+// archivos de configuración y opciones del sistema.
+// configload.php se encarga de buscarlo y definirlo.
+const SMP_LOC_LIBS = 'lib/';
+const SMP_LOC_MEDIA = 'media/';
+const SMP_LOC_TMPS = 'tmp/';
+const SMP_LOC_USR = 'usr/';
+
+// Subdirectorios 1er nivel
+define('SMP_LOC_LIB_PHP', SMP_LOC_LIBS . 'php/');
+define('SMP_LOC_CSS', SMP_LOC_MEDIA . 'css/');
+define('SMP_LOC_IMGS', SMP_LOC_MEDIA . 'img/');
+define('SMP_LOC_ADMIN', SMP_LOC_USR . 'adm/');
+define('SMP_LOC_CONTENT', SMP_LOC_USR . 'content/');
+
+// Subdirectorios 2do nivel
+define('SMP_LOC_INC', SMP_LOC_LIB_PHP . 'inc/');
+define('SMP_LOC_EXT', SMP_LOC_LIB_PHP . 'ext/');
+define('SMP_LOC_FOTOSPERFIL', SMP_LOC_CONTENT . 'perfil/');
+define('SMP_LOC_UPLOADS', SMP_LOC_CONTENT . 'upload/');
 // --
 //
 // -- Errores
@@ -199,12 +214,12 @@ const SMP_SESSINDEX_NOTIF_ERR = 'notifErr';
 const SMP_SESSINDEX_NOTIF_MSG = 'notifMsg';
 const SMP_SESSINDEX_USERNAME = 'username';
 const SMP_SESSINDEX_SYSTEMPASSWORDSALT = 'systemPasswordSalt';
+const SMP_SESSINDEX_SESSIONPASSWORD = 'sessionPassword';
 // --
 // Otras constantes internas
 const SMP_NAV_ACTION = 'accion';
 const SMP_LOGOUT = 'logout';
 const SMP_LOGIN = 'login';
-const SMP_HOME = 'home';
 const SMP_RESTOREPWD = 'restorePwd';
 // --
 // 

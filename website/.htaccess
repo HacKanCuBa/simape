@@ -84,7 +84,7 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.php [L]
 
 # DENY BROWSER ACCESS TO THESE FILES
-<FilesMatch "^(config\.php|php\.ini|php5\.ini|readme\.html|bb-config\.php)">
+<FilesMatch "^(config\.php|php\.ini|php5\.ini|readme\.html|bb-config\.php|pages\.uid)">
 Order allow,deny
 Deny from all
 </FilesMatch>
@@ -166,10 +166,10 @@ RewriteCond %{REQUEST_URI} ^/(cgi.cgi|webcgi|cgi-914|cgi-915|bin|cgi|mpcgi|cgi-b
 # HTTP_USER_AGENT, HTTP_REFERER, HTTP_COOKIE,HTTP_FORWARDED,HTTP_ACCEPT
 
 # Directory Traversal, Null Byte Injection, HTTP Response Splitting
-RewriteCond %{QUERY_STRING} ^.*(../|..%2f|..%5C|..%252F|..%255C|..%u2215|%u002e%u002e%u2215|%252e%252e%252f|%00|\x00|\u00|%5C00|%09|%0D%0A) [NC,OR]
+#RewriteCond %{QUERY_STRING} ^.*(../|..%2f|..%5C|..%252F|..%255C|..%u2215|%u002e%u002e%u2215|%252e%252e%252f|%00|\x00|\u00|%5C00|%09|%0D%0A) [NC,OR]
 
 # SQL Injection Probing
-RewriteCond %{QUERY_STRING} ^.*(@@version|CHR(|CHAR(|UNION%20SELECT|/select/|/union/|/insert/|/update/|/delete/).* [NC,OR]
+#RewriteCond %{QUERY_STRING} ^.*(@@version|CHR(|CHAR(|UNION%20SELECT|/select/|/union/|/insert/|/update/|/delete/).* [NC,OR]
 RewriteCond %{QUERY_STRING} ^.*(or|and)%20([0-9]=[0-9]).* [NC,OR]
 
 # Remote/Local File Inclusion

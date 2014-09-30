@@ -29,25 +29,25 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.2
+ * @version 0.3
  */
 //
 function shorthand_to_bytes($val) 
 {
     // http://us1.php.net/ini_get
-    $val = trim($val);
-    $last = strtolower($val[strlen($val)-1]);
-    switch($last) {
+    $mod = strtolower(substr(trim($val), -1));
+    $value = intval(substr(trim($val), 0, -1));
+    switch($mod) {
         // The 'G' modifier is available since PHP 5.1.0
         case 'g':
-            $val *= 1024;
+            $value *= 1024 * 1024 * 1024;
         case 'm':
-            $val *= 1024;
+            $value *= 1024 * 1024;
         case 'k':
-            $val *= 1024;
+            $value *= 1024;
     }
 
-    return $val;
+    return $value;
 }
 
 // Verificar configuración

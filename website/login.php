@@ -66,11 +66,6 @@ const LOGIN_SESSINDEX_CAPTCHA = 'CAPTCHA';
 const LOGIN_ERR_RESTORETKN = '&iexcl;El token de restablecimiento de contrase&ntilde;a no es v&aacute;lido!';
 
 /**
- * Página por defecto al loggearse.
- */
-define('LOGIN_LOC_LOGEDIN', SMP_LOC_PAGS . 'saper.php');
-
-/**
  * Constantes que manejan lo que será mostrado al usuario.
  */
 const LOGIN_DISPLAY_DEFAULT = 0;
@@ -125,7 +120,7 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
             // Login OK 
             if($usuario->sesionIniciar()) {
                 // Sesion iniciada, ir a la pagina de inicio del usuario
-                $nav = LOGIN_LOC_LOGEDIN;
+                $nav = defined('SMP_HOME') ? SMP_HOME : 'usr/index.php';
             } else {
                 // Falló
                 Session::store(SMP_SESSINDEX_NOTIF_ERR, 'Ha ocurrido un error '
