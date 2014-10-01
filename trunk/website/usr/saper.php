@@ -109,6 +109,11 @@ if ($page->authenticateToken()
                 }
             } else {
                 $entrada = Sanitizar::glPOST('frm_txtHoraIni');
+                foreach ($entrada as $key => $value) {
+                    if (strlen($value) <= 2) {
+                        $entrada[$key] .= ':00';
+                    }
+                }
                 Session::store(SAPER_SESSINDEX_HINI, $entrada);
             }
             if (is_a($ficha, 'SaperFicha')) {
@@ -136,15 +141,17 @@ if ($page->authenticateToken()
                         Page::getMain() .
                         $ficha->imprimir(2, 'ficha', FALSE) .
                         "\n\t\t\t<br />" .
-                        "\n\t\t\t<b>El cálculo de horas extras se realiza bajo las siguientes condiciones:</b>" .
+                        "\n\t\t\t<b>Los c&aacute;lculos se realizan bajo las siguientes condiciones:</b>" .
                         "\n\t\t\t<ul>" .
-                        "\n\t\t\t\t<li>La operación matemática realizada es: Hora de Salida - Hora de Entrada - 6hs</li>" .
-                        "\n\t\t\t\t<li>Si la hora a la que el agente ingresó es anterior a la hora a la que debe ingresar, se empleará esta última para el cálculo.  Esto es, no se toma en cuenta el tiempo anterior a la hora de ingreso.</li>" .
-                        "\n\t\t\t\t<li>Se mostrará, en la columna de Horas Extras, un \"-\" cuando las horas trabajadas sean menor a 6 y un \"&lt; 1h\" cuando las horas extras sean menor que 1, y no se sumará al total.</li>" .
-                        "\n\t\t\t\t<li>Cuando las horas extras sean menor que 1, pero mayor a 0, se considerá Tiempo Compensado y se mostrará en la columna apropiada.</li>" .
-                        "\n\t\t\t\t<li>El total indicado al final de la planilla NO tiene en cuenta si el agente adeuda horas en el mes.</li>" .
-                        "\n\t\t\t\t<li>Cuando se presente m&aacute; de un par de fichajes, a cada período se le aplicarán las reglas anteriores.</li>" .
-                        "\n\t\t\t\t<li>La operación matemática realizada para las horas extras reales es: Horas Extra - (Horas Adeudadas - Horas Compensadas), si Horas Adeudadas - Horas Compensadas resulta mayor que 0.</li>" .
+                        "\n\t\t\t\t<li>No se consideran los segundos en los fichajes (se truncan a 0).</li>" .
+                        "\n\t\t\t\t<li>Si la hora a la que el agente ingres&oacute; es anterior a la hora a la que debe ingresar, se emplear&aacute; esta &uacute;ltima para el c&aacute;lculo.  Esto es, no se toma en cuenta el tiempo anterior a la hora de ingreso.</li>" .
+                        "\n\t\t\t\t<li>Se considera Hora Extra a todo tiempo trabajado superior a 1 hora respecto de las horas laborales ordinarias.</li>" .
+                        "\n\t\t\t\t<li>Se considera Tiempo Compensado a todo tiempo adicional a las horas laborales ordinarias inferior a 1h.</li>" .
+                        "\n\t\t\t\t<li>Se considera Tiempo Faltante o Adeudado cuando no se hayan cumplido las horas laborales ordinarias.</li>" .
+                        "\n\t\t\t\t<li>Las columnas de la planilla muestran valores propios, esto es, sin interacción entre sí.</li>" .
+                        "\n\t\t\t\t<li>Cuando se presente m&aacute;s de un par de fichajes, a cada período se le aplicarán las reglas anteriores.</li>" .
+                        "\n\t\t\t\t<li>La operación matemática realizada para las horas extras reales es: Horas Extra - (Horas Adeudadas - Horas Compensadas), si (Horas Adeudadas - Horas Compensadas) resulta mayor que 0 (esto es, el agente adeuda horas que no compensa y se descuentan de las extras).</li>" .
+                        "\n\t\t\t\t<li>El Tiempo Compensado nunca se suma a las Horas Extra.</li>" .
                         "\n\t\t\t</ul>" .
                         Page::getMainClose();                
 //                echo $html;
@@ -236,7 +243,6 @@ switch($display) {
                     break;
                 }
             }
-            echo "</input>";
             echo "\n\t\t\t\t\t\t</td>";
             echo "\n\t\t\t\t\t</tr>";
         }
@@ -254,7 +260,7 @@ switch($display) {
         echo "\n\t\t\t\t\t\t\t<select name='frm_optMes'>";
         for ($i = 1; $i < 13; $i ++) {  
             $mes = ucfirst(strftime('%B', strtotime($i . '/01/2014')));
-            echo "\n\t\t\t\t\t\t\t\t<option value='" . $mes . "'>" . $mes . "</option>";
+            echo "\n\t\t\t\t\t\t\t\t<option value='" . $mes . "'" . (($i == date("m")) ? " selected" : '') . ">" . $mes . "</option>";
         }
         echo "\n\t\t\t\t\t\t\t</select>";
         echo "\n\t\t\t\t\t\t</td>";
@@ -318,7 +324,7 @@ switch($display) {
         echo "\n\t\t\t\t\t</tr>";
 
         echo "\n\t\t\t\t\t<tr>";
-        $horaInicio = Session::retrieve(SAPER_SESSINDEX_HINI) ?: ["07:30:00", "07:30:00", "07:30:00", "07:30:00", "07:30:00"];
+        $horaInicio = Session::retrieve(SAPER_SESSINDEX_HINI) ?: ["07:30", "07:30", "07:30", "07:30", "07:30"];
         for ($i = 0; $i < 5; $i++) {
             echo "\n\t\t\t\t\t\t<td><input type='time' size='5' name='frm_txtHoraIni[" . $i . "]' value='" . $horaInicio[$i] . "'>";
             echo "\n\t\t\t\t\t\t</td>";
@@ -336,15 +342,17 @@ switch($display) {
         echo "\n\t\t\t</table>";
         
         echo "\n\t\t\t<br />";
-        echo "\n\t\t\t<b>El cálculo de horas extras se realiza bajo las siguientes condiciones:</b>";
+        echo "\n\t\t\t<b>Los c&aacute;lculos se realizan bajo las siguientes condiciones:</b>";
         echo "\n\t\t\t<ul>";
-        echo "\n\t\t\t\t<li>La operación matemática realizada es: Hora de Salida - Hora de Entrada - 6hs</li>";
-        echo "\n\t\t\t\t<li>Si la hora a la que el agente ingresó es anterior a la hora a la que debe ingresar, se empleará esta última para el cálculo.  Esto es, no se toma en cuenta el tiempo anterior a la hora de ingreso.</li>";
-        echo "\n\t\t\t\t<li>Se mostrará, en la columna de Horas Extras, un \"-\" cuando las horas trabajadas sean menor a 6 y un \"&lt; 1h\" cuando las horas extras sean menor que 1, y no se sumará al total.</li>";
-        echo "\n\t\t\t\t<li>Cuando las horas extras sean menor que 1, pero mayor a 0, se considerá Tiempo Compensado y se mostrará en la columna apropiada.</li>";
-        echo "\n\t\t\t\t<li>El total indicado al final de la planilla NO tiene en cuenta si el agente adeuda horas en el mes.</li>";
-        echo "\n\t\t\t\t<li>Cuando se presente m&aacute; de un par de fichajes, a cada período se le aplicarán las reglas anteriores.</li>";
-        echo "\n\t\t\t\t<li>La operación matemática realizada para las horas extras reales es: Horas Extra - (Horas Adeudadas - Horas Compensadas), si Horas Adeudadas - Horas Compensadas resulta mayor que 0.</li>";
+        echo "\n\t\t\t\t<li>No se consideran los segundos en los fichajes (se truncan a 0).</li>";
+        echo "\n\t\t\t\t<li>Si la hora a la que el agente ingres&oacute; es anterior a la hora a la que debe ingresar, se emplear&aacute; esta &uacute;ltima para el c&aacute;lculo.  Esto es, no se toma en cuenta el tiempo anterior a la hora de ingreso.</li>";
+        echo "\n\t\t\t\t<li>Se considera Hora Extra a todo tiempo trabajado superior a 1 hora respecto de las horas laborales ordinarias.</li>";
+        echo "\n\t\t\t\t<li>Se considera Tiempo Compensado a todo tiempo adicional a las horas laborales ordinarias inferior a 1h.</li>";
+        echo "\n\t\t\t\t<li>Se considera Tiempo Faltante o Adeudado cuando no se hayan cumplido las horas laborales ordinarias.</li>";
+        echo "\n\t\t\t\t<li>Las columnas de la planilla muestran valores propios, esto es, sin interacción entre sí.</li>";
+        echo "\n\t\t\t\t<li>Cuando se presente m&aacute;s de un par de fichajes, a cada período se le aplicarán las reglas anteriores.</li>";
+        echo "\n\t\t\t\t<li>La operación matemática realizada para las horas extras reales es: Horas Extra - (Horas Adeudadas - Horas Compensadas), si (Horas Adeudadas - Horas Compensadas) resulta mayor que 0 (esto es, el agente adeuda horas que no compensa y se descuentan de las extras).</li>";
+        echo "\n\t\t\t\t<li>El Tiempo Compensado nunca se suma a las Horas Extra.</li>";
         echo "\n\t\t\t</ul>";
         break;
     
