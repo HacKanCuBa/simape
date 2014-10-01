@@ -72,13 +72,18 @@ class SaperFicha
     * 
     * @param string $string String conteniendo la hora en la forma de "HH#MM#SS" 
     * o "HH#MM" donde # es un simbolo separador cualquiera.
-    * @param boolean $getAsObject TRUE para devolver resultado como objeto, 
+    * @param boolean $getAsObject [opcional]<br />
+    * TRUE para devolver resultado como objeto, 
     * FALSE para hacerlo como Unix Timestamp (por defecto).
+    * @param boolean $removeSeconds [opcional]<br />
+    * Si es TRUE, elimina los segundos del tiempo recibido (por defecto).
     * @return mixed Hora como objeto DateTime si $getAsObject = TRUE, 
     * si no como int Unix Timestamp (por defecto).  En caso de error, FALSE.
     */
-    protected static function readHour($string, $getAsObject = FALSE)
-    {
+    protected static function readHour($string, 
+                                        $getAsObject = FALSE, 
+                                        $removeSeconds = TRUE
+    ) {
        try {
            $str = preg_replace('[\s]', ':', trim(preg_replace("/[^0-9]/", 
                                                                 ' ', 
@@ -88,6 +93,10 @@ class SaperFicha
                    DateTime::createFromFormat("Y-m-d e H#i", 
                                                "1970-01-01 -0000 " . $str));
    
+           ($time && $removeSeconds) ? $time->setTime($time->format('H'), 
+                                                        $time->format('i'), 
+                                                        0) : 
+                                        NULL;
            if ($getAsObject) {
                return $time;
            } else {
@@ -368,19 +377,16 @@ class SaperFicha
                             "' style='text-align: center;'>", $indent + 3, 
                                                                 TRUE, FALSE);
         $str .= "<h3>Considerando el tiempo adeudado en el mes (<i>" 
-                . sprintf('%02d:%02d:%02d', ($this->hs_faltantes_total/3600), 
-                                                ($this->hs_faltantes_total/60%60), 
-                                                $this->hs_faltantes_total%60) 
+                . sprintf('%02d:%02d', ($this->hs_faltantes_total/3600), 
+                                                ($this->hs_faltantes_total/60%60)) 
                 . "</i>) y teniendo en cuenta el tiempo compensado (<i>" 
-                . sprintf('%02d:%02d:%02d', ($this->hs_compensadas_total/3600), 
-                                            ($this->hs_compensadas_total/60%60), 
-                                            $this->hs_compensadas_total%60) 
+                . sprintf('%02d:%02d', ($this->hs_compensadas_total/3600), 
+                                            ($this->hs_compensadas_total/60%60)) 
                 . "</i>), las horas extras reales son: " 
                 . sprintf(($this->hs_extras_real_total < 0 ? '-' : '') . 
-                                                            '%02d:%02d:%02d', 
+                                                            '%02d:%02d', 
                                     abs(($this->hs_extras_real_total/3600)),
-                                    abs(($this->hs_extras_real_total/60%60)), 
-                                            abs($this->hs_extras_real_total%60))
+                                    abs(($this->hs_extras_real_total/60%60)))
                 . ($this->hs_extras_real_total < 0 ? ' (adeuda tiempo)' : '')
                 . "</h3>";
         $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
@@ -411,12 +417,6 @@ class SaperFicha
         $compensa_total = 0;
         $faltan = array();
         $faltan_total = 0;
-        
-        foreach ($entrada_diaria as $key => $value) {
-            if (strlen($value) <= 2) {
-                $entrada_diaria[$key] = $entrada_diaria[$key] . ':00';
-            }
-        }
 
         foreach ($this->get_asArray() as $dia) {
             $fecha = DateTime::createFromFormat("d#m#Y", $dia[0]);
@@ -495,33 +495,34 @@ class SaperFicha
                     $tiempo = array($extra, $comp, $falta);
                 }
             }
-            $compensa[] = $tiempo[1] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[1])->format('H:i:s') : '-';
+            $compensa[] = $tiempo[1] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[1])->format('H:i') : '-';
             $compensa_total += $tiempo[1];
-            $extras[] = $tiempo[0] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[0])->format('H:i:s') : ($tiempo[1] ? '&lt; 1h' :  '-');
+            $extras[] = $tiempo[0] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[0])->format('H:i') : ($tiempo[1] ? '&lt; 1h' :  '-');
             $extras_total += $tiempo[0];
-            $faltan[] = $tiempo[2] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[2])->format('H:i:s') : '-';
+            $faltan[] = $tiempo[2] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[2])->format('H:i') : '-';
             $faltan_total += $tiempo[2];
         }       
         // el ultimo valor es 0, lo reemplazo por el total de extras
         end($extras);
         // las extras totales pueden ser > 24hs
         //$extras[key($extras)] = DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $extras_total)->format('H:i:s');
-        $extras[key($extras)] = sprintf('%02d:%02d:%02d', 
+//        $extras[key($extras)] = sprintf('%02d:%02d:%02d', 
+//                                                ($extras_total/3600),
+//                                                ($extras_total/60%60), 
+//                                                $extras_total%60);
+        $extras[key($extras)] = sprintf('%02d:%02d', 
                                                 ($extras_total/3600),
-                                                ($extras_total/60%60), 
-                                                $extras_total%60);
+                                                ($extras_total/60%60));
 
         end($compensa);
-        $compensa[key($compensa)] = sprintf('%02d:%02d:%02d', 
+        $compensa[key($compensa)] = sprintf('%02d:%02d', 
                                                 ($compensa_total/3600),
-                                                ($compensa_total/60%60), 
-                                                $compensa_total%60);
+                                                ($compensa_total/60%60));
 
         end($faltan);
-        $faltan[key($faltan)] = sprintf('%02d:%02d:%02d', 
+        $faltan[key($faltan)] = sprintf('%02d:%02d', 
                                                 ($faltan_total/3600),
-                                                ($faltan_total/60%60), 
-                                                $faltan_total%60);
+                                                ($faltan_total/60%60));
 
         $this->hs_compensadas_total = $compensa_total;
         $this->hs_compensadas = $compensa;
