@@ -168,3 +168,156 @@ openssl req -new -sha512 -key simape-svr.key -out simape-svr.csr
 # Firmar con certificado de CA
 openssl x509 -req -sha512 -in simape-svr.csr -out simape-svr.crt -CA my-ca.crt -CAkey my-ca.key -CAcreateserial -days 730
 }}}
+Luego copiar los archivos simape-svr.key, simape-svr.crt y my-ca.crt a /etc/ssl/localcerts o donde se prefiera (debe editarse /etc/apache2/sites-available/simape_ssl acorde).  *Importante*: los archivos .crt deben ser legibles por todos y los .key solo por root: `sudo chmod 0400 *.key && sudo chmod 0444 *.crt` estando en el directorio apropiado.
+
+¡¡Muy recomendable hacer un backup de todos los archivos recién generados, y sus respectivas contraseñas!!
+
+*Atención*: Si al generar el certificado del servidor se ha empleado una contraseña, Apache2 no podrá iniciar automáticamente dado que se deberá escribir dicha contraseña (https://wiki.apache.org/httpd/RemoveSSLCertPassPhrase)
+
+== Google Authenticator ==
+Decidí implementar GAuth en mi servidor dado que añade un factor de seguridad fundamental, y es muy fácil de configurar.
+
+El siguiente script compila e instala GAuth, y lo habilita para las conexiones SSH y terminales locales:
+{{{
+#!/bin/bash
+
+# *************************************************************************
+# Script de instalacion y configuracion de Google Authenticator
+# Autor: HacKan
+# Licencia: GNU GPL v3
+#
+#  This is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# *************************************************************************
+
+declare -r VERSION="0.3"
+
+declare -i -r EXIT_SUCCESS=0
+declare -i -r EXIT_FAILURE=1
+
+# Parametros extras para la configuracion de PAM (p.e. nullok)
+declare -r PAM_PARAMS=""
+
+# Script de desinstalacion
+declare -r UNINSTALL_SCRIPT="gauth_uninstall"
+
+function err_msg {
+	echo -e "\t!!! ${1}"
+}
+
+EVAL=${EXIT_FAILURE}
+
+echo "*** Instalando dependencias..."
+sudo apt-get -y install libpam0g-dev libqrencode3
+if [ $? -eq 0 ]; then
+	if [ -f libpam-google-authenticator*.tar.bz2 ]; then
+		echo "*** Compilando fuente..."
+		tar jvxf libpam-google-authenticator*.tar.bz2
+		cd libpam-google-authenticator*
+		make
+		if [ $? -eq 0 ]; then
+		    echo
+			echo "*** Instalando modulo PAM..."
+			sudo make install
+			if [ $? -eq 0 ]; then
+				sudo bash -c 'echo -e "\n\n# Google authenticator\nauth required pam_google_authenticator.so ${PAM_PARAMS}\n# --" >> /etc/pam.d/sshd'
+				sudo bash -c 'echo -e "\n\n# Google authenticator\nauth required pam_google_authenticator.so ${PAM_PARAMS}\n# --" >> /etc/pam.d/login'
+			    echo
+				echo "*** Google Authenticator ha sido instalado correctamente.  Se habilito para SSH y LOGIN"
+				echo "*** Debe configurarlo AHORA para su usuario, o no podra iniciar sesion nuevamente"
+				echo
+				google-authenticator
+                if [ $? -eq 0 ]; then
+                    echo
+                    echo "*** Google Authenticator ha sido configurado correctamente para su usuario.  Debe ejecutar google-authenticator para cada usuario.  Aquellos usuarios no configurados, no podran iniciar sesion"
+                    EVAL=${EXIT_SUCCESS}
+                else
+                    err_msg "Algo fallo en la configuracion de Google Authenticator.  Ejecute nuevamente google-authenticator.  Si no logra configurarlo, ejecute ${UNINSTALL_SCRIPT} de inmediato antes de salir de su sesion, para revertir todos los cambios.  De otra forma, no podra iniciar sesion nuevamente."
+                fi
+			else
+				err_msg "No se ha podido instalar correctamente"
+			fi
+		else
+			err_msg "No se ha podido compilar correctamente"
+		fi
+	else
+		err_msg "No se encuentra el archivo fuente"
+	fi
+else
+	err_msg "No se han podido instalar las dependencias necesarias"
+fi
+
+echo "*** Script finalizado ***"
+exit ${EVAL}
+}}}
+*Atención*: los cambios tienen efecto INMEDIATO, por lo que debe configurarse google auth para todas las cuentas de usuario.  Las que no hayan sido configuradas, ¡no podrán loggearse!
+
+Basta con crear el script anterior en el mismo directorio donde se tiene la fuente de GAuth.  Pueden obtenerla desde el [https://code.google.com/p/google-authenticator/ repo oficial], en la sección [https://code.google.com/p/google-authenticator/downloads/list Downloads].
+
+Para desinstalar GAuth, pueden emplear el siguiente script:
+{{{
+#!/bin/bash
+
+# *************************************************************************
+# Script de desinstalacion de Google Authenticator
+# Autor: HacKan
+# Licencia: GNU GPL v3
+#
+#  This is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# *************************************************************************
+
+declare -r VERSION="0.2"
+
+declare -i -r EXIT_SUCCESS=0
+declare -i -r EXIT_FAILURE=1
+
+function err_msg {
+	echo -e "\t!!! ${1}"
+}
+
+EVAL=${EXIT_FAILURE}
+
+echo "*** Buscando PAM pam_google_authenticator.so..."
+PAM="`find /lib*/security /lib*/*/security -maxdepth 1 -name pam_google_authenticator.so -printf '%H' -quit`"
+echo "*** Borrando ${PAM}/pam_google_authenticator.so..."
+sudo rm -v ${PAM}/pam_google_authenticator.so
+echo "*** Buscando aplicacion google-authenticator..."
+APP="`which google-authenticator`"
+echo "*** Borrando ${APP}..."
+sudo rm -v ${APP}
+echo "*** A continuacion se revertiran los cambios en /etc/pam.d/sshd y /etc/pam.d/login"
+echo "Si ha realizado otras modificaciones en estos archivos, presione CTRL+C para salir ahora"
+read -p "o cualquier tecla para continuar" -n 1
+sleep 2
+echo "*** Modificando la configuracion de /etc/pam.d/sshd..."
+head -n -2 /etc/pam.d/sshd | sudo tee /etc/pam.d/sshd
+echo "*** Modificando la configuracion de /etc/pam.d/login..."
+head -n -2 /etc/pam.d/login | sudo tee /etc/pam.d/login
+EVAL=${EXIT_SUCCESS}
+
+echo "*** Finalizado"
+exit ${EVAL}
+}}}
