@@ -403,7 +403,7 @@ Luego copiar los archivos simape-svr.key, simape-svr.crt y my-ca.crt a /etc/ssl/
 *Atención*: Si al generar el certificado del servidor se ha empleado una contraseña, Apache2 no podrá iniciar automáticamente dado que se deberá escribir dicha contraseña (https://wiki.apache.org/httpd/RemoveSSLCertPassPhrase)
 
 == Google Authenticator ==
-Decidí implementar GAuth en mi servidor dado que añade un factor de seguridad fundamental, y es muy fácil de configurar.
+Decidí implementar GAuth en mi servidor dado que añade un factor de seguridad fundamental, y es muy fácil de configurar (http://www.howtogeek.com/121650/how-to-secure-ssh-with-google-authenticators-two-factor-authentication/).
 
 El siguiente script compila e instala GAuth, y lo habilita para las conexiones SSH y terminales locales:
 {{{
