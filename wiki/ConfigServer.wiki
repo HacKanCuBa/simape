@@ -21,3 +21,130 @@ sudo bash -c 'echo -e "# deb cdrom:[Debian GNU/Linux 7.2.0 _Wheezy_ - Official i
 sudo apt-get update && sudo apt-get upgrade
 }}}
 
+= Script =
+Pueden descargar toda la configuración desde este mismo repo [https://code.google.com/p/simape/source/browse/trunk trunk]/svr_conf a un directorio de mismo nombre en su servidor, editar los archivos pertinentes y crear el siguiente script que se encarga de instalar y configurar todo lo necesario.
+{{{
+#!/bin/bash
+# Script para instalar SiMaPe
+#
+function get_scriptpath {
+	# Devuelte la ruta al script de forma certera
+	# Uso: ruta=`get_scriptpath` o bien ruta=$( get_scriptpath )
+	# Fuente: http://stackoverflow.com/questions/4774054/reliable-way-for-a-bash-script-to-get-the-full-path-to-itself
+	pushd "`dirname "$0"`" > /dev/null
+	echo "`pwd -P`"
+	popd > /dev/null
+}
+
+CURDIR=$( get_scriptpath )
+###
+
+echo "SiMaPe pre requisitos"
+echo
+echo "Paquetes.."
+echo "MySQL 5.5"
+echo "Apache 2"
+echo "PHP 5.5"
+echo "ssmtp"
+echo "Configuraciones...."
+echo
+sudo bash -c 'echo -e "deb http://packages.dotdeb.org wheezy-php55 all\n#deb-src http://packages.dotdeb.org wheezy-php55 all" > /etc/apt/sources.list.d/dotdeb-php5.list'
+wget http://www.dotdeb.org/dotdeb.gpg
+sudo apt-key add dotdeb.gpg
+rm dotdeb.gpg
+sudo bash -c 'echo -e "# deb cdrom:[Debian GNU/Linux 7.2.0 _Wheezy_ - Official i386 NETINST Binary-1 20131012-12:55]/ wheezy main\n#deb cdrom:[Debian GNU/Linux 7.2.0 _Wheezy_ - Official i386 NETINST Binary-1 20131012-12:55]/ wheezy main\n\ndeb http://ftp.ccc.uba.ar/pub/linux/debian/debian/ wheezy main contrib\n#deb-src http://ftp.ccc.uba.ar/pub/linux/debian/debian/ wheezy main\n\ndeb http://security.debian.org/ wheezy/updates main contrib\n#deb-src http://security.debian.org/ wheezy/updates main\n\n# wheezy-updates, previously known as volatile\ndeb http://ftp.ccc.uba.ar/pub/linux/debian/debian/ wheezy-updates main contrib\n#deb-src http://ftp.ccc.uba.ar/pub/linux/debian/debian/ wheezy-updates main\n" > /etc/apt/sources.list'
+sudo apt-get update && sudo apt-get upgrade
+sudo apt-get install mysql-server mysql-client apache2 php5 php-pear php5-mysqlnd php5-mcrypt php5-curl php5-mhash libapache2-mod-php5 php5-cli php5-common apache2-mpm-prefork ssmtp php5-gd
+echo
+echo "*** IMPORTANTE: verificar que el paquete apache2-mpm-prefork se encuentra instalado, y al mismo tiempo el paquete apache2-mpm-worker no esté."
+dpkg --get-selections | grep apache2-mpm
+echo
+echo "Presione una tecla para continuar"
+read -n 1
+echo
+echo "Crear carpeta de log"
+sudo mkdir /var/log/simape
+sudo touch /var/log/simape/SiMaPe-DB.log
+sudo chmod 0640 /var/log/simape
+sudo chmod 0600 /var/log/simape/SiMaPe-DB.log
+sudo chown -R mysql:adm /var/log/simape
+echo
+echo "Crear carpeta del sitio"
+sudo mkdir /var/www/simape
+sudo chmod 0775 /var/www/simape
+sudo chown www-data:www-data /var/www/simape
+sudo rm /var/www/index.html
+sudo adduser hackan www-data    # para poder escribir sin sudo
+echo
+echo "Habilitar PHP5 en apache"
+cd /etc/apache2/mods-enabled
+sudo ln -s ../mods-available/php5.conf ./
+sudo ln -s ../mods-available/php5.load ./
+echo
+echo "Configurar PHP"
+echo "Edite el archivo ${CURDIR}/svr_conf/php5/mods-available/simape.ini segun lo necesite, y presione una tecla para continuar"
+read -n 1
+sudo cp -L ${CURDIR}/svr_conf/php5/mods-available/* /etc/php5/mods-available/
+cd /etc/php5/apache2/conf.d
+sudo ln -s ../../mods-available/simape.ini ./00_simape.ini
+sudo mkdir /var/lib/php5/sessions
+sudo mkdir /var/lib/php5/upload_tmp
+sudo chmod 733 /var/lib/php5/sessions
+sudo chmod 733 /var/lib/php5/upload_tmp
+sudo chmod o+t /var/lib/php5/sessions
+sudo chmod o+t /var/lib/php5/upload_tmp
+echo
+echo "Configurar apache"
+echo "ATENCION: Debe colocar los certificados SSL en ${CURDIR}/svr_conf/ssl/localcerts o bien directamente en /etc/ssl/localcerts"
+echo "Los archivos son: simape-ca.crt, simape-svr.key y simape-svr.crt"
+echo "Donde el primero es el certificado de la autoridad de certificacion (CA), el segundo es la llave del servidor y el tercero, el certificado del servidor generado con su llave y firmado por la CA."
+echo "Si los nombres fuesen distintos, editar acorde /etc/apache2/sites-available/simape_ssl"
+echo "Si no cuenta con estos certificados aun, o no usara SSL, elimine ${CURDIR}/svr_conf/apache2/sites-available/simape_ssl"
+echo
+echo "Presione una tecla para continuar"
+read -n 1
+echo
+sudo cp -L ${CURDIR}/svr_conf/apache2/sites-available /etc/apache2/sites-available
+cd /etc/apache2/sites-enabled
+sudo rm -f /etc/apache2/sites-available/*
+#sudo ln -s ../sites-available/simape ./001-simape
+#sudo ln -s ../sites-available/simape_ssl ./002-simape_ssl
+sudo a2ensite simape
+sudo a2ensite simape_ssl
+sudo a2enmod headers
+sudo a2enmod ssl
+sudo a2enmod rewrite
+echo
+echo "ssmtp"
+sudo cp ../svr_conf/ssmtp /etc/
+sudo chown root:mail /etc/ssmtp/ssmtp.conf
+sudo chmod 0640 /etc/ssmtp/ssmtp.conf
+sudo adduser hackan mail
+sudo adduser www-data mail
+echo
+echo "Reiniciar Apache"
+sudo service apache2 restart
+echo
+echo "Cron sessions-cleaner"
+sudo cp -L ${CURDIR}/svr_conf/cond.d/php5 /etc/cron.d
+sudo chmod +x /etc/cron.d/php5
+echo
+echo "Bash aliases"
+cp ${CURDIR}/bash_aliases ~/.bash_aliases
+cp ${CURDIR}/bash_ps1 ~/.bash_ps1
+echo
+echo "Crear pagina web de prueba"
+sudo bash -c 'echo -e "<?php\nphpinfo();\n?>" > /var/www/simape/test.php'
+sudo chmod 0644 /var/www/simape/test.php
+cd /var/www
+sudo chown -R www-data:www-data ./simape/
+echo "*** Probar funcionamiento: http://localhost/test.php y https://localhost/test.php"
+echo
+echo "DEBE CERRAR SU SESION DE USUARIO Y VOLVERLA A INICIAR"
+echo "*FIN*"
+}}}
+
+= Incrementando la seguridad del servidor y la app =
+== SSL ==
+Activar SSL en Apache y SiMaPe es fundamental para la seguridad de la misma.  Se pueden adquirir certificados firmados por una CA, pero si no se puede ésto, al menos se deben generar certificados autofirmados e instalarlos en el servidor y en las computadoras cliente (para evitar la advertencia de los navegadores con *Este sitio no es seguro*).
+Los certificados pueden ir en /etc/ssl/localcerts y luego basta con activarlo en Apache: `sudo a2ensite simape_ssl` y en la aplicación editar etc/config.php y poner a TRUE la constante SMP_SSL
