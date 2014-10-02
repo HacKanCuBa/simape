@@ -2,7 +2,7 @@
 
 = Cómo configurar un servidor para usar SiMaPe =
 
-Esta guía indica paso a paso cómo debe configurarse un servidor, con opciones por defecto, para instalar y desarrollar este sistema.
+Esta guía indica paso a paso cómo debe configurarse un servidor, con opciones por defecto, para instalar y desarrollar este sistema.  Sirve para cualquier distro *Debian*/derivados.
 Todas las opciones pueden modificarse a gusto.
 Los archivos de configuración se encuentran en éste mismo repositorio: [https://code.google.com/p/simape/source/browse/trunk trunk]/svr_conf
 
@@ -142,6 +142,238 @@ echo "*** Probar funcionamiento: http://localhost/test.php y https://localhost/t
 echo
 echo "DEBE CERRAR SU SESION DE USUARIO Y VOLVERLA A INICIAR"
 echo "*FIN*"
+}}}
+
+= Configuraciones individuales =
+
+== Apache ==
+*/etc/apache2/conf.d*
+Deshabilitar mostrar errores:
+{{{
+ServerSignature Off
+ServerTokens Prod
+}}}
+
+*/etc/apache2/sites-available*
+Configuración por defecto del sitio:
+
+_simape_
+{{{
+<VirtualHost *:80>
+	ServerAdmin webmaster@localhost
+
+	DocumentRoot /var/www/simape
+	<Directory />
+		Options FollowSymLinks -Indexes
+		AllowOverride None
+	</Directory>
+	<Directory /var/www/simape>
+		Options -Indexes FollowSymLinks
+		AllowOverride None
+		Order allow,deny
+		allow from all
+	</Directory>
+
+	ErrorLog /var/log/simape/apache_error.log
+
+	# Possible values include: debug, info, notice, warn, error, crit,
+	# alert, emerg.
+	LogLevel warn
+
+	CustomLog /var/log/simape/apache_access.log combined
+</VirtualHost>
+}}}
+
+_simape`_`ssl_
+{{{
+LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
+
+Listen 443
+<VirtualHost *:443>
+    ServerName 5.224.0.250:443
+    SSLEngine on
+
+    SSLProtocol all -SSLv2 -TLSv1 -SSLv3
+
+    #SSLUseStapling on
+    #SSLStaplingResponderTimeout 5
+    #SSLStaplingReturnResponderErrors off
+    #SSLStaplingCache shmcb:/var/run/ocsp(128000)
+
+    SSLCertificateFile /etc/ssl/localcerts/simape-svr.crt
+    SSLCertificateKeyFile /etc/ssl/localcerts/simape-svr.key
+    SSLCertificateChainFile /etc/ssl/localcerts/simape-ca.crt
+    SSLCACertificateFile /etc/ssl/localcerts/simape-ca.crt
+
+    SSLCipherSuite HIGH:!aNULL:!MD5:!eNULL:!LOW:!3DES:!EXP:!PSK:!SRP:!DSS:!RC4
+    SSLHonorCipherOrder on
+
+    SSLCompression off
+
+    Header add Strict-Transport-Security "max-age=15768000"
+
+    ServerAdmin webmaster@localhost
+
+    DocumentRoot /var/www/simape
+	<Directory />
+		Options FollowSymLinks -Indexes
+		AllowOverride All
+	</Directory>
+	<Directory /var/www/simape>
+		Options -Indexes FollowSymLinks
+		AllowOverride All
+		Order allow,deny
+		allow from all
+	</Directory>
+
+	ErrorLog /var/log/simape/apache_error.log
+
+	# Possible values include: debug, info, notice, warn, error, crit,
+	# alert, emerg.
+	LogLevel warn
+
+	CustomLog /var/log/simape/apache_access.log combined
+</VirtualHost>
+}}}
+
+== PHP ==
+
+*/etc/php5/mods-available*
+Configuración por defecto:
+{{{
+expose_php=Off
+display_errors=Off
+log_errors=On
+error_log=/var/log/simape/php_scripts_error.log
+file_uploads=On
+upload_tmp_dir = "/var/lib/php5/upload_tmp"
+max_file_uploads = 2
+
+allow_url_fopen=Off
+
+# Limites de memoria
+memory_limit = 8M
+post_max_size = 6M
+upload_max_filesize = 5M
+
+# En segundos
+max_execution_time =  30
+max_input_time = 30
+
+# Deshabilitar funciones peligrosas
+disable_functions = allow_url_fopen,exec,passthru,shell_exec,system,proc_open,popen,curl_exec,curl_multi_exec,parse_ini_file,show_source
+
+# Limitar acceso al sistema
+open_basedir="/var/www/simape/"
+
+# Configuracion de session
+session.use_strict_mode = 1
+session.save_path = "/var/lib/php5/sessions"
+session.cookie_httponly = 1
+session.name = SIMAPESESS
+session.hash_function = sha256
+session.hash_bits_per_character = 5
+session.entropy_length = 256
+session.entropy_file = /dev/urandom
+session.gc_maxlifetime = 43200
+
+default_charset = "UTF-8"
+
+sendmail_path = /usr/sbin/ssmtp -t
+}}}
+
+*/etc/cron.d*
+Limpiar sesiones antiguas:
+{{{
+# /etc/cron.d/php5: crontab fragment for php5
+#  This purges session files older than X, where X is defined in seconds
+#  as the largest value of session.gc_maxlifetime from all your php.ini
+#  files, or 24 minutes if not defined.  See /usr/lib/php5/maxlifetime
+
+# Look for and purge old sessions every 30 minutes
+09,39 *     * * *     root   [ -x /usr/lib/php5/maxlifetime ] && [ -x /usr/lib/php5/sessionclean ] && [ -d /var/lib/php5 ] && /usr/lib/php5/sessionclean /var/lib/php5/sessions $(/usr/lib/php5/maxlifetime)
+}}}
+
+*/etc/cron.daily*
+Limpiar sesiones antiguas adicional:
+{{{
+#!/bin/bash
+
+# Borra las sesiones antiguas
+
+declare -r SESSDIR="/var/lib/php5/sessions"
+declare -i TODAY=$( date +%s --date="`date +'%Y-%m-%d'`" )
+
+
+cd ${SESSDIR}
+for SESSFILE in $( ls ); do
+    FILEMODTIME=`stat -c "%Y" ${SESSFILE}`
+    if [ ${FILEMODTIME} -lt ${TODAY} ]
+    then
+        #echo "Borrando ${SESSFILE}..."
+        rm -f ${SESSFILE}
+    fi
+done
+}}}
+
+*/etc/cron.daily*
+Limpiar archivos temporales de simape:
+{{{
+#!/bin/bash
+# Borra los archivos temporales
+
+declare -r TEMPDIR="/var/www/simape/tmp"
+declare -i TODAY=$( date +%s --date="`date +'%Y-%m-%d'`" )
+
+
+cd ${TEMPDIR}
+for TEMPFILE in $( ls ); do
+    FILEMODTIME=`stat -c "%Y" ${TEMPFILE}`
+    if [ ${FILEMODTIME} -lt ${TODAY} ]
+    then
+        #echo "Borrando ${TEMPFILE}..."
+        rm -f ${TEMPFILE}
+    fi
+done
+}}}
+
+== Iptables ==
+
+*/etc/network/if-post-down.d*
+Salvar config de IPtables:
+{{{
+#!/bin/sh
+iptables-save -c > /etc/iptables.rules
+if [ -f /etc/iptables.downrules ]; then
+   iptables-restore < /etc/iptables.downrules
+fi
+exit 0
+}}}
+
+*/etc/network/if-pre-up.d*
+Recuperar config de IPtables:
+{{{
+#!/bin/sh
+iptables-restore < /etc/iptables.rules
+exit $?
+}}}
+
+*/etc/iptables.rules*
+Config de IPtables:
+{{{
+# Generated by iptables-save v1.4.14 on Sun Dec  1 13:05:44 2013
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [36:5040]
+[0:0] -A INPUT -i lo -j ACCEPT
+[378:32152] -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+[0:0] -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
+[0:0] -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+[0:0] -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+[1:28] -A INPUT -j DROP
+COMMIT
+# Completed on Sun Dec  1 13:05:44 2013
 }}}
 
 = Incrementando la seguridad del servidor y la app =
