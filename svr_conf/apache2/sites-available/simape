@@ -1,0 +1,23 @@
+<VirtualHost *:80>
+	ServerAdmin webmaster@localhost
+
+	DocumentRoot /var/www/simape
+	<Directory />
+		Options FollowSymLinks -Indexes
+		AllowOverride None
+	</Directory>
+	<Directory /var/www/simape>
+		Options -Indexes FollowSymLinks
+		AllowOverride None
+		Order allow,deny
+		allow from all
+	</Directory>
+
+	ErrorLog /var/log/simape/apache_error.log
+
+	# Possible values include: debug, info, notice, warn, error, crit,
+	# alert, emerg.
+	LogLevel warn
+
+	CustomLog /var/log/simape/apache_access.log combined
+</VirtualHost>

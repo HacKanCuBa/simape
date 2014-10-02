@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Borra las sesiones antiguas
+
+declare -r SESSDIR="/var/lib/php5/sessions"
+declare -i TODAY=$( date +%s --date="`date +'%Y-%m-%d'`" )
+
+
+cd ${SESSDIR}
+for SESSFILE in $( ls ); do
+    FILEMODTIME=`stat -c "%Y" ${SESSFILE}`
+    if [ ${FILEMODTIME} -lt ${TODAY} ]
+    then
+        #echo "Borrando ${SESSFILE}..."
+        rm -f ${SESSFILE}
+    fi
+done

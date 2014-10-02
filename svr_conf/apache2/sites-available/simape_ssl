@@ -1,0 +1,49 @@
+LoadModule ssl_module /usr/lib/apache2/modules/mod_ssl.so
+
+Listen 443
+<VirtualHost *:443>
+    ServerName 5.224.0.250:443
+    SSLEngine on
+
+    SSLProtocol all -SSLv2 -TLSv1 -SSLv3
+
+    #SSLUseStapling on
+    #SSLStaplingResponderTimeout 5
+    #SSLStaplingReturnResponderErrors off
+    #SSLStaplingCache shmcb:/var/run/ocsp(128000)
+
+    SSLCertificateFile /etc/ssl/localcerts/simape-svr.crt
+    SSLCertificateKeyFile /etc/ssl/localcerts/simape-svr.key
+    SSLCertificateChainFile /etc/ssl/localcerts/simape-ca.crt
+    SSLCACertificateFile /etc/ssl/localcerts/simape-ca.crt
+
+    SSLCipherSuite HIGH:!aNULL:!MD5:!eNULL:!LOW:!3DES:!EXP:!PSK:!SRP:!DSS:!RC4
+    SSLHonorCipherOrder on
+
+    SSLCompression off
+
+    Header add Strict-Transport-Security "max-age=15768000"
+
+    ServerAdmin webmaster@localhost
+
+        DocumentRoot /var/www/simape
+	<Directory />
+		Options FollowSymLinks -Indexes
+		AllowOverride All
+	</Directory>
+	<Directory /var/www/simape>
+		Options -Indexes FollowSymLinks
+		AllowOverride All
+		Order allow,deny
+		allow from all
+	</Directory>
+
+	ErrorLog /var/log/simape/apache_error.log
+
+	# Possible values include: debug, info, notice, warn, error, crit,
+	# alert, emerg.
+	LogLevel warn
+
+	CustomLog /var/log/simape/apache_access.log combined
+</VirtualHost>
+
