@@ -147,4 +147,24 @@ echo "*FIN*"
 = Incrementando la seguridad del servidor y la app =
 == SSL ==
 Activar SSL en Apache y SiMaPe es fundamental para la seguridad de la misma.  Se pueden adquirir certificados firmados por una CA, pero si no se puede ésto, al menos se deben generar certificados autofirmados e instalarlos en el servidor y en las computadoras cliente (para evitar la advertencia de los navegadores con *Este sitio no es seguro*).
-Los certificados pueden ir en /etc/ssl/localcerts y luego basta con activarlo en Apache: `sudo a2ensite simape_ssl` y en la aplicación editar etc/config.php y poner a TRUE la constante SMP_SSL
+
+Los certificados pueden ir en /etc/ssl/localcerts y luego basta con activarlo en Apache: `sudo a2ensite simape_ssl` y en la aplicación editar _etc/config.php_ y poner a *TRUE* la constante *SMP_SSL*.
+
+Claro que pueden almacenarse en otra parte y editar acorde _/etc/apache2/sites-available/simape_ssl_.
+
+Pueden solicitarnos generar un certificado firmado por nosotros para emplear en su servidor, enviar email a *[http://www.google.com/recaptcha/mailhide/d?k=01WbHw5omysGmLm-bRDJ-Pdg==&c=n8rpi9AizpMrjkmnGlATwZSBjMZgz_QeyHEz1zZYfHE= sima...@googlegroups.com]* (click para ver la dirección)
+
+Esta guía explica muy bien cómo generar los certificados: http://www.vanemery.com/Linux/Apache/apache-SSL.html
+
+Cabe destacar que la guía es algo antigua y los parámetros de seguridad son muy precarios.  Hago un resumen de comandos más apropiados que recomiendo emplear:
+{{{
+# Generar certificado de entidad CA (solo debe hacerse una única vez)
+openssl genrsa -aes256 -out my-ca.key 4096
+openssl req -new -x509 -sha512 -days 3650 -key my-ca.key -out my-ca.crt
+
+# Generar certificado para el servidor (debe repetirse por cada servidor)
+openssl genrsa -aes256 -out simape-svr.key 1024
+openssl req -new -sha512 -key simape-svr.key -out simape-svr.csr
+# Firmar con certificado de CA
+openssl x509 -req -sha512 -in simape-svr.csr -out simape-svr.crt -CA my-ca.crt -CAkey my-ca.key -CAcreateserial -days 730
+}}}
