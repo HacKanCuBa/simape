@@ -129,10 +129,6 @@ echo "Cron sessions-cleaner"
 sudo cp -L ${CURDIR}/svr_conf/cond.d/php5 /etc/cron.d
 sudo chmod +x /etc/cron.d/php5
 echo
-echo "Bash aliases"
-cp ${CURDIR}/bash_aliases ~/.bash_aliases
-cp ${CURDIR}/bash_ps1 ~/.bash_ps1
-echo
 echo "Crear pagina web de prueba"
 sudo bash -c 'echo -e "<?php\nphpinfo();\n?>" > /var/www/simape/test.php'
 sudo chmod 0644 /var/www/simape/test.php
