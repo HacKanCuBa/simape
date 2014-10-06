@@ -230,6 +230,8 @@ Listen 443
 </VirtualHost>
 }}}
 
+Resulta importante destacar que por ser inseguros se han deshabilitado los protocolos SSL v2, SSL v3 y TLS v1 (SSL v1 ya viene deshabilitado).  Se recomienda mantener estos parámetros.
+
 == PHP ==
 
 */etc/php5/mods-available*
