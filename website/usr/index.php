@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.1
+ * @version 0.11
  */
 
 require_once 'autoload.php';
@@ -67,8 +67,7 @@ if ($page->authenticateToken()
 }
 
 if (isset($nav)) {
-    Page::nav($nav);
-    exit();
+    $page->nav($nav);
 }
 
 // Token de pagina

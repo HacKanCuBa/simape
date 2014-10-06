@@ -32,7 +32,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.91
+ * @version 0.92
  */
 class Usuario extends Empleado
 {    
@@ -834,11 +834,11 @@ class Usuario extends Empleado
             if ($this->generateToken(self::TOKEN_PASSWORDRESTORE)
                     && $this->store_inDB_PwdRestore()
             ) {
-                $passrestore_url = Sanitizar::glSERVER('HTTPS') ? 'https://' : 'http://';
-                $passrestore_url .= Sanitizar::glSERVER('SERVER_NAME') 
-                                    . '/nav.php' 
-                                    . '?accion=' . SMP_RESTOREPWD 
-                                    . '&username=' . $this->UsuarioNombre 
+                $passrestore_url = (SMP_SSL ? 'https://' : 'http://')
+                                    . server_ip()
+                                    . '/login.php' 
+                                    . '?' . SMP_NAV_ACTION . '=' . SMP_RESTOREPWD 
+                                    . '&' . SMP_SESSINDEX_USERNAME . '=' . $this->UsuarioNombre 
                                     . '&passRestoreToken=' . $this->getToken();
 
                 // Enviar email

@@ -38,21 +38,25 @@
 // Para asegurar que toda la aplicación está bien hecha
 error_reporting(E_ALL);
 
-// si estoy en mantenimiento, salir
+// Modo mantenimiento?
 file_exists('.mantenimiento') ? header('Location: mantenimiento.html') && exit() : NULL;
 
 // Raiz para inclusion de archivos
 define('SMP_FS_ROOT', dirname(__FILE__) .'/');
 
+// Inclusiones
 require_once 'configload.php';
 require_once SMP_FS_ROOT . SMP_LOC_INC . 'funciones.php';
+
+// Zona horaria
+setlocale(LC_TIME, SMP_LOCALE);
+date_default_timezone_set(SMP_TIMEZONE);
 
 // Autocarga de dependencias
 set_include_path(get_include_path() 
                 . PATH_SEPARATOR . SMP_FS_ROOT . SMP_LOC_INC);
 spl_autoload_extensions('_class.php,_trait.php,_interface.php');
 spl_autoload_register();
-// --
 
 // Carga de otras dependencias
 //Session::initiate();

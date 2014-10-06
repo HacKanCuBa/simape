@@ -88,7 +88,7 @@ $display = LOGIN_DISPLAY_DEFAULT;
 
 // Si SSL está habilitado pero el usuario cargó la página de manera insegura,
 // recarga por SSL.
-SMP_SSL ? (Sanitizar::glSERVER('HTTPS') ?: (Page::nav(SMP_LOGIN) && exit())) : NULL;
+SMP_SSL ? (Sanitizar::glSERVER('HTTPS') ?: ($p = new Page && $p->nav(SMP_LOGIN))) : NULL;
 
 // Inicializaciones
 // Iniciar o continuar sesion
@@ -225,8 +225,8 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
 }
 
 if (isset($nav)) {
-    Page::nav($nav);
-    exit();
+    $page = new Page;
+    $page->nav($nav);
 }
 
 if (isset($login_atempt)) {

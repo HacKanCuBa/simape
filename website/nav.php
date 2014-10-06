@@ -32,6 +32,7 @@
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @version 1.45
+ * @deprecated since version 1.45
  */
 
 require_once 'load.php';

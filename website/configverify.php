@@ -55,9 +55,6 @@ if (!defined('SMP_CONFIG')) {
     die("No se pudo cargar el archivo config.php"); 
 }
 
-setlocale(LC_TIME, SMP_LOCALE);
-date_default_timezone_set(SMP_TIMEZONE);
-
 $upload_max_filesize = shorthand_to_bytes(ini_get('upload_max_filesize'));
 $post_max_size = shorthand_to_bytes(ini_get('post_max_size'));
 $memory_limit = shorthand_to_bytes(ini_get('memory_limit'));
