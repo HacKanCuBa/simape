@@ -77,9 +77,7 @@ sudo rm /var/www/index.html
 sudo adduser hackan www-data    # para poder escribir sin sudo
 echo
 echo "Habilitar PHP5 en apache"
-cd /etc/apache2/mods-enabled
-sudo ln -s ../mods-available/php5.conf ./
-sudo ln -s ../mods-available/php5.load ./
+sudo a2enmod php5
 echo
 echo "Configurar PHP"
 echo "Edite el archivo ${CURDIR}/svr_conf/php5/mods-available/simape.ini segun lo necesite, y presione una tecla para continuar"
@@ -106,7 +104,7 @@ read -n 1
 echo
 sudo cp -L ${CURDIR}/svr_conf/apache2/sites-available /etc/apache2/sites-available
 cd /etc/apache2/sites-enabled
-sudo rm -f /etc/apache2/sites-available/*
+sudo rm -f /etc/apache2/sites-enabled/*
 #sudo ln -s ../sites-available/simape ./001-simape
 #sudo ln -s ../sites-available/simape_ssl ./002-simape_ssl
 sudo a2ensite simape
