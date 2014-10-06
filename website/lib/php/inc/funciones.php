@@ -57,3 +57,15 @@ function delete_row_from_matrix(&$matrix, $row)
 {
     return array_splice($matrix, $row, 1);
 }
+
+/**
+ * Devuelve la IP del servidor.
+ * @return string IP del servidor.
+ */
+function server_ip()
+{
+    return SMP_SERVER_ADDR ?: 
+                    (stristr(Sanitizar::glSERVER('SERVER_SOFTWARE'), 'win') ? 
+                                        Sanitizar::glSERVER('LOCAL_ADDR') : 
+                                        Sanitizar::glSERVER('SERVER_ADDR'));
+}

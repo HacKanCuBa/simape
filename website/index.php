@@ -21,16 +21,26 @@
  * 
  *****************************************************************************/
 
-/*
- * Este index.php debe estar siempre en la raiz del sitio
+/**
+ * index.php
+ * Página de inicio y presentación
+ * 
+ * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
+ * @copyright (c) 2013, Iván A. Barrera Oro
+ * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
+ * @version 0.5
  */
 
 require_once 'load.php';
 
 Session::terminate();
 
-if(!empty(Sanitizar::glPOST('frm_buttonLogin'))) {
+if(!empty(Sanitizar::glPOST('frm_btnLogin'))) {
     Page::nav(SMP_LOGIN);
+    exit();
+} elseif(!empty(Sanitizar::glPOST('frm_btnCert'))) {
+    $p = new Page(SMP_LOC_MEDIA . 'cert/index.php');
+    $p->go();
     exit();
 }
 
@@ -40,9 +50,12 @@ echo Page::getHeader();
 echo Page::getHeaderClose();
 echo Page::getMain();
 echo "\n\t\t<form style='text-align: center;' method='post'>";
-echo "\n\t\t\t<p><input name='frm_buttonLogin' type='submit' "
+echo "\n\t\t\t<p><input name='frm_btnLogin' type='submit' "
      . "style='font-style:italic;' "
      . "value='Ingresar al sistema - Iniciar sesi&oacute;n' /></p>";
+echo "\n\t\t\t<p><input name='frm_btnCert' type='submit' "
+     . "style='font-style:italic;' "
+     . "value='Instalar certificado' /></p>";
 echo "\n\t\t</form>";
 echo "\n\t\t<h3>Acerca de SiMaPe</h3>";
 echo "\n\t\t\t<p>Este sistema se encuentra siendo desarrollado en exclusivo " 

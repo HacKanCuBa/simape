@@ -34,7 +34,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.2
+ * @version 1.21
  */
 
 // << Config
@@ -109,6 +109,19 @@ const SMP_SESSIONKEY_LIFETIME = 28800; // 8hs
 define('SMP_HOME', 'usr/index.php');
 // --
 // 
+// Activar conexion SSL?
+const SMP_SSL = FALSE;
+// --
+// 
+// Dirección IP del servidor (no es necesario salvo que se emplee SSL).
+// IMPORTANTE: si se emplea SSL, la aplicación redireccionará
+// todas las peticiones a través de https.  Si esta constante
+// no se define, tratará de buscar la IP del servidor en la variable
+// superglobal $_SERVER.  Aparte del riesgo de seguridad que esto implica,
+// en caso de fallar, la aplicación no funcionaría.
+// Se recomienda completar este valor acorde.
+const SMP_SERVER_ADDR = '';
+// --
 // >>
 
 // << Config interna
