@@ -36,10 +36,10 @@ require_once 'load.php';
 Session::terminate();
 
 if(!empty(Sanitizar::glPOST('frm_btnLogin'))) {
-    Page::nav(SMP_LOGIN);
-    exit();
+    $p = new Page();
+    $p->nav(SMP_LOGIN);
 } elseif(!empty(Sanitizar::glPOST('frm_btnCert'))) {
-    $p = new Page(SMP_LOC_MEDIA . 'cert/index.php');
+    $p = new Page(SMP_LOC_MEDIA . 'cert/index.php', TRUE);
     $p->go();
     exit();
 }

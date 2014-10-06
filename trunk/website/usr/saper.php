@@ -182,8 +182,7 @@ if ($page->authenticateToken()
 }
 
 if (isset($nav)) {
-    Page::nav($nav);
-    exit();
+    $page->nav($nav);
 }
 
 // Token de pagina
