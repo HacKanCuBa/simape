@@ -120,7 +120,7 @@ class Session
     protected static function begin($dontChangeID = FALSE, 
                                      $lifetime = NULL, 
                                      $path = NULL, 
-                                     $domain = NULL, $https = NULL)
+                                     $domain = NULL, $https = SMP_SSL)
     {
         // Ideas:
         // http://security.stackexchange.com/questions/24177/starting-a-secure-php-session
@@ -140,7 +140,7 @@ class Session
         $dominio = empty($domain) ? Sanitizar::glSERVER('SERVER_NAME') : $domain;
 
         // Configurar HTTP o HTTPS
-        $secure = empty($https) ? boolval(Sanitizar::glSERVER('HTTPS')) : $https;
+        $secure = is_bool($https) ? $https : boolval(Sanitizar::glSERVER('HTTPS'));
         
         // Configurar path
         $ruta = empty($path) ? SMP_WEB_ROOT : $path;

@@ -56,7 +56,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.34
+ * @version 1.35
  */
 class Page
 {  
@@ -293,8 +293,10 @@ class Page
                                  $intLink = NULL) 
     {
         if (empty($loc) || self::pageExists($loc)) {
-            header("Location: "
-                    . self::urlMake($loc, $params, $intLink));
+            header("Location: " . 
+                    ((SMP_SSL || Sanitizar::glSERVER('HTTPS')) ? 'https://' 
+                                                        . server_ip() : '') .
+                    self::urlMake($loc, $params, $intLink));
             return TRUE;
         }
         
@@ -683,7 +685,7 @@ class Page
     }
     
     /**
-     * Envía los headers necesarios para ir a la página indicada, envíando
+     * Envía los headers necesarios para ir a la página indicada, enviando
      * también los parámetros requeridos.<br />
      * <i>Debe llamarse primero a setLocation para fijar la ubicación</i>.
      * De no hacerlo así, dará como resultado la raíz del sitio (SMP_WEB_ROOT) 

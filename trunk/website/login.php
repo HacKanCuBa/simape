@@ -86,6 +86,10 @@ const LOGIN_DISPLAY_LOGGEDOUT = 10;
  */
 $display = LOGIN_DISPLAY_DEFAULT;
 
+// Si SSL está habilitado pero el usuario cargó la página de manera insegura,
+// recarga por SSL.
+SMP_SSL ? (Sanitizar::glSERVER('HTTPS') ?: (Page::nav(SMP_LOGIN) && exit())) : NULL;
+
 // Inicializaciones
 // Iniciar o continuar sesion
 $session = new Session;
