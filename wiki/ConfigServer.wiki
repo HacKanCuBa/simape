@@ -380,7 +380,7 @@ Los certificados pueden ir en /etc/ssl/localcerts y luego basta con activarlo en
 
 Claro que pueden almacenarse en otra parte y editar acorde _/etc/apache2/sites-available/simape_ssl_.
 
-Pueden solicitarnos generar un certificado firmado por nosotros para emplear en su servidor, enviar email a *[http://www.google.com/recaptcha/mailhide/d?k=01WbHw5omysGmLm-bRDJ-Pdg==&c=n8rpi9AizpMrjkmnGlATwZSBjMZgz_QeyHEz1zZYfHE= sima...@googlegroups.com]* (click para ver la dirección)
+Pueden solicitarnos generar un certificado firmado por nosotros para emplear en su servidor, enviar email a *[https://www.google.com/recaptcha/mailhide/d?k=01WbHw5omysGmLm-bRDJ-Pdg==&c=n8rpi9AizpMrjkmnGlATwZSBjMZgz_QeyHEz1zZYfHE= sima...@googlegroups.com]* (click para ver la dirección)
 
 Esta guía explica muy bien cómo generar los certificados: http://www.vanemery.com/Linux/Apache/apache-SSL.html
 
