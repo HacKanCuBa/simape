@@ -28,33 +28,51 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.1
+ * @version 0.2
  */
 -->
 <html lang='es-AR'>
 <head>
-	<meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
-	<title>SiMaPe - Mantenimiento</title>
-	<meta name='robots' content='noindex,nofollow' />
-	<link rel='icon' type='image/ico' href='/favicon.ico' />
-	<link rel='stylesheet' type='text/css' href='/media/css/main.css' />
-        <script type="text/JavaScript">
-            setTimeout("location.href = '/index.php';", 60000);
-        </script>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+    <title>SiMaPe - Mantenimiento</title>
+    <meta name='robots' content='noindex,nofollow' />
+    <link rel='icon' type='image/ico' href='/favicon.ico' />
+    <link rel='stylesheet' type='text/css' href='/media/css/main.css' />
+    <script type="text/JavaScript">
+        setTimeout("location.href = '/index.php';", 60000);
+    </script>
+    <style type="text/css">
+        #content    
+        {
+            background-color: transparent;
+            position: fixed;
+            left: 35%;
+            visibility: visible;
+        }
+    </style>
 </head>
 <body>
-	<div class='header'>
-		<img src='/media/img/header.png' alt='CSJN - CMF - SIMAPE' title='Corte Suprema de Justicia de la Naci&oacute;n - A&ntilde;o de su Sesquicentenario - Cuerpo M&eacute;dico Forense - SiMaPe' id='img_header' />
-	</div>
-	<div class='data'>
-		<h1>En mantenimiento</h1>
-                <p>Estamos cambiando algunas cosas, para mejor idealmente...</p>
-                <p>¡Volveremos enseguida!</p>
-                <p>En 1 minuto se intentará acceder nuevamente</p>
-                <img src="/media/img/mantenimiento.png" alt="">
-	</div>
-	<p id='pi'>
-		<span class='pi_hidden'>SiMaPe: GNU GPL v3.0 (C) 2013 Iv&aacute;n Ariel Barrera Oro</span><span class='pi_visible'>π</span>
-	</p>
+    <div class='header'>
+            <img src='/media/img/header.png' alt='CSJN - CMF - SIMAPE' title='Corte Suprema de Justicia de la Naci&oacute;n - A&ntilde;o de su Sesquicentenario - Cuerpo M&eacute;dico Forense - SiMaPe' id='img_header' />
+    </div>
+    <div class='data'>
+        <div id="horizon"><div id="content">
+        <table style="text-align: center;">
+            <tr>
+                <td style="text-align: left;">
+                    <h1>En mantenimiento</h1>
+                    <p>Estamos cambiando algunas cosas, para mejor idealmente...</p>
+                    <p><b>¡No deseperes!</b> En 1 minuto se intentará acceder automaticamente</p>
+                </td>
+                <td style="text-align: left;">
+                    <img src="/media/img/robot.png" alt="">
+                </td>
+            </tr>
+        </table>
+            </div></div>
+    </div>
+    <p id='pi'>
+            <span class='pi_hidden'>SiMaPe: GNU GPL v3.0 (C) 2013 Iv&aacute;n Ariel Barrera Oro</span><span class='pi_visible'>π</span>
+    </p>
 </body>
 </html>

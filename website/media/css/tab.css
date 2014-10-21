@@ -1,0 +1,81 @@
+/*****************************************************************************
+ *  Este archivo forma parte de SiMaPe
+ *  Sistema Integrado de Manejo de Personal
+ *  Copyright (C) <2013>  <Ivan Ariel Barrera Oro>
+ *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ *
+ *  SiMaPe is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ * 
+ *  SiMaPe is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
+ * 
+ *****************************************************************************/
+/* 
+    Created on : 06/10/2014, 14:19:22
+    Author     : hackan
+    Version    : 0.1
+*/
+
+/* TABS */
+/* http://css-tricks.com/examples/CSSTabs */
+/** { margin: 0; padding: 0; }*/
+
+.w3cTabs { 
+    height: 300px;
+    /*min-height: 100px;*/
+    position: relative; 
+    width: auto;
+    resize: none;
+    /*margin-left: auto;*/
+    text-align: center;
+}
+.w3cTabs > div { display: inline; }
+.w3cTabs > div > a { 
+    margin-left: -1px; 
+    position: relative; 
+    left: 1px; 
+    text-decoration: none; 
+    color: black; 
+    background: white; 
+    display: block; 
+    float: left; 
+    padding: 5px 10px; 
+    border: 1px solid #ccc; 
+    border-bottom: 1px solid white; 
+}
+.w3cTabs > div:not(:target) > a { 
+    border-bottom: 0; 
+    background: -moz-linear-gradient(top, #fff, #eee);
+    background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#eee)); /* corregido por hackan */
+}	
+.w3cTabs > div:target > a { 
+    background: white; 
+    font-style: italic; /* agregado por hackan */
+}	
+.w3cTabs > div > div { 
+    background: white; 
+    z-index: -2; 
+    left: 0; 
+    top: 30px; 
+    bottom: 0; 
+    right: 0; 
+    padding: 20px; 
+    border: 1px solid #ccc;
+    height: auto;
+    /*max-height: auto;*/
+    resize: none;
+    overflow-y: scroll;
+}	
+.w3cTabs > div:not(:target) > div { position: absolute }
+.w3cTabs > div:target > div { position: absolute; z-index: -1; }
+/**/

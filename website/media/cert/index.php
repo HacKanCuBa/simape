@@ -27,32 +27,27 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.11
+ * @version 0.13
  */
 
 require_once '../../load.php';
-
-if(!empty(Sanitizar::glPOST('frm_button'))) {
-    $p = new Page;
-    $p->nav(SMP_WEB_ROOT);
-}
+force_connect(FORCE_CONNECT_PLAIN);
 
 // -- PAGE
-Page::_e(Page::getHead('SiMaPe - Certificado'));
-Page::_e(Page::getBody());
-Page::_e(Page::getHeader());
-Page::_e(Page::getHeaderClose());
-Page::_e(Page::getMain());
+Page::printHead('SiMaPe - Certificado', ['main', 'input']);
+Page::printBody();
+Page::printHeader();
+Page::printHeaderClose();
+Page::printMain();
 
-Page::_e('<h1>Certificado de SiMaPe</h1>', 2);
+Page::_e('<h2>Certificado de SiMaPe</h2>', 2);
 Page::_e('Para instalar el certificado en su equipo, siga los siguientes pasos:', 2);
-Page::_e('<ul>', 2);
-Page::_e('<li>Para Firefox:</li>', 3);
+Page::_e('<p><em>Para Firefox:</em></p>', 3);
 Page::_e('<ol>', 3);
 Page::_e('<li><a href="simape-ca.crt">Descargar el certificado</a></li>', 4);
 Page::_e('<li>De la ventana que aparece, tildar las primeras 2 casillas y luego click en <i>Aceptar</i>.</li>', 4);
 Page::_e('</ol>', 3);
-Page::_e('<li>Para otros navegadores:</li>', 3);
+Page::_e('<p><em>Para otros navegadores:</em></p>', 3);
 Page::_e('<ol>', 3);
 Page::_e('<li><a href="simape-ca.crt">Descargar el certificado</a></li>', 4);
 Page::_e('<li>Ir a la carpeta donde se lo descargo, click derecho sobre el archivo y seleccionar <i>Instalar</i>.</li>', 4);
@@ -60,16 +55,36 @@ Page::_e('<li>De la ventana que aparece, click en el bot&oacute;n <i>Buscar</i>.
 Page::_e('<li>De la lista, seleccionar <i>Entidad de confianza de certificados ra&iacute;</i>z y luego click en <i>Aceptar</i>.</li>', 4);
 Page::_e('<li><i>Siguiente</i> y <i>Finalizar</i>.  Aparecerá un cartel solicitando confirmaci&oacute;n, click en <i>S&iacute;</i>.</li>', 4);
 Page::_e('</ol>', 3);
+
+Page::_e('<p>Los detalles del certificado son:</p>', 2);
+Page::_e('<ul>', 2);
+Page::_e('<li><b>Nombre:</b> SiMaPe CA</li>', 3);
+Page::_e('<li><b>Organizaci&oacute;n:</b> SiMaPe</li>', 3);
+Page::_e('<li><b>Unidad Organizacional:</b> Certificate Authority</li>', 3);
+Page::_e('<li><b>Localidad:</b> CABA</li>', 3);
+Page::_e('<li><b>Provincia:</b> Buenos Aires</li>', 3);
+Page::_e('<li><b>Pa&iacute;s:</b> AR</li>', 3);
+Page::_e('<li><b>V&aacute;lido desde:</b> October 2, 2014</li>', 3);
+Page::_e('<li><b>V&aacute;lido hasta:</b> September 29, 2024</li>', 3);
+Page::_e('<li><b>Emisor:</b> SiMaPe CA, SiMaPe</li>', 3);
+Page::_e('<li><b>Algoritmo de llave:</b> RSA</li>', 3);
+Page::_e('<li><b>Tama&ntilde;o de llave:</b> 4096 bit</li>', 3);
+Page::_e('<li><b>N&uacute;mero de serie:</b> 00 DE CC 44 86 70 51 08 69</li>', 3);
+Page::_e('<li><b>Huella SHA1:</b> A8 C0 EE 29 C6 CA E2 D5 AB 4C D0 40 EE A3 C5 74 0A 94 3F 7D</li>', 3);
 Page::_e('</ul>', 2);
 
-Page::_e('<br />', 2);
+Page::_e("<p style='text-align:center;'>" 
+            . Page::getInput('button', 
+                                NULL, 
+                                'Volver a la p&aacute;gina de inicio', 
+                                NULL, 
+                                'btn_blue', 
+                                NULL, 
+                                NULL, 
+                                "onClick='location.href=\"" . SMP_WEB_ROOT 
+                                    . "index.php\";'") 
+            . "</p>", 2);
 
-Page::_e("<form style='text-align: center;' method='post'>", 2);
-Page::_e("<p><input name='frm_button' type='submit' "
-     . "style='font-style:italic;' "
-     . "value='Volver a la p&aacute;gina de inicio' /></p>", 3);
-Page::_e("</form>", 2);
-
-Page::_e(Page::getMainClose());
-Page::_e(Page::getFooter());
-Page::_e(Page::getBodyClose());
+Page::printMainClose();
+Page::printFooter();
+Page::printBodyClose();

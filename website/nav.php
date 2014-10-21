@@ -31,8 +31,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.45
- * @deprecated since version 1.45
+ * @version 1.46
  */
 
 require_once 'load.php';

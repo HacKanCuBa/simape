@@ -33,7 +33,7 @@
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @uses PHPExcel Clase lectora de archivos XLS
- * @version 0.2
+ * @version 0.22
  */
 
 class Saper extends Curl
@@ -174,8 +174,7 @@ class Saper extends Curl
                                     $valor, 
                                     $estado = self::ESTADO_ACTIVO)
     {        
-        $status = ($estado == self::ESTADO_ACTIVO) ? $estado : 
-                    (($estado == self::ESTADO_BAJA) ? $estado : self::ESTADO_ACTIVO);
+        $status = ($estado == self::ESTADO_BAJA) ? $estado : self::ESTADO_ACTIVO;
         $url = static::urlMake(self::P_CARGOSAGENTES);
         $options = array(
                         CURLOPT_FRESH_CONNECT => 0,
@@ -183,6 +182,7 @@ class Saper extends Curl
                         CURLOPT_COOKIESESSION => 0,
                         CURLOPT_FOLLOWLOCATION => 1,
                         CURLOPT_HEADER => 1,
+                        CURLOPT_TIMEOUT => 10,
         );
                         
         $busqueda = [NULL, self::BUSCAR_APELLIDO, self::BUSCAR_DNI, self::BUSCAR_NOMBRE, self::BUSCAR_LEGAJO];

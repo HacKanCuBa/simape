@@ -56,7 +56,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.36
+ * @version 1.45
  */
 class Page
 {  
@@ -94,13 +94,22 @@ class Page
     /**
      * Tiempo de vida de un token de página, en segundos.
      */
-    const TOKEN_LIFETIME = 1800;
+    const TOKEN_LIFETIME = 3600;
     
     /**
      * Extensiones permitidas, separadas por coma.
      */
     const EXTENSIONS = 'php,html';
 
+    const FORM_ENCTYPE_DEFAULT = "application/x-www-form-urlencoded";
+    const FORM_ENCTYPE_FILE = "multipart/form-data";
+    
+    const FORM_METHOD_GET = 'get';
+    const FORM_METHOD_POST = 'post';
+    
+    const FORM_TYPE_OPEN = TRUE;
+    const FORM_TYPE_CLOSE = FALSE;
+    
     /**
      * Nombre de la hoja de estilos que será cargada 
      * (sin la extensión).  Debe encontrarse en el subdirectorio SMP_LOC_CSS.
@@ -253,17 +262,13 @@ class Page
             }
         }
         
-        $pathPage = '';
-        if (self::isValid_loc($loc)) {
-            $pathPage = $loc; 
-        }
-        
-        if (!empty($intLink)) {
-            $strParams .= '#' . $intLink;
-        }
-        return SMP_WEB_ROOT . $pathPage . $strParams;
+        return SMP_WEB_ROOT . 
+                (self::isValid_loc($loc) ? $loc : '') . 
+                $strParams . 
+                ($intLink ? '#' . $intLink : '');
     }
     
+    // __ PUB    
     /**
      * Envía los headers necesarios para ir a la página indicada, envíando
      * también los parámetros requeridos.
@@ -274,28 +279,40 @@ class Page
      * <b>IMPORTANTE</b>: Es conveniente llamar a exit() 
      * <i>inmediatamente después</i> de este método.
      * 
-     * @param string $loc Ruta relativa desde '/' a la página deseada.<br />
+     * @param string $loc [opcional]<br />
+     * Ruta relativa desde '/' (o la raíz correspondiente definida por 
+     * SMP_WEB_ROOT) a la página deseada.<br />
      * Solo puede contener letras mayúsculas y minúsculas del alfabeto inglés,
      * números y los símbolos '/', '-' y '_'.
      * El primer caracter debe ser una letra o un número.<br />
      * P. e.: incs/page_class.php
-     * @param mixed $params Parámetros en la forma:
+     * @param mixed $params [opcional]<br />
+     * Parámetros en la forma:
      * <ul>
      * <li>Como string: <i>nombre=valor&nombre2=valor2,...</i></li>
      * <li>Como array: <i>['nombre'=>'valor', 'nombre2'=>'valor2',...]</li>
      * </ul>
-     * @param string $intLink Enlace interno (<i>#link</i>).
+     * @param string $intLink [opcional]<br />
+     * Enlace interno (<i>#link</i>).
+     * @param boolean $overrideSSL [opcional]<br />
+     * Si es TRUE, fuerza conexión en modo plano.  Si es FALSE, conecta vía SSL
+     * si la conexión actual es SSL o si <i>SMP_SSL=TRUE</i> o si no en modo 
+     * plano.
      * @return boolean TRUE si se enviaron correctamente los headers, 
      * FALSE si no.
      */
-    protected static function go_to($loc = NULL,
+    public static function go_to($loc = NULL,
                                  $params = NULL,
-                                 $intLink = NULL) 
+                                 $intLink = NULL,
+                                 $overrideSSL = FALSE) 
     {
         if (empty($loc) || self::pageExists($loc)) {
             header("Location: " . 
-                    ((SMP_SSL || Sanitizar::glSERVER('HTTPS')) ? 'https://' 
-                                                        . server_ip() : '') .
+                    (($overrideSSL && (SMP_SSL || is_connection_ssl())) ? 
+                        'http://' . server_ip() : 
+                        ((SMP_SSL || is_connection_ssl()) ? 
+                            'https://' . server_ip() : 
+                            '')) .
                     self::urlMake($loc, $params, $intLink));
             return TRUE;
         }
@@ -303,7 +320,6 @@ class Page
         return FALSE;
     }
 
-    // __ PUB
     /**
      * Devuelve la ruta completa a la hoja de estilos por defecto.
      * @return string Ruta completa a la hoja de estilos por defecto.
@@ -344,12 +360,10 @@ class Page
                 . "\n\t<link rel='icon' type='image/ico' href='" 
                 . SMP_WEB_ROOT . self::FAVICON . ".ico' />";
           
-        if (is_string($stylesheet)) {
-            $stylesheets = explode(',', $stylesheet);
-        } elseif (empty($stylesheet)) {
-            $stylesheets = [ self::STYLESHEET_DEFAULT ];
-        }
-        
+        $stylesheets = is_array($stylesheet) ? $stylesheet : 
+                        (is_string($stylesheet) ? explode(',', $stylesheet) : 
+                            [ self::STYLESHEET_DEFAULT ]);
+                
         // si no es un array, es pq el argumento recibido es invalido.
         if (is_array($stylesheets)) {
             foreach ($stylesheets as $css) {
@@ -364,10 +378,27 @@ class Page
                 }
             }
         }
-               
+              
         return $code;
     }
     
+    /**
+     * Imprime el head del documento HTML.
+     * Debe continuarse con printBody, que cierra head y abre body.
+     * 
+     * @see printBody()
+     * @param string $title Título de la página.
+     * @param array|string $stylesheet Array de nombres de hojas de estilos que serán 
+     * cargadas, con la forma: ['miCss1', 'miCss2', ...]. <br />
+     * O bien, un string de nombres separado por comas: "miCss1,miCss2,..."<br />
+     * De no indicar ninguna, se cargará STYLESHEET_DEFAULT.<br />
+     */
+    public static function printHead($title = NULL, $stylesheet = NULL)
+    {
+        echo static::getHead($title, $stylesheet);
+    }
+
+
 //    public function getStylesheet()
 //    {
 //        foreach ($this->stylesheet as $css) {
@@ -376,15 +407,25 @@ class Page
 //    }
 
     /**
-    * Devuelve el cierre de head y apertura de body.
-    * Debe continuarse con getHeader, que carga el encabezado.
-    * 
-    * @see getHeader()
-    * @return string Código HTML de cierre del Head y apertura de Body.
-    */
+     * Devuelve el cierre de head y apertura de body.
+     * Debe continuarse con getHeader, que carga el encabezado.
+     * 
+     * @see getHeader()
+     * @return string Código HTML de cierre del Head y apertura de Body.
+     */
     public static function getBody() 
     {   
         return "\n</head>\n<body>";
+    }
+    
+    /**
+     * Imprime el cierre de head y apertura de body.
+     * Debe continuarse con printHeader, que carga el encabezado.
+     * @see printHeader()
+     */
+    public static function printBody()
+    {
+        echo static::getBody();
     }
 
     /**
@@ -403,8 +444,20 @@ class Page
                 . "\n\t\t<img src='". $raiz . SMP_LOC_IMGS . self::HEADER_IMG 
                 . "' alt='CSJN - CMF - SIMAPE' "
                 . "title='Corte Suprema de Justicia de la Naci&oacute;n - "
-                . "A&ntilde;o de su Sesquicentenario - Cuerpo "
+                . "Cuerpo "
                 . "M&eacute;dico Forense - SiMaPe' id='img_header' />";
+    }
+    
+    /**
+     * Imprime el encabezado.
+     * Debe continuarse con printHeaderClose().
+     * @see printHeaderClose()
+     * @param string $imgroot Raíz del directorio donde está la imágen del 
+     * encabezado (SMP_WEB_ROOT o SMP_FS_ROOT).
+     */
+    public static function printHeader($imgroot = SMP_WEB_ROOT)
+    {
+        echo static::getHeader($imgroot);
     }
 
     /**
@@ -418,26 +471,31 @@ class Page
         return "\n\t</div>";
     }
 
+    /**
+     * Imprime el cierre del encabezado.  Permite incluir código personalizado 
+     * en el encabezado (entre printHeader() y printHeaderClose()).
+     */
+    public static function printHeaderClose()
+    {
+        echo static::getHeaderClose();
+    }
 
     /**
      * Devuelve el código HTML de la barra de navegacion vertical.
      * Debe ir antes de getMain() y después de getHeaderClose().
      * 
+     * @param string $name Nombre con el cual dirigirse a la persona/usuario.
      * @see getMain()
      * @see getHeaderClose()
-     * @return string Código HTML de la barra de navegación vertical
+     * @return string Código HTML de la barra de navegación vertical.
      */
-    public static function getDefaultNavbarVertical() 
+    public static function getDefaultNavbarVertical($name = NULL) 
     {
         $navbar = new Navbar;
         $navbar->setIndent(1);
         
-        $session = new Session;
-        $session->useSystemPassword();
-        $username = $session->retrieveEnc(SMP_SESSINDEX_USERNAME);
-        
         $btns = array ('&iexcl;Bienvenido <i>' 
-                       . $username . '</i>!',
+                       . $name . '</i>!',
                        'Mensajes',
                        'Mi perfil de empleado',
                        'Mi perfil de usuario',
@@ -543,14 +601,34 @@ class Page
     }*/
 
     /**
+     * Imprime el código HTML de la barra de navegacion vertical.
+     * Debe ir antes de printMain() y después de printHeaderClose().
+     * 
+     * @param string $name Nombre con el cual dirigirse a la persona/usuario.
+     */
+    public static function printDefaultNavbarVertical($name = NULL)
+    {
+        echo static::getDefaultNavbarVertical($name);
+    }
+
+    /**
      * Abre el cuerpo de la página.<br />
-     * Debe ir despues de la barra de navegacion.
+     * Debe ir después de la barra de navegacion.
      * 
      * @return string Código HTML de apertura del cuerpo de la página.
      */
     public static function getMain() 
     {
         return "\n\t<div class='data'>";
+    }
+    
+    /**
+     * Imprime la apertura del cuerpo de la página.<br />
+     * Debe ir después de la barra de navegacion.
+     */
+    public static function printMain()
+    {
+        echo static::getMain();
     }
 
     /**
@@ -562,6 +640,15 @@ class Page
     public static function getMainClose() 
     {
         return "\n\t</div>";
+    }
+
+    /**
+     * Imprime el cierre el cuerpo de la página.<br />
+     * Debe ir antes de printFooter() y después de printMain().
+     */
+    public static function printMainClose()
+    {
+        echo static::getMainClose();
     }
 
     /**
@@ -579,6 +666,14 @@ class Page
     }
     
     /**
+     * Imprime el pie de página.  Debe continuarse con printBodyClose().
+     */
+    public static function printFooter()
+    {
+        echo static::getFooter();
+    }
+
+    /**
      * Cierra por completo la página, no debe haber nada despues de éste.
      * 
      * @return string Código HTML de cierre completo de la página.
@@ -589,6 +684,14 @@ class Page
                 . "\n</html>";
     }
     
+    /**
+     * Cierra por completo la página, no debe haber nada despues de éste.
+     */
+    public static function printBodyClose()
+    {
+        echo static::getBodyClose();
+    }
+
     /**
      * Devuelve el nivel actual de indentado.
      * 
@@ -696,19 +799,25 @@ class Page
      * <b>IMPORTANTE</b>: Es conveniente llamar a exit() 
      * <i>inmediatamente después</i> de este método.
      * 
-     * @param mixed $params Parámetros en la forma:
+     * @param mixed $params [opcional]<br />
+     * Parámetros en la forma:
      * <ul>
      * <li>Como string: <i>nombre=valor&nombre2=valor2,...</i></li>
      * <li>Como array: <i>['nombre'=>'valor', 'nombre2'=>'valor2',...]</li>
      * </ul>
-     * @param string $intLink Enlace interno (<i>#link</i>).
+     * @param string $intLink [opcional]<br />
+     * Enlace interno (<i>#link</i>).
+     * @param boolean $overrideSSL [opcional]<br />
+     * Si es TRUE, no verifica la existencia de 
+     * conexión segura y mantiene el modo de conexión actual, sea cual fuere.
+     * FALSE por defecto.
      * @return boolean TRUE si se enviaron correctamente los headers, 
      * FALSE si no.
      * @see setLocation
      */
-    public function go($params = NULL, $intLink = NULL)
+    public function go($params = NULL, $intLink = NULL, $overrideSSL = FALSE)
     {
-        return self::go_to($this->pageLoc, $params, $intLink);
+        return self::go_to($this->pageLoc, $params, $intLink, $overrideSSL);
     }
     
     /**
@@ -718,73 +827,74 @@ class Page
      * 
      * @param string $accion Acción a ejecutar o ruta de la página a cargar.
      */
-    public function nav($accion = NULL)
+    public static function nav($accion = NULL)
     {
-        //self::go_to('nav.php', [ SMP_NAV_ACTION => $accion ]);
-        // Inicializo variables de redireccion
-        $params = NULL;
-        $intLink = NULL;
-
-        $session = new Session;
-        $session->useSystemPassword();
-        $usuario = new Usuario($session->retrieveEnc(SMP_SESSINDEX_USERNAME));
-        
-        switch($accion) {
-            case SMP_LOGOUT:
-                $usuario->sesionFinalizar();
-                $this->setLocation('login.php');
-                $params = [SMP_LOGOUT => 'TRUE'];
-                break;
-
-            case NULL:
-            case '':
-            case SMP_WEB_ROOT:
-                $this->setLocation(SMP_WEB_ROOT);
-                // Ya se que da FALSE, es para que se entienda.
-                // Location=NULL lleva a WEBROOT
-                break;
-
-            case SMP_LOGIN:
-                $this->setLocation('login.php');
-                break;
-
-            case SMP_LOC_USR . 'mensajes.php':
-                $intLink = "tabR"; 
-                // omito break para que ejecute default
-            default:
-                // si la página no existe, 404...
-                if (Page::pageExists($accion)) {
-                    // Si el usuario está loggeado, dirigirse a la pag solicitada con un
-                    // page token.
-                    // Si no esta loggeado, darán error las comprobaciones
-                    if ($usuario->sesionAutenticar()) {
-                        // Login OK
-                        // Page Token
-                        $this->generateRandomToken();
-                        $this->generateTimestamp();
-                        $this->setLocation($accion);
-                        $this->generateToken();
-
-                        // Guardo Page RandTkn y Timestamp en SESSION                
-                        $session->store(SMP_SESSINDEX_PAGE_RANDOMTOKEN, 
-                                                    $this->getRandomToken());
-                        $session->store(SMP_SESSINDEX_PAGE_TIMESTAMP, 
-                                                    $this->getTimestamp());
-
-                        // Paso por GET el Page Token
-                        $params = SMP_SESSINDEX_PAGE_TOKEN . '=' . $this->getToken();
-                    } else {
-                        $this->setLocation('403.php');
-                    }
-                } else {
-                    // No existe la pagina
-                    $this->setLocation('404.php');
-                }
-                break;
-        }
-
-        $this->go($params, $intLink);
+        self::go_to('nav.php', [ SMP_NAV_ACTION => $accion ]);
         exit();
+//        // Inicializo variables de redireccion
+//        $params = NULL;
+//        $intLink = NULL;
+//
+//        $session = new Session;
+//        $session->useSystemPassword();
+//        $usuario = new Usuario($session->retrieveEnc(SMP_SESSINDEX_USERNAME));
+//        
+//        switch($accion) {
+//            case SMP_LOGOUT:
+//                $usuario->sesionFinalizar();
+//                $this->setLocation('login.php');
+//                $params = [SMP_LOGOUT => 'TRUE'];
+//                break;
+//
+//            case NULL:
+//            case '':
+//            case SMP_WEB_ROOT:
+//                $this->setLocation(SMP_WEB_ROOT);
+//                // Ya se que da FALSE, es para que se entienda.
+//                // Location=NULL lleva a WEBROOT
+//                break;
+//
+//            case SMP_LOGIN:
+//                $this->setLocation('login.php');
+//                break;
+//
+//            case SMP_LOC_USR . 'mensajes.php':
+//                $intLink = "tabR"; 
+//                // omito break para que ejecute default
+//            default:
+//                // si la página no existe, 404...
+//                if (Page::pageExists($accion)) {
+//                    // Si el usuario está loggeado, dirigirse a la pag solicitada con un
+//                    // page token.
+//                    // Si no esta loggeado, darán error las comprobaciones
+//                    if ($usuario->sesionAutenticar()) {
+//                        // Login OK
+//                        // Page Token
+//                        $this->generateRandomToken();
+//                        $this->generateTimestamp();
+//                        $this->setLocation($accion);
+//                        $this->generateToken();
+//
+//                        // Guardo Page RandTkn y Timestamp en SESSION                
+//                        $session->store(SMP_SESSINDEX_PAGE_RANDOMTOKEN, 
+//                                                    $this->getRandomToken());
+//                        $session->store(SMP_SESSINDEX_PAGE_TIMESTAMP, 
+//                                                    $this->getTimestamp());
+//
+//                        // Paso por GET el Page Token
+//                        $params = SMP_SESSINDEX_PAGE_TOKEN . '=' . $this->getToken();
+//                    } else {
+//                        $this->setLocation('403.php');
+//                    }
+//                } else {
+//                    // No existe la pagina
+//                    $this->setLocation('404.php');
+//                }
+//                break;
+//        }
+//
+//        $this->go($params, $intLink);
+//        exit();
     }
 
     /**
@@ -845,5 +955,134 @@ class Page
         $str = ($newline ? "\n" : "") . static::indent($indent) . strval($value);
         echo ($print ? $str : NULL);
         return $str;
+    }
+    
+    /**
+     * Devuelve el código HTML para un formulario, con las características 
+     * deseadas.  No debe emplearse entrada directa del usuario con este
+     * método sin sanitizar apropiadamente, en especial el parámetro $url.
+     * Debe cerrarse con getForm(FORM_TYPE_CLOSE).
+     * 
+     * @param boolean $type [opcional]<br />
+     * Apertura (FORM_TYPE_OPEN) o cierre (FORM_TYPE_CLOSE) del formulario.
+     * @param string $name [opcional]<br />
+     * Nombre del formulario.
+     * @param string $style [opcional]<br />
+     * Instrucciones de estilo.
+     * @param string $method [opcional]<br />
+     * Método POST (por defecto) o GET.
+     * @param string $enctype [opcional]<br />
+     * FORM_ENCTYPE_DEFAULT: <i>application/x-www-form-urlencoded</i> 
+     * o FORM_ENCTYPE_FILE: <i>multipart/form-data</i>
+     * @param mixed $accept [opcional]<br /> 
+     * Si $enctype = FORM_ENCTYPE_FILE, lista de tipos de archivos que aceptará.
+     * Puede ser string separado por comas o un array (no importa el tipo de 
+     * índice).
+     * @param string $url [opcional]<br />
+     * URL a la cual el formulario enviará los datos.  Por defecto, es a 
+     * la misma página.  ATENCIÓN: ¡este parámetro no se valida, por lo tanto 
+     * puede ser peligroso!
+     * @param string $other [opcional]<br />
+     * String de parámetros opcionales que seran pasados directamente a la 
+     * directiva HTML.
+     * @return string Codigo HTML del formulario, de apertura o cierre.
+     */    
+    public static function getForm($type = self::FORM_TYPE_OPEN,
+                                    $name = NULL, 
+                                    $style = NULL,
+                                    $method = self::FORM_METHOD_POST,
+                                    $enctype = self::FORM_ENCTYPE_DEFAULT,
+                                    $accept = NULL,
+                                    $url = NULL,
+                                    $other = NULL
+    ) {
+        if ($type == self::FORM_TYPE_OPEN) {
+            $html = '<form ';
+            $html .= $name ? 'name="' . $name . '" ' : '';
+            $html .= $style ? 'style="' . $style . '" ' : '';
+            $html .= 'method="' . ((strtolower($method) == self::FORM_METHOD_POST) ? 
+                                        self::FORM_METHOD_POST : 
+                                        self::FORM_METHOD_GET) . '" ';
+            $html .= 'enctype="' . ((strtolower($enctype) == self::FORM_ENCTYPE_DEFAULT) ? 
+                                        self::FORM_ENCTYPE_DEFAULT : 
+                                        self::FORM_ENCTYPE_FILE) . '" ';
+            $html .= $accept ? 
+                            ('accept="' . 
+                                (is_array($accept) ? 
+                                    string_list_from_array($accept) : 
+                                    $accept) . '" ') : 
+                            '';
+            $html .= $url ? 'action="' . $url . '" ' : '';
+            $html .= $other;
+            $html .= '>';
+        } else {
+            $html = '</form>';
+        }
+        
+        return $html;
+    }
+    
+    /**
+     * Devuelve el código HTML para un input, con las características 
+     * deseadas. El tipo de input debe ser un valor de "text", "password", 
+     * "checkbox", "radio", "submit", "reset", "file", "hidden", "image", 
+     * "button".
+     * @param string $type Tipo de input.
+     * @param string $name [opcional]<br />
+     * Nombre del input.
+     * @param string $value [opcional]<br />
+     * Valor del input.
+     * @param string $id [opcional]<br />
+     * Valor del ID.
+     * @param string $class [opcional]<br />
+     * Nombre de la clase.
+     * @param string $size [opcional]<br />
+     * Tamaño del input.
+     * @param string $accept [opcional]<br />
+     * Si $type = "file", lista de tipos de archivos que aceptará.
+     * Puede ser string separado por comas o un array (no importa el tipo de 
+     * índice).
+     * @param type $other [opcional]<br />
+     * String de parámetros opcionales que seran pasados directamente a la 
+     * directiva HTML.
+     * @return boolean|string Codigo HTML del input, o FALSE en caso de error.
+     */
+    public static function getInput($type, 
+                                            $name = NULL, 
+                                            $value = NULL,
+                                            $id = NULL,
+                                            $class = NULL,                                            
+                                            $size = NULL, 
+                                            $accept = NULL, 
+                                            $other = NULL
+    ) {
+        // HTML 5 TYPES 2014 OCT
+        if (in_array(strtolower($type), ["text", "password", "checkbox", 
+                                            "radio", "submit", "reset", 
+                                            "file", "hidden", "image", 
+                                            "button", "number", "color", "week",
+                                            "date", "datetime", "datetime-local",
+                                            "email", "month", "range", "reset",
+                                            "search", "tel", "time", "url"])
+        ) {
+            $html = '<input type="' . $type . '" ';
+            $html .= $id ? 'id="' . $id . '" ' : '';
+            $html .= $name ? 'name="' . $name . '" ' : '';
+            $html .= $value ? 'value="' . $value . '" ' : '';
+            $html .= $class ? 'class="' . $class . '" ' : '';
+            $html .= $size ? 'size="' . $size . '" ' : '';
+            $html .= $accept ? 
+                                ('accept="' . 
+                                    (is_array($accept) ? 
+                                        string_list_from_array($accept) : 
+                                        $accept) . '" ') : 
+                                '';
+            $html .= $other;
+            $html .= '/>';
+
+            return $html;
+        }
+        
+        return FALSE;
     }
 }

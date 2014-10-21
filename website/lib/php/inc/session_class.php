@@ -45,7 +45,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.46
+ * @version 1.48
  */
 class Session
 {
@@ -120,7 +120,8 @@ class Session
     protected static function begin($dontChangeID = FALSE, 
                                      $lifetime = NULL, 
                                      $path = NULL, 
-                                     $domain = NULL, $https = SMP_SSL)
+                                     $domain = NULL, 
+                                     $https = SMP_SSL)
     {
         // Ideas:
         // http://security.stackexchange.com/questions/24177/starting-a-secure-php-session
@@ -140,7 +141,7 @@ class Session
         $dominio = empty($domain) ? Sanitizar::glSERVER('SERVER_NAME') : $domain;
 
         // Configurar HTTP o HTTPS
-        $secure = is_bool($https) ? $https : boolval(Sanitizar::glSERVER('HTTPS'));
+        $secure = is_bool($https) ? $https : is_connection_ssl();
         
         // Configurar path
         $ruta = empty($path) ? SMP_WEB_ROOT : $path;
@@ -189,9 +190,8 @@ class Session
      * @param mixed $value [opcional] <br/>
      * Valor, puede ser cualquier elemento serializable
      * (se recomienta emplear valores escalares o arrays, y evitar objetos).
-     * @param boolean $dontSanitize [opcional] <br/>
-     * Si es TRUE, NO sanitiza el valor antes de 
-     * almacenarlo (FALSE por defecto).
+     * @param boolean $sanitize [opcional] <br/>
+     * Si es TRUE, sanitiza el valor antes de almacenarlo (por defecto).
      * @param string $password [opcional] <br/>
      * Contraseña de encriptación.
      * @param string $salt [opcional] <br/>
@@ -202,7 +202,7 @@ class Session
      */
     public static function store($key,
                                  $value = NULL, 
-                                 $dontSanitize = FALSE, 
+                                 $sanitize = TRUE, 
                                  $password = NULL, 
                                  $salt = NULL
     ) {
@@ -210,18 +210,16 @@ class Session
             if (isset($key) 
                 && (is_string($key) || is_integer($key))
             ) {
-                if (!$dontSanitize) {
-                    $value = Sanitizar::value($value);
-                }
+                $valor = $sanitize ? Sanitizar::value($value) : $value;
                 
                 if (!empty($password)) {
-                    $value = Crypto::encrypt($value, $password, $salt);
-                    if (empty($value)) {
+                    $valor = Crypto::encrypt($valor, $password, $salt);
+                    if (empty($valor)) {
                         return FALSE;
                     }
                 }
                 
-                $_SESSION[$key] = serialize($value);
+                $_SESSION[$key] = serialize($valor);
                 return TRUE;     
             }
         }
@@ -238,14 +236,13 @@ class Session
      * Valor, puede ser cualquier elemento serializable
      * (se recomienta emplear valores escalares o arrays, y evitar objetos).
      * @param boolean $sanitize [opcional] <br/>
-     * Si es TRUE, sanitiza el valor antes de 
-     * almacenarlo (FALSE por defecto).
+     * Si es TRUE, sanitiza el valor antes de almacenarlo (por defecto).
      * @return boolean TRUE si se almacenó el valor satisfactoriamente, 
      * FALSE si no.
      * @see setPassword()
      * @see setPasswordSalt()
      */
-    public function storeEnc($key, $value = NULL, $sanitize = FALSE)
+    public function storeEnc($key, $value = NULL, $sanitize = TRUE)
     {
         if (isset($key)) {
             return self::store($key, $value, $sanitize, $this->password, 
@@ -270,7 +267,7 @@ class Session
      * @param mixed $key Índice, string o int.
      * @param boolean $sanitize [opcional] <br/>
      * TRUE para sanitizar el valor antes de 
-     * devolverlo, FALSE para devolverlo sin sanitizar (por defecto).
+     * devolverlo (por defecto), FALSE para devolverlo sin sanitizar.
      * @param string $password [opcional] <br/>
      * Contraseña de encriptación.
      * @param string $salt [opcional] <br/>
@@ -281,7 +278,7 @@ class Session
      * notificarlo.  Usar error_get_last() u otra para determinarlo.
      */
     public static function retrieve($key, 
-                                    $sanitize = FALSE, 
+                                    $sanitize = TRUE, 
                                     $password = NULL, 
                                     $salt = NULL)
     {
@@ -305,11 +302,7 @@ class Session
                         }
                     }
                     
-                    if ($sanitize) {
-                        $retVal = Sanitizar::value($retVal);
-                    }
-                    
-                    return $retVal;
+                    return ($sanitize ? Sanitizar::value($retVal) : $retVal);
                 } else {
                     return NULL;
                 }
@@ -330,13 +323,13 @@ class Session
      * @param mixed $key Índice, string o int.
      * @param boolean $sanitize [opcional]<br />
      * TRUE para sanitizar el valor antes de 
-     * devolverlo, FALSE para devolverlo sin sanitizar (por defecto).
+     * devolverlo (por defecto), FALSE para devolverlo sin sanitizar.
      * @return mixed Valor almacenado en $_SESSION[$key] o NULL si dicho valor
      * no existe.<br />
      * En caso de error, realiza una llamada del sistema para 
      * notificarlo.  Usar error_get_last() u otra para determinarlo.
      */
-    public function retrieveEnc($key, $sanitize = FALSE)
+    public function retrieveEnc($key, $sanitize = TRUE)
     {
         return self::retrieve($key, $sanitize, $this->password, $this->password_salt);
     }

@@ -23,27 +23,45 @@
 
 include 'load.php';
 
-echo Page::getHead('SiMaPe - Error 403');
-echo Page::getBody();
-echo Page::getHeader();
-echo Page::getHeaderClose();
-echo Page::getMain();
+Session::initiate();
 
-echo "\n\t\t<h2 style='text-align: center;font-weight: bold'>"
-     . "Error 403: Acceso denegado</h2>";
-echo "\n\t\t<br />";
-echo "\n\t\t<p style='text-align: center;font-style: italic'>No tiene permiso "
-     . "para acceder a la p&aacute;gina requerida.";
-echo "\n\t\t<p style='text-align: center; font-style: italic'>Si lleg&oacute; "
-     . "aqu&iacute; por medio de un enlace, contacte con un administrador del "
-     . "sistema.</p>";
+Page::printHead('SiMaPe - Error 403', ['main','input', 'msg']);
+Page::printBody();
+Page::printHeader();
+Page::printHeaderClose();
+Page::printMain();
 
-echo "\n\t\t<form style='text-align: center;' action='" . SMP_WEB_ROOT . 'login.php' . "' method='post'>";
-echo "\n\t\t\t<p><input name='frm_buttonLogin' type='submit' "
-     . "style='font-style:italic;' "
-     . "value='Ingresar al sistema - Iniciar sesi&oacute;n' /></p>";
-echo "\n\t\t</form>";
+Page::_e("<h2 style='text-align: center;font-weight: bold'>"
+            . "Error 403: Acceso denegado</h2>", 2) ;
+if (!empty(Session::retrieve(SMP_SESSINDEX_NOTIF_ERR))) {
+    Page::_e("<p class='fadeout' "
+                . "style='color:red; text-align: center;' >" 
+                . Session::retrieve(SMP_SESSINDEX_NOTIF_ERR) 
+                . "</p>", 2);
+    Session::remove(SMP_SESSINDEX_NOTIF_ERR);
+} else {
+    Page::_e("<br />", 2);
+}
+Page::_e("<p style='text-align: center;'>No tiene permiso "
+            . "para acceder a la p&aacute;gina requerida.</p>", 2);
+Page::_e("<p style='text-align: center;'>Si lleg&oacute; "
+            . "aqu&iacute; por medio de un enlace, <i>es probable que su "
+            . "sesi&oacute;n haya caducado por inactividad</i>.  "
+            . "Si considera que se trata de un error, contacte con un "
+            . "administrador del sistema.</p>", 2);
+Page::_e("<p style='text-align: center;'>", 2);
+Page::_e(Page::getInput('button', 
+                                '', 
+                                'Ingresar al sistema - Iniciar sesi&oacute;n', 
+                                '',
+                                'btn_blue', 
+                                '', 
+                                '', 
+                                "onClick='location.href=\"" 
+                                    . SMP_WEB_ROOT . "login.php\";'"), 
+                            3);
+Page::_e('</p>', 2);
 
-echo Page::getMainClose();
-echo Page::getFooter();
-echo Page::getBodyClose();
+Page::printMainClose();
+Page::printFooter();
+Page::printBodyClose();
