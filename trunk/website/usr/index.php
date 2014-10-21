@@ -49,26 +49,24 @@ if ($page->authenticateToken()
         && $usuario->sesionAutenticar()
 ) {
     $nav = SMP_LOC_USR . 'saper.php';
-//    $formToken = new FormToken;
-//    $formToken->prepare_to_auth(
-//                        Sanitizar::glPOST(SMP_SESSINDEX_FORM_TOKEN), 
-//                        Session::retrieve(SMP_SESSINDEX_FORM_RANDOMTOKEN), 
-//                        Session::retrieve(SMP_SESSINDEX_FORM_TIMESTAMP)
-//    );
-//    
-//    if ($formToken->authenticateToken()) {
-//        // Procesar POST
-//        
-//    }
+    $formToken = new FormToken;
+    $formToken->prepare_to_auth(
+                        Sanitizar::glPOST(SMP_SESSINDEX_FORM_TOKEN), 
+                        Session::retrieve(SMP_SESSINDEX_FORM_RANDOMTOKEN), 
+                        Session::retrieve(SMP_SESSINDEX_FORM_TIMESTAMP)
+    );
+    
+    if ($formToken->authenticateToken()) {
+        // Procesar POST
+        
+    }
 } else {
     // Acceso denegado
     $usuario->sesionFinalizar();
     $nav = '403.php';
 }
 
-if (isset($nav)) {
-    $page->nav($nav);
-}
+isset($nav) ? $page->nav($nav) : NULL;
 
 // Token de pagina
 $page->setLocation(SMP_LOC_USR . 'index.php');
@@ -86,15 +84,15 @@ Session::store(SMP_SESSINDEX_FORM_RANDOMTOKEN, $formToken->getRandomToken());
 Session::store(SMP_SESSINDEX_FORM_TIMESTAMP, $formToken->getTimestamp());
 // -- --
 // -- PAGE
-Page::_e(Page::getHead('SiMaPe - Inicio'));
-Page::_e(Page::getBody());
-Page::_e(Page::getHeader());
-Page::_e(Page::getHeaderClose());
-Page::_e(Page::getDefaultNavbarVertical());
-Page::_e(Page::getMain());
+Page::printHead('SiMaPe - Inicio', ['main', 'input', 'navbar']);
+Page::printBody();
+Page::printHeader();
+Page::printHeaderClose();
+Page::printDefaultNavbarVertical('');
+Page::printMain();
 
 
 
-Page::_e(Page::getMainClose());
-Page::_e(Page::getFooter());
-Page::_e(Page::getBodyClose());
+Page::printMainClose();
+Page::printFooter();
+Page::printBodyClose();

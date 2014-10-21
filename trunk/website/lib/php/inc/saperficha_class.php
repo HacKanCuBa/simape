@@ -30,9 +30,8 @@
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @uses PHPExcel Clase lectora de archivos XLS
- * @version 0.7
+ * @version 0.81
  */
-
 class SaperFicha
 {
     /**
@@ -52,12 +51,19 @@ class SaperFicha
     protected $apellido, $nombre, $dni, $cargo, $dependencia;
     protected $hs_extras, $hs_extras_total, $hs_compensadas, $hs_compensadas_total;
     protected $hs_faltantes_total, $hs_extras_real_total, $hs_faltantes;
-    
+    protected $tardes;
+
+
     /**
      * Diferencia tolerada entre fichajes de salida/entrada, en segundos.
      * P. E.: 13:33:21 y 13:38:10, se toma el primero.
      */
     const DIFF_FICHAJES = 600;
+    
+    /**
+     * Diferencia tolerada para la llegada tarde (15')
+     */
+    const DIFF_TARDE = 900;
 
     public function __construct($fname = NULL) 
     {
@@ -172,6 +178,16 @@ class SaperFicha
         return $nums;
     }
 
+    /**
+     * Determina si un fichaje corresponde a una llegada tarde o no.
+     * @param int $fichaje Fichaje de entrada.
+     * @param int $entrada Hora de entrada correspondiente.
+     * @return boolean TRUE si es tarde, FALSE si no.
+     */
+    protected static function es_tarde($fichaje, $entrada)
+    {
+        return ($fichaje > ($entrada + self::DIFF_TARDE));
+    }
     // __PUB
     /**
      * Carga una ficha desde un archivo de Excel.
@@ -201,7 +217,7 @@ class SaperFicha
             foreach ($row as $col) {
                 $col = trim($col);
                 $time = round(24 * $col * 60 * 60);
-                $ficha[$i][] = empty($col) ? "-" : (is_numeric($col) ? sprintf('%02d:%02d:%02d', ($time/3600), ($time/60%60), $time%60) : $col);
+                $ficha[$i][] = empty($col) ? "" : (is_numeric($col) ? sprintf('%02d:%02d:%02d', ($time/3600), ($time/60%60), $time%60) : $col);
             }
         }
         // reacomodo
@@ -220,6 +236,10 @@ class SaperFicha
         $i = 0;
         while(isset($ficha[$i + 5])) {
             $this->ficha[$i] = $ficha[$i + 5];
+            // elimino el texto " No se computan las horas." del descargo
+            end($this->ficha[$i]);
+            $this->ficha[$i][key($this->ficha[$i])] = str_ireplace(' No se computan las horas.', '', $this->ficha[$i][key($this->ficha[$i])]);
+            //
             $i++;
         }
 
@@ -360,6 +380,13 @@ class SaperFicha
                                 $style = "color: green;";
                             }
                             break;
+                            
+                        case 10:
+                            // tarde
+                            if ($col != '-') {
+                                $style = "color: #D19934;";
+                            }
+                            break;
 
                         default:
                             break;
@@ -377,16 +404,19 @@ class SaperFicha
                             "' style='text-align: center;'>", $indent + 3, 
                                                                 TRUE, FALSE);
         $str .= "<h3>Considerando el tiempo adeudado en el mes (<i>" 
-                . sprintf('%02d:%02d', ($this->hs_faltantes_total/3600), 
-                                                ($this->hs_faltantes_total/60%60)) 
+                . sprintf('%02d:%02d:%02d', ($this->hs_faltantes_total/3600), 
+                                                ($this->hs_faltantes_total/60%60),
+                                                $this->hs_faltantes_total%60) 
                 . "</i>) y teniendo en cuenta el tiempo compensado (<i>" 
-                . sprintf('%02d:%02d', ($this->hs_compensadas_total/3600), 
-                                            ($this->hs_compensadas_total/60%60)) 
+                . sprintf('%02d:%02d:%02d', ($this->hs_compensadas_total/3600), 
+                                            ($this->hs_compensadas_total/60%60),
+                                            $this->hs_compensadas_total%60) 
                 . "</i>), las horas extras reales son: " 
                 . sprintf(($this->hs_extras_real_total < 0 ? '-' : '') . 
-                                                            '%02d:%02d', 
+                                                            '%02d:%02d:%02d', 
                                     abs(($this->hs_extras_real_total/3600)),
-                                    abs(($this->hs_extras_real_total/60%60)))
+                                    abs(($this->hs_extras_real_total/60%60)),
+                                    abs($this->hs_extras_real_total%60))
                 . ($this->hs_extras_real_total < 0 ? ' (adeuda tiempo)' : '')
                 . "</h3>";
         $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
@@ -417,96 +447,118 @@ class SaperFicha
         $compensa_total = 0;
         $faltan = array();
         $faltan_total = 0;
+        $tarde = array();
 
         foreach ($this->get_asArray() as $dia) {
             $fecha = DateTime::createFromFormat("d#m#Y", $dia[0]);
-            $tiempo = array(0, 0, 0);
+            $tiempo = array(0, 0, 0, FALSE);
             // No leer fichaje si tiene una inasistencia
             if (end($dia) == '-' ||
                     stristr(end($dia), 'descargo') || 
                     stristr(end($dia), 'fichaje incompleto') ||
                     empty(end($dia))
             ) {
-                // genero un array con todos los fichajes, incluido el descargo.
+                // si x algun motivo no figura la hra de entrada, fijo a 7:30
+                $entra = is_a($fecha, 'DateTime') 
+                            ? ((intval(date("N", $fecha->getTimestamp())) < 6) 
+                                ? (static::readHour($entrada_diaria[intval(date("N", $fecha->getTimestamp())) - 1]) 
+                                    ?: 27000) 
+                                : 27000) 
+                            : 27000;
+                
                 // leo los fichajes validos y elimino el resto.
                 // convierto todos a enteros.
-                $descargo = preg_replace("/[^0-9,.:]/", ' ', end($dia));
-                $fichajes = array_filter(
-                                    array_map('intval', 
+                $descargo = array_filter(
+                                array_map('intval', 
                                     array_map(array($this, 'readHour'), 
-                                        array_merge(
-                                            preg_split('/[\s,\x0B,\x0D,\x0A,.]+/i', 
-                                                $dia[1]), 
-                                            preg_split('/[\s,\x0B,\x0D,\x0A,.]+/i', 
-                                                $dia[2]),
-                                            explode(" ", $descargo))))
-                );
-
+                                        explode(" ", 
+                                            preg_replace("/[^0-9,.:]/", 
+                                                            ' ', 
+                                                            end($dia))))));
                 // ordeno de menor a mayor y elimino valores parecidos
-                static::removeSimilar($fichajes);
-    //            var_dump($fichajes);
+                static::removeSimilar($descargo);
 
-                if (count($fichajes) > 1) {
-                    // si x algun motivo no figura la hra de entrada, fijo a 7:30
-                    $entra = $this->readHour($entrada_diaria[intval(date("N", $fecha->getTimestamp())) - 1]) ?: 27000;
-                    if (count($fichajes) % 2) {
-                        // impar
-                        // hago la diferencia entre el primero y el último
-                        // debo descartar el ultimo, si la diff con el 
-                        // anteultimo es menor a 5 minutos (o definido por 
-                        // DIFF_SALIDA).
-                        $entro = (($fichajes[0] < $entra) ? $entra : $fichajes[0]);
-                        $salio = end($fichajes);
-                        $tiempo = static::calcExtra($entro, $salio);
-    //                        var_dump($entro, $salio, $tiempo);
-                    } else {
-                        // par
-                        // hago diferencias de a dos y voy sumando
-                        $diff = 0;
-                        $extra = 0;
-                        $comp = 0;
-                        $falta = 0;
-                        while (current($fichajes)) {
-                            if (key($fichajes)) {
-                                $entro = current($fichajes);
-                                $salio = next($fichajes);
-                                if ($diff >= 21600) {
-                                    // si el 1° periodo era de 6hs o más, 
-                                    // todo periodo posterior se suma en las 
-                                    // extras si cumple las reglas
-                                    $tiempo = static::calcExtra($salio - $entro);
+                if (count($descargo) == 2) {
+                    // Prioridad al descargo: si hay un par de fichajes validos,
+                    // leerlos unicamente
+                    
+                    $entro = (($descargo[0] < $entra) ? $entra : $descargo[0]);
+                    $tiempo = static::calcExtra($entro, $descargo[1]);
+                    $tiempo[] = static::es_tarde($descargo[0], $entra);
+                } else {
+                    // genero un array con todos los fichajes, incluido el descargo.
+                    $fichajes = array_merge(
+                                    array_filter(
+                                        array_map('intval', 
+                                            array_map(array($this, 'readHour'), 
+                                                array_merge(
+                                                    preg_split('/[\s,\x0B,\x0D,\x0A,.]+/i', 
+                                                                $dia[1]), 
+                                                    preg_split('/[\s,\x0B,\x0D,\x0A,.]+/i', 
+                                                                $dia[2]))))),
+                                $descargo);
+                    static::removeSimilar($fichajes);
+                    if (count($fichajes) > 1) {
+                        if (count($fichajes) % 2) {
+                            // impar
+                            // hago la diferencia entre el primero y el último
+                            // debo descartar el ultimo, si la diff con el 
+                            // anteultimo es menor a 5 minutos (o definido por 
+                            // DIFF_SALIDA).
+                            $entro = (($fichajes[0] < $entra) ? $entra : $fichajes[0]);
+                            $salio = end($fichajes);
+                            $tiempo = static::calcExtra($entro, $salio);
+                            $tiempo[] = static::es_tarde($fichajes[0], $entra);
+                        } else {
+                            // par
+                            // hago diferencias de a dos y voy sumando
+                            $diff = 0;
+                            $extra = 0;
+                            $comp = 0;
+                            $falta = 0;
+                            while (current($fichajes)) {
+                                if (key($fichajes)) {
+                                    $entro = current($fichajes);
+                                    $salio = next($fichajes);
+                                    if ($diff >= 21600) {
+                                        // si el 1° periodo era de 6hs o más, 
+                                        // todo periodo posterior se suma en las 
+                                        // extras si cumple las reglas
+                                        $tiempo = static::calcExtra($salio - $entro);
+                                    } else {
+                                        // si el periodo anterior no alcanzo las 6hs,
+                                        // debo sumar hasta alcanzar o superar 
+                                        // y luego aplicar regla.
+                                        $diff += $salio - $entro;
+                                        $falta = 0;
+                                        $tiempo = static::calcExtra($diff - 21600);
+                                    }
+                                    $extra += $tiempo[0];
+                                    $comp += $tiempo[1];
+                                    $falta += $tiempo[2];
                                 } else {
-                                    // si el periodo anterior no alcanzo las 6hs,
-                                    // debo sumar hasta alcanzar o superar 
-                                    // y luego aplicar regla.
-                                    $diff += $salio - $entro;
-                                    $falta = 0;
-                                    $tiempo = static::calcExtra($diff - 21600);
+                                    // 1° periodo
+                                    $entro = (current($fichajes) < $entra) ? $entra : current($fichajes);
+                                    $salio = next($fichajes);
+                                    // si hay menos de 6hs, tiempo = 0 y 
+                                    // diff el valor correspondiente.
+                                    list($extra, $comp, $falta) = static::calcExtra($entro, $salio);
+                                    $diff = $salio - $entro;
                                 }
-                                $extra += $tiempo[0];
-                                $comp += $tiempo[1];
-                                $falta += $tiempo[2];
-                            } else {
-                                // 1° periodo
-                                $entro = (current($fichajes) < $entra) ? $entra : current($fichajes);
-                                $salio = next($fichajes);
-                                // si hay menos de 6hs, tiempo = 0 y 
-                                // diff el valor correspondiente.
-                                list($extra, $comp, $falta) = static::calcExtra($entro, $salio);
-                                $diff = $salio - $entro;
+                                next($fichajes);
                             }
-                            next($fichajes);
+                            $tiempo = array($extra, $comp, $falta, static::es_tarde($fichajes[0], $entra));
                         }
-                        $tiempo = array($extra, $comp, $falta);
                     }
                 }
             }
-            $compensa[] = $tiempo[1] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[1])->format('H:i:s') : '-';
+            $compensa[] = $tiempo[1] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[1])->format('H:i:s') : '';
             $compensa_total += $tiempo[1];
-            $extras[] = $tiempo[0] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[0])->format('H:i:s') : ($tiempo[1] ? '&lt; 1h' :  '-');
+            $extras[] = $tiempo[0] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[0])->format('H:i:s') : ($tiempo[1] ? '&lt; 1h' :  '');
             $extras_total += $tiempo[0];
-            $faltan[] = $tiempo[2] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[2])->format('H:i:s') : '-';
+            $faltan[] = $tiempo[2] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[2])->format('H:i:s') : '';
             $faltan_total += $tiempo[2];
+            $tarde[] = $tiempo[3] ? '*' : '';
         }       
         // el ultimo valor es 0, lo reemplazo por el total de extras
         end($extras);
@@ -527,6 +579,9 @@ class SaperFicha
                                                 ($faltan_total/60%60),
                                                 $faltan_total%60);
 
+        end($tarde);
+        $tarde[key($tarde)] = count(array_filter($tarde));
+        
         $this->hs_compensadas_total = $compensa_total;
         $this->hs_compensadas = $compensa;
         $this->hs_extras = $extras;
@@ -538,6 +593,7 @@ class SaperFicha
         $this->hs_extras_real_total = $this->hs_extras_total - 
                                                 ($adeuda > 0 ? $adeuda : 0);
 
+        $this->tardes = $tarde;
         return TRUE;
     }
     
@@ -610,6 +666,20 @@ class SaperFicha
                                             $this->hs_faltantes_total : 0);
     }
     
+    public function getTardes()
+    {
+        return (isset($this->tardes) ? $this->tardes : NULL);
+    }
+    
+    /**
+     * 
+     * @return int Total de llegadas tarde.
+     */
+    public function getTardesTotal()
+    {
+        return (isset($this->tardes) ? end($this->tardes) : 0);
+    }
+
     /**
      * Agrega la columna de horas extras calculadas a la ficha.
      * Idem a: <br />
@@ -643,6 +713,18 @@ class SaperFicha
     {
         if (!empty($this->hs_faltantes) && is_array($this->hs_faltantes)) {
             $this->add_column('Faltan', $this->hs_faltantes);
+        }
+    }
+    
+    /**
+     * Agrega la columna de llegadas tarde a la ficha.
+     * Idem a: <br />
+     * <code>saperficha_obj->add_column(saperficha_obj->getTardes());</code>
+     */
+    public function add_column_tardes()
+    {
+        if (!empty($this->tardes) && is_array($this->tardes)) {
+            $this->add_column('Tarde', $this->tardes);
         }
     }
 }

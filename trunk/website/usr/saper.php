@@ -27,8 +27,25 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.81
+ * @version 0.83
  */
+
+function getCondiciones()
+{
+    return "\n<strong>Los c&aacute;lculos se realizan bajo las siguientes condiciones:</strong>" .
+    "\n<ul style='text-align: left;'>" .
+    "\n\t<li>No se consideran los segundos en los fichajes (se truncan a 0).</li>" .
+    "\n\t<li>Si la hora a la que el agente ingres&oacute; es anterior a la hora a la que debe ingresar, se emplear&aacute; esta &uacute;ltima para el c&aacute;lculo.  Esto es, no se toma en cuenta el tiempo anterior a la hora de ingreso.</li>" .
+    "\n\t<li>Se considera Hora Extra a todo tiempo trabajado superior a 1 hora respecto de las horas laborales ordinarias.</li>" .
+    "\n\t<li>Se considera Tiempo Compensado a todo tiempo adicional a las horas laborales ordinarias inferior a 1h.</li>" .
+    "\n\t<li>Se considera Tiempo Faltante o Adeudado cuando no se hayan cumplido las horas laborales ordinarias.</li>" .
+    "\n\t<li>Las columnas de la planilla muestran valores propios, esto es, sin interacción entre sí.</li>" .
+    "\n\t<li>Cuando se presente m&aacute;s de un par de fichajes, a cada período se le aplicarán las reglas anteriores.</li>" .
+    "\n\t<li>La operación matemática realizada para las horas extras reales es: Horas Extra - (Horas Adeudadas - Horas Compensadas), si (Horas Adeudadas - Horas Compensadas) resulta mayor que 0 (esto es, el agente adeuda horas que no compensa y se descuentan de las extras).</li>" .
+    "\n\t<li>El Tiempo Compensado nunca se suma a las Horas Extra.</li>" .
+    "\n\t<li>Cuando ocurra una llegada tarde (ingreso luego de 15' de la hora de entrada), ser&aacute; indicada en la columna apropiada con un *.  Al final de la misma se indica el total.</li>" .
+    "\n</ul>";
+}
 
 require_once 'autoload.php';
 
@@ -122,6 +139,7 @@ if ($page->authenticateToken()
                 $ficha->add_column_faltantes();
                 $ficha->add_column_compensadas();
                 $ficha->add_column_extras();
+                $ficha->add_column_tardes();
                 
                 $display = SAPER_DISPLAY_CALC;
             } else {
@@ -135,24 +153,14 @@ if ($page->authenticateToken()
                 $ficha->add_column_faltantes();
                 $ficha->add_column_compensadas();
                 $ficha->add_column_extras();
+                $ficha->add_column_tardes();
                 // mpdf no interpreta bien el css
                 $html = Page::getHeader(SMP_FS_ROOT) .
                         Page::getHeaderClose() .
                         Page::getMain() .
                         $ficha->imprimir(2, 'ficha', FALSE) .
-                        "\n\t\t\t<br />" .
-                        "\n\t\t\t<b>Los c&aacute;lculos se realizan bajo las siguientes condiciones:</b>" .
-                        "\n\t\t\t<ul>" .
-                        "\n\t\t\t\t<li>No se consideran los segundos en los fichajes (se truncan a 0).</li>" .
-                        "\n\t\t\t\t<li>Si la hora a la que el agente ingres&oacute; es anterior a la hora a la que debe ingresar, se emplear&aacute; esta &uacute;ltima para el c&aacute;lculo.  Esto es, no se toma en cuenta el tiempo anterior a la hora de ingreso.</li>" .
-                        "\n\t\t\t\t<li>Se considera Hora Extra a todo tiempo trabajado superior a 1 hora respecto de las horas laborales ordinarias.</li>" .
-                        "\n\t\t\t\t<li>Se considera Tiempo Compensado a todo tiempo adicional a las horas laborales ordinarias inferior a 1h.</li>" .
-                        "\n\t\t\t\t<li>Se considera Tiempo Faltante o Adeudado cuando no se hayan cumplido las horas laborales ordinarias.</li>" .
-                        "\n\t\t\t\t<li>Las columnas de la planilla muestran valores propios, esto es, sin interacción entre sí.</li>" .
-                        "\n\t\t\t\t<li>Cuando se presente m&aacute;s de un par de fichajes, a cada período se le aplicarán las reglas anteriores.</li>" .
-                        "\n\t\t\t\t<li>La operación matemática realizada para las horas extras reales es: Horas Extra - (Horas Adeudadas - Horas Compensadas), si (Horas Adeudadas - Horas Compensadas) resulta mayor que 0 (esto es, el agente adeuda horas que no compensa y se descuentan de las extras).</li>" .
-                        "\n\t\t\t\t<li>El Tiempo Compensado nunca se suma a las Horas Extra.</li>" .
-                        "\n\t\t\t</ul>" .
+                        "\n<br />" .
+                        getCondiciones() .
                         Page::getMainClose();                
 //                echo $html;
 //                die();
@@ -181,9 +189,7 @@ if ($page->authenticateToken()
     $nav = '403.php';
 }
 
-if (isset($nav)) {
-    $page->nav($nav);
-}
+isset($nav) ? $page->nav($nav) : NULL;
 
 // Token de pagina
 $page->setLocation(SMP_LOC_USR . 'saper.php');
@@ -200,204 +206,242 @@ Session::store(SMP_SESSINDEX_FORM_TIMESTAMP, $formToken->getTimestamp());
 // -- --
 //
 // Mostrar página
+Page::printHead('SiMaPe | SAPER', ['main', 'msg', 'navbar', 'tabla', 'input']);
+Page::printBody();
+Page::printHeader();
+Page::printHeaderClose();
+Page::printDefaultNavbarVertical($usuario->getNombre());
+Page::printMain();
 
-echo Page::getHead('SiMaPe - SAPER');
-echo Page::getBody();
-echo Page::getHeader();
-echo Page::getHeaderClose();
-//echo Page::getDefaultNavbarVertical();
-echo Page::getMain();
-
-echo "\n\t\t<h2 style='text-align: center;'>Fichaje mensual de los agentes</h2>";
-echo "\n\t\t<form style='text-align: center; margin: 0 auto; width: 100%;' "
-     . "name='frm_saper' method='post' action='?" . SMP_SESSINDEX_PAGE_TOKEN . '=' . $page->getToken() . "' >";
+Page::_e("<h2 style='text-align: center;'>Fichaje mensual de los agentes</h2>", 2);
+Page::_e(Page::getForm(Page::FORM_TYPE_OPEN, 
+                        'frm_saper', 
+                        'text-align: center; margin: 0 auto; width: 100%;', 
+                        Page::FORM_METHOD_POST, 
+                        Page::FORM_ENCTYPE_DEFAULT, 
+                        NULL, 
+                        '?' . SMP_SESSINDEX_PAGE_TOKEN . '=' . 
+                        $page->getToken()), 
+        2);
 
 if (!empty(Session::retrieve(SMP_SESSINDEX_NOTIF_ERR))) {
-    echo "\n\t\t\t<p><address class='fadeout' "
-         . "style='color:red; text-align: center;' >" 
-         . Session::retrieve(SMP_SESSINDEX_NOTIF_ERR) . "</address></p>";
+    Page::_e("<p class='fadeout' "
+                . "style='color:red; text-align: center;' >" 
+                . Session::retrieve(SMP_SESSINDEX_NOTIF_ERR) . "</p>", 3);
     Session::remove(SMP_SESSINDEX_NOTIF_ERR);
 }
-echo "\n\t\t\t<table style='text-align: left; margin: auto; width: auto;' >";
-echo "\n\t\t\t\t<tbody>";
-echo "\n\t\t\t\t\t<tr>";
+Page::_e("<table style='text-align: center; margin: auto; width: auto; border-collapse:separate; border-spacing:0 1em;' >", 3);
+Page::_e("<tbody>", 4);
+Page::_e("<tr>", 5);
 
 switch($display) {
     case SAPER_DISPLAY_SELECT:
-        echo "\n\t\t\t\t\t\t<td colspan='2' style='text-align: center;'>";
-        echo "\n\t\t\t\t\t\t\t<h3>Seleccione el agente buscado</h3>";
-        echo "\n\t\t\t\t\t\t</td>";
-        echo "\n\t\t\t\t\t</tr>";
+        Page::_e("<td colspan='2'>", 6);
+        Page::_e("<h3>Seleccione el agente buscado</h3>", 7);
+        Page::_e("</td>", 6);
+        Page::_e("</tr>", 5);
         
         foreach ($agentes as $ord => $agente) {
-            echo "\n\t\t\t\t\t<tr>";
-            echo "\n\t\t\t\t\t\t<td colspan='2' style='text-align: center;'>";
+            Page::_e("<tr>", 5);
+            Page::_e("<td colspan='2'>", 6);
             end($agente);
             $doc_key = key($agente) - 1;
-            echo "\n\t\t\t\t\t\t\t<input type='radio' name='frm_radAgente' value='" . $agente[$doc_key] . $agente[$doc_key + 1] . "'" . (empty($ord) ? ' checked' : '') . ">";
+            Page::_e(Page::getInput('radio', 
+                                    'frm_radAgente', 
+                                    $agente[$doc_key] . $agente[$doc_key + 1], 
+                                    NULL, 
+                                    NULL, 
+                                    NULL, 
+                                    NULL, 
+                                    empty($ord) ? 'checked' : NULL), 
+                    7);
             foreach ($agente as $key => $valor) {
                 if ($key < $doc_key) {
-                    echo $valor . "\t";
+                    echo $valor . " ";
                 } else {
                     break;
                 }
             }
-            echo "\n\t\t\t\t\t\t</td>";
-            echo "\n\t\t\t\t\t</tr>";
+            Page::_e("</td>", 6);
+            Page::_e("</tr>", 5);
         }
         
-        echo "\n\t\t\t\t\t<tr>";
-        echo "\n\t\t\t\t\t\t<td colspan='2' style='text-align: center;'>";
-        echo "\n\t\t\t\t\t\t\t<br />";
-        echo "\n\t\t\t\t\t\t\t<h3>Seleccione el mes y a&ntilde;o deseado</h3>";
-        echo "\n\t\t\t\t\t\t</td>";
-        echo "\n\t\t\t\t\t</tr>";
+        Page::_e("<tr>", 5);
+        Page::_e("<td colspan='2'>", 6);
+        Page::_e("<h3>Seleccione el mes y a&ntilde;o deseado</h3>", 7);
+        Page::_e("</td>", 6);
+        Page::_e("</tr>", 5);
             
-        echo "\n\t\t\t\t\t<tr>";
-        echo "\n\t\t\t\t\t\t<td style='text-align: center;'>";
-        echo "\n\t\t\t\t\t\t\t<br />";
-        echo "\n\t\t\t\t\t\t\t<select name='frm_optMes'>";
+        Page::_e("<tr>", 5);
+        Page::_e("<td>", 6);
+        Page::_e("<select name='frm_optMes'>", 7);
         for ($i = 1; $i < 13; $i ++) {  
             $mes = ucfirst(strftime('%B', strtotime($i . '/01/2014')));
-            echo "\n\t\t\t\t\t\t\t\t<option value='" . $mes . "'" . (($i == date("m")) ? " selected" : '') . ">" . $mes . "</option>";
+            Page::_e("<option value='" . $mes . "'" . (($i == date("m")) ? " selected" : '') . ">" . $mes . "</option>", 8);
         }
-        echo "\n\t\t\t\t\t\t\t</select>";
-        echo "\n\t\t\t\t\t\t</td>";
-        echo "\n\t\t\t\t\t\t<td style='text-align: center;'>";
-        echo "\n\t\t\t\t\t\t\t<br />";
-        echo "\n\t\t\t\t\t\t\t<input type='number' name='frm_txtYear' placeholder='A&ntilde;o' value='" . date("Y") . "'>";
-        echo "\n\t\t\t\t\t\t</td>";
-        echo "\n\t\t\t\t\t</tr>";
+        Page::_e("</select>", 7);
+        Page::_e("</td>", 6);
+        Page::_e("<td>", 6);
+        Page::_e(Page::getInput('number', 
+                                'frm_txtYear', 
+                                date("Y"), 
+                                NULL, 
+                                'txt_fixed', 
+                                NULL, 
+                                NULL, 
+                                "placeholder='A&ntilde;o'"), 
+                7);
+        Page::_e("</td>", 6);
+        Page::_e("</tr>", 5);
         
-        echo "\n\t\t\t\t\t<tr>";
-        echo "\n\t\t\t\t\t\t<td style='text-align: center;'>";
-        echo "\n\t\t\t\t\t\t\t<br /><input type='submit' name='frm_btnCalcular' value='Ver datos del agente seleccionado'>";
-        echo "\n\t\t\t\t\t\t</td>";
-        echo "\n\t\t\t\t\t\t<td style='text-align: center;'>";
-        echo "\n\t\t\t\t\t\t\t<br /><input type='submit' name='frm_btnReiniciar' value='Volver a buscar'>";
-        echo "\n\t\t\t\t\t\t</td>";
-        echo "\n\t\t\t\t\t</tr>";
+        Page::_e("<tr>", 5);
+        Page::_e("<td>", 6);
+        Page::_e(Page::getInput('submit', 
+                                'frm_btnCalcular', 
+                                'Ver datos del agente seleccionado', 
+                                NULL, 
+                                'btn_blue'), 
+                7);
+        Page::_e("</td>", 6);
+        Page::_e("<td>", 6);
+        Page::_e(Page::getInput('submit', 
+                                'frm_btnReiniciar', 
+                                'Volver a buscar', 
+                                NULL, 
+                                'btn_blue'), 
+                7);
+        Page::_e("</td>", 6);
+        Page::_e("</tr>", 5);
         
-        echo "\n\t\t\t\t</tbody>";
-        echo "\n\t\t\t</table>";
+        Page::_e("</tbody>", 4);
+        Page::_e("</table>", 3);
         break;
         
     case SAPER_DISPLAY_CALC:
-        echo "\n\t\t\t\t\t\t<td>";
-        $ficha->imprimir(7);
-        echo "\n\t\t\t\t\t\t</td>";
-        echo "\n\t\t\t\t\t</tr>";
-        echo "\n\t\t\t\t\t<tr>";
-        echo "\n\t\t\t\t\t\t<td style='text-align: center;'>";
-        echo "\n\t\t\t\t\t\t\t<br />";
-        echo "\n\t\t\t\t\t\t\t<input type='submit' name='frm_btnImprimir' value='Imprimir ficha' />";
-        echo "\n\t\t\t\t\t\t</td>";
-        echo "\n\t\t\t\t\t</tr>";
-        echo "\n\t\t\t\t</tbody>";
-        echo "\n\t\t\t</table>";
-                
-        echo "\n\t\t\t<br />";
-        echo "\n\t\t\t<table style='text-align: center; margin: auto; width: auto;' >";
+        Page::_e("<td colspan='5'>", 6);
+        Page::_e("<h2>C&aacute;lculo de horas extras</h2>", 7);
+        Page::_e("</td>", 6);
+        Page::_e("</tr>", 5);
+        Page::_e("<tr>", 5);
+        Page::_e("<td colspan='5'><h4>Hora de inicio de tareas</h4></td>", 6);
+        Page::_e("</tr>", 5);
         
-        echo "\n\t\t\t\t<thead>";
-        echo "\n\t\t\t\t\t<tr>";
-        echo "\n\t\t\t\t\t\t<td colspan='5'>";
-        echo "\n\t\t\t\t\t\t\t<h2>C&aacute;lculo de horas extras</h2>";
-        echo "\n\t\t\t\t\t\t</td>";
-        echo "\n\t\t\t\t\t</tr>";
-        echo "\n\t\t\t\t</thead>";
-        
-        echo "\n\t\t\t\t<tbody>";
-        
-        echo "\n\t\t\t\t\t<tr>";
-        echo "\n\t\t\t\t\t\t<td colspan='5'><h4>Hora de inicio de tareas</h4>";
-        echo "\n\t\t\t\t\t\t</td>";
-        echo "\n\t\t\t\t\t</tr>";
-        
-        echo "\n\t\t\t\t\t<tr>";
+        Page::_e("<tr>", 5);
         $dias = array('Lunes', 'Martes', 'Mi&eacute;rcoles', 'Jueves', 'Viernes');
         foreach ($dias as $dia) {
-            echo "\n\t\t\t\t\t\t<td><i>" . $dia . "</i>";
-            echo "\n\t\t\t\t\t\t</td>";
+            Page::_e("<td><em>" . $dia . "</em></td>", 6);
         }
-        echo "\n\t\t\t\t\t</tr>";
+        Page::_e("</tr>", 5);
 
-        echo "\n\t\t\t\t\t<tr>";
+        Page::_e("<tr>", 5);
         $horaInicio = Session::retrieve(SAPER_SESSINDEX_HINI) ?: ["07:30", "07:30", "07:30", "07:30", "07:30"];
         for ($i = 0; $i < 5; $i++) {
-            echo "\n\t\t\t\t\t\t<td><input type='time' size='5' name='frm_txtHoraIni[" . $i . "]' value='" . $horaInicio[$i] . "'>";
-            echo "\n\t\t\t\t\t\t</td>";
+            Page::_e("<td>", 6);
+            Page::_e(Page::getInput('time', 
+                                    "frm_txtHoraIni[" . $i . "]", 
+                                    $horaInicio[$i], 
+                                    NULL, 
+                                    NULL,
+                                    5), 
+                    7);
+            Page::_e("</td>", 6);
         }
-        echo "\n\t\t\t\t\t</tr>";
+        Page::_e("</tr>", 5);
         
-        echo "\n\t\t\t\t\t<tr>";
-        echo "\n\t\t\t\t\t\t<td colspan='5'><br />  "
-                . "<input type='submit' value='Calcular horas extras' name='frm_btnCalcular'>"
-                . "<input type='submit' name='frm_btnReiniciar' value='Volver a buscar'>";
-        echo "\n\t\t\t\t\t\t</td>";
-        echo "\n\t\t\t\t\t</tr>";
+        Page::_e("<tr>", 5);
+        Page::_e("<td colspan='2'>", 6);
+        Page::_e(Page::getInput('submit', 
+                                    'frm_btnCalcular', 
+                                    'Calcular horas extras', 
+                                    NULL, 
+                                    'btn_blue'), 
+                    7);
+        Page::_e("</td>", 6);
+        Page::_e("<td>", 6);
+        Page::_e(Page::getInput('submit', 
+                                    'frm_btnImprimir', 
+                                    'Imprimir ficha', 
+                                    NULL, 
+                                    'btn_blue'), 
+                    7);
+        Page::_e("</td>", 6);
+        Page::_e("<td colspan='2'>", 6);
+        Page::_e(Page::getInput('submit', 
+                                    'frm_btnReiniciar', 
+                                    'Volver a buscar', 
+                                    NULL, 
+                                    'btn_blue'), 
+                    7);
+        Page::_e("</td>", 6);
+        Page::_e("</tr>", 5);
         
-        echo "\n\t\t\t\t</tbody>";
-        echo "\n\t\t\t</table>";
+        Page::_e("<tr>", 5);
+        Page::_e("<td colspan='5'>", 6);
+        $ficha->imprimir(7);
+        Page::_e("</td>", 6);
+        Page::_e("</tr>", 5);
         
-        echo "\n\t\t\t<br />";
-        echo "\n\t\t\t<b>Los c&aacute;lculos se realizan bajo las siguientes condiciones:</b>";
-        echo "\n\t\t\t<ul>";
-        echo "\n\t\t\t\t<li>No se consideran los segundos en los fichajes (se truncan a 0).</li>";
-        echo "\n\t\t\t\t<li>Si la hora a la que el agente ingres&oacute; es anterior a la hora a la que debe ingresar, se emplear&aacute; esta &uacute;ltima para el c&aacute;lculo.  Esto es, no se toma en cuenta el tiempo anterior a la hora de ingreso.</li>";
-        echo "\n\t\t\t\t<li>Se considera Hora Extra a todo tiempo trabajado superior a 1 hora respecto de las horas laborales ordinarias.</li>";
-        echo "\n\t\t\t\t<li>Se considera Tiempo Compensado a todo tiempo adicional a las horas laborales ordinarias inferior a 1h.</li>";
-        echo "\n\t\t\t\t<li>Se considera Tiempo Faltante o Adeudado cuando no se hayan cumplido las horas laborales ordinarias.</li>";
-        echo "\n\t\t\t\t<li>Las columnas de la planilla muestran valores propios, esto es, sin interacción entre sí.</li>";
-        echo "\n\t\t\t\t<li>Cuando se presente m&aacute;s de un par de fichajes, a cada período se le aplicarán las reglas anteriores.</li>";
-        echo "\n\t\t\t\t<li>La operación matemática realizada para las horas extras reales es: Horas Extra - (Horas Adeudadas - Horas Compensadas), si (Horas Adeudadas - Horas Compensadas) resulta mayor que 0 (esto es, el agente adeuda horas que no compensa y se descuentan de las extras).</li>";
-        echo "\n\t\t\t\t<li>El Tiempo Compensado nunca se suma a las Horas Extra.</li>";
-        echo "\n\t\t\t</ul>";
+        Page::_e("</tbody>", 4);
+        Page::_e("</table>", 3);
+                
+        Page::_e("<br />", 3);
+        Page::_e(getCondiciones(), 3);
         break;
     
     case SAPER_DISPLAY_NORESULT:
-        echo "\n\t\t\t\t\t\t<td colspan='2' style='text-align: center;'>";
-        echo "\n\t\t\t\t\t\t\t<i>La b&uacute;squeda no produjo resultados</i>";
-        echo "\n\t\t\t\t\t\t</td>";
-        echo "\n\t\t\t\t\t</tr>";
-        echo "\n\t\t\t\t\t<tr>";
+        Page::_e("<td colspan='2' style='text-align: center;'>", 6);
+        Page::_e("<em>La b&uacute;squeda no produjo resultados</em>", 7);
+        Page::_e("</td>", 6);
+        Page::_e("</tr>", 5);
+        Page::_e("<tr>", 5);
         /* OMITO BREAK */
     case SAPER_DISPLAY_SEARCH:  /* caso por defecto */
         /* OMITO BREAK */
     default :
-        echo "\n\t\t\t\t\t\t<td colspan='2' style='text-align: center;'>";
-        echo "\n\t\t\t\t\t\t\t<h3>Seleccione par&aacute;metro a buscar e ingrese el valor correspondiente</h3>";
-        echo "\n\t\t\t\t\t\t</td>";
-        echo "\n\t\t\t\t\t</tr>";
-        echo "\n\t\t\t\t\t<tr>";
-        echo "\n\t\t\t\t\t\t<td style='text-align: center;'>";
-        echo "\n\t\t\t\t\t\t\t<select name='tipoBusqueda'>";
-        echo "\n\t\t\t\t\t\t\t\t<option value='BUSCAR_AUTO'>Autom&aacute;tico</option>";
-        echo "\n\t\t\t\t\t\t\t\t<option value='BUSCAR_APELLIDO'>Apellido</option>";
-        echo "\n\t\t\t\t\t\t\t\t<option value='BUSCAR_NOMBRE'>Nombre</option>";
-        echo "\n\t\t\t\t\t\t\t\t<option value='BUSCAR_DNI'>DNI</option>";
-        echo "\n\t\t\t\t\t\t\t\t<option value='BUSCAR_LEGAJO'>Legajo</option>";
-        echo "\n\t\t\t\t\t\t\t</select>";
-        echo "\n\t\t\t\t\t\t</td>";
-        echo "\n\t\t\t\t\t\t<td style='text-align: center;'>";
-        echo "\n\t\t\t\t\t\t\t<input type='text' name='frm_txtValor' "
-                . "placeholder='Par&aacute;metro de b&uacute;squeda'>";
-        echo "\n\t\t\t\t\t\t</td>";
-        echo "\n\t\t\t\t\t</tr>";
-        echo "\n\t\t\t\t\t<tr>";
-        echo "\n\t\t\t\t\t\t<td colspan='2' style='text-align: center;'>";
-        echo "\n\t\t\t\t\t\t\t<br /><input type='submit' name='frm_btnBuscar' value='Buscar'>";
-        echo "\n\t\t\t\t\t\t</td>";
-        echo "\n\t\t\t\t\t</tr>";
-        echo "\n\t\t\t\t</tbody>";
-        echo "\n\t\t\t</table>";
+        Page::_e("<td colspan='2' style='text-align: center;'>", 6);
+        Page::_e("<h3>Seleccione par&aacute;metro a buscar e ingrese el valor correspondiente</h3>", 7);
+        Page::_e("</td>", 6);
+        Page::_e("</tr>", 5);
+        Page::_e("<tr>", 5);
+        Page::_e("<td style='text-align: center;'>", 6);
+        Page::_e("<select name='tipoBusqueda'>", 7);
+        Page::_e("<option value='BUSCAR_AUTO'>Autom&aacute;tico</option>", 8);
+        Page::_e("<option value='BUSCAR_APELLIDO'>Apellido</option>", 8);
+        Page::_e("<option value='BUSCAR_NOMBRE'>Nombre</option>", 8);
+        Page::_e("<option value='BUSCAR_DNI'>DNI</option>", 8);
+        Page::_e("<option value='BUSCAR_LEGAJO'>Legajo</option>", 8);
+        Page::_e("</select>", 7);
+        Page::_e("</td>", 6);
+        Page::_e("<td style='text-align: center;'>", 6);
+        Page::_e(Page::getInput('text', 
+                                'frm_txtValor', 
+                                NULL, 
+                                NULL, 
+                                'txt_resizable', 
+                                NULL, 
+                                NULL, 
+                                'placeholder="Apellido/Nombre/DNI/Legajo"'), 
+                7);
+        Page::_e("</td>", 6);
+        Page::_e("</tr>", 5);
+        Page::_e("<tr>", 5);
+        Page::_e("<td colspan='2' style='text-align: center;'>", 6);
+        Page::_e(Page::getInput('submit', 
+                                'frm_btnBuscar', 
+                                'Buscar', 
+                                NULL, 
+                                'btn_blue'), 
+                7);
+        Page::_e("</td>", 6);
+        Page::_e("</tr>", 5);
+        Page::_e("</tbody>", 4);
+        Page::_e("</table>", 3);
         break;
 }
 
-echo "\n\t\t\t<input type='hidden' name='formToken' value='"
-     . $formToken->getToken() . "' />";
-echo "\n\t\t</form>";
+Page::_e(Page::getInput('hidden', 'formToken', $formToken->getToken()), 7);
+Page::_e(Page::getForm(Page::FORM_TYPE_CLOSE));
 
-echo Page::getMainClose();
-echo Page::getFooter();
-echo Page::getBodyClose();
+Page::printMainClose();
+Page::printFooter();
+Page::printBodyClose();

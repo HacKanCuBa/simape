@@ -69,3 +69,100 @@ function server_ip()
                                         Sanitizar::glSERVER('LOCAL_ADDR') : 
                                         Sanitizar::glSERVER('SERVER_ADDR'));
 }
+
+/**
+ * Devuelve un array a partir una lista separada por el separador indicado.  
+ * Asimismo, si la lista tiene valores del tipo "llave=valor", el array será 
+ * asociativo donde el índice será <i>llave</i>.  Si solo contiene valores, 
+ * será numerado en el orden recibido.
+ * 
+ * @param string $list Lista de valores.
+ * @param string $separator Separador.  Por defecto ','.
+ * @return array|FALSE Array de valores o FALSE en caso de error.
+ */
+function array_from_string_list($list, $separator = ',')
+{
+    if (is_string($list)) {
+        $arr = array();
+        foreach (explode($separator, $list) as $item) {
+            if (stristr($item, '=')) {
+                list($key, $value) = explode('=', $item);
+                $arr[$key] = $value;
+            } else {
+                $arr[] = $item;
+            }
+        }
+        
+        return $arr;
+    }
+    
+    return FALSE;
+}
+
+/**
+ * Devuelve una lista en string a partir de un array, ya sea asociativo, 
+ * numerado o mixto.
+ * @param array $array Array.
+ * @param boolean $always_assoc TRUE para que la lista sea siempre asociativa, 
+ * FALSE (por defecto) para evitar los índices numerados.<br />
+ * Esto es [1, 'a' => 2] será devuelto como "0=1,a=2" en el primer caso, 
+ * y "1,a=2" en el segundo.
+ * @return string|FALSE String lista, o FALSE en caso de error.
+ */
+function string_list_from_array($array, $always_assoc = FALSE)
+{
+    if (is_array($array)) {
+        $str = '';
+        foreach ($array as $key => $value) {
+            $str .= (is_numeric($key) && !$always_assoc) ? '' : $key . '=';
+            $str .= $value . ',';
+        }
+        return substr($str, 0, -1);
+    }
+    
+    return FALSE;
+}
+
+/**
+ * Determina si la conexión actual se realiza vía SSL o no.
+ * @return boolean TRUE indica conexión SSL.  FALSE, conexión plana.
+ */
+function is_connection_ssl()
+{
+    return boolval(Sanitizar::glSERVER('HTTPS'));
+}
+
+const FORCE_CONNECT_PLAIN = 1;
+const FORCE_CONNECT_SSL = 2;
+/**
+ * Fuerza la conexión actual al modo seleccionado:
+ * <ol>
+ * <li>FORCE_CONNECT_PLAIN</li>
+ * <li>FORCE_CONNECT_SSL</li>
+ * </ol>
+ * Si la conexión actual no se encuentra en el modo indicado, recarga el script.
+ * Si no, continúa la ejecución.
+ * Si se desea forzar el modo SSL, SMP_SSL debe ser TRUE, o la conexión 
+ * permanecerá en modo actual.
+ * @param int $mode Modo de conexión a forzar.
+ */
+function force_connect($mode = FORCE_CONNECT_PLAIN) 
+{
+    $file = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[0]['file'];
+    $loc = str_ireplace(SMP_FS_ROOT, '', dirname($file) . '/');
+    $loc = (empty($loc) ? '' : $loc) . basename($file);
+    $exit = FALSE;
+    switch ($mode) {
+        case FORCE_CONNECT_PLAIN:
+            $exit = is_connection_ssl() ? Page::go_to($loc, NULL, NULL, TRUE) : FALSE;
+            break;
+
+        case FORCE_CONNECT_SSL:
+            $exit = is_connection_ssl() ? FALSE : (SMP_SSL ? Page::go_to($loc) : FALSE);
+            break;
+        
+        default:
+            break;
+    }
+    $exit ? exit() : NULL;
+}
