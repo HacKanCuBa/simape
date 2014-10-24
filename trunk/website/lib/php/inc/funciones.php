@@ -74,13 +74,20 @@ function server_ip()
  * Devuelve un array a partir una lista separada por el separador indicado.  
  * Asimismo, si la lista tiene valores del tipo "llave=valor", el array será 
  * asociativo donde el índice será <i>llave</i>.  Si solo contiene valores, 
- * será numerado en el orden recibido.
+ * será numerado en el orden recibido.  Si el valor recibido es un array, 
+ * lo devuelve sin procesar.  Si el valor recibido es otra cosa, lo devuelve 
+ * como array(valor).
  * 
  * @param string $list Lista de valores.
- * @param string $separator Separador.  Por defecto ','.
- * @return array|FALSE Array de valores o FALSE en caso de error.
+ * @param string $separator [opcional]<br />
+ * Separador.  Por defecto ','.
+ * @param boolean $no_assoc [opcional]<br />
+ * TRUE para forzar al índice numerado 
+ * (eliminará todas las llaves), FALSE para dejarlo como indique la lista 
+ * (por defecto).
+ * @return array Array de valores.
  */
-function array_from_string_list($list, $separator = ',')
+function array_from_string_list($list, $separator = ',', $no_assoc = FALSE)
 {
     if (is_string($list)) {
         $arr = array();
@@ -91,36 +98,46 @@ function array_from_string_list($list, $separator = ',')
             } else {
                 $arr[] = $item;
             }
-        }
-        
-        return $arr;
+        }      
+        $ret = $no_assoc ? array_values($arr) : $arr;
+    } elseif (is_array($list)) {
+        $ret = $list;
+    } else {
+        $ret = array($list);
     }
     
-    return FALSE;
+    return $ret;
 }
 
 /**
  * Devuelve una lista en string a partir de un array, ya sea asociativo, 
- * numerado o mixto.
+ * numerado o mixto.  Si el valor recibido es un string, lo devuelve sin 
+ * procesar.  Si es cualquier otra cosa, tratará de convertirlo a string 
+ * mediante strval().
  * @param array $array Array.
- * @param boolean $always_assoc TRUE para que la lista sea siempre asociativa, 
+ * @param string $separator [opcional]<br />
+ * Separador.  Por defecto ','.
+ * @param boolean $always_assoc [opcional]<br />
+ * TRUE para que la lista sea siempre asociativa, 
  * FALSE (por defecto) para evitar los índices numerados.<br />
  * Esto es [1, 'a' => 2] será devuelto como "0=1,a=2" en el primer caso, 
  * y "1,a=2" en el segundo.
- * @return string|FALSE String lista, o FALSE en caso de error.
+ * @return string String lista.
  */
-function string_list_from_array($array, $always_assoc = FALSE)
+function string_list_from_array($array, $separator = ',', $always_assoc = FALSE)
 {
     if (is_array($array)) {
         $str = '';
         foreach ($array as $key => $value) {
             $str .= (is_numeric($key) && !$always_assoc) ? '' : $key . '=';
-            $str .= $value . ',';
+            $str .= $value . $separator;
         }
-        return substr($str, 0, -1);
+        $ret = substr($str, 0, -1);
+    } else {
+        $ret = strval($array);
     }
     
-    return FALSE;
+    return $ret;
 }
 
 /**
@@ -165,4 +182,38 @@ function force_connect($mode = FORCE_CONNECT_PLAIN)
             break;
     }
     $exit ? exit() : NULL;
+}
+
+function send_to_browser($data = NULL, $newtab = FALSE)
+{
+    header('Content-Type: application/pdf');
+    if(!headers_sent()) {
+        if (!isset($_SERVER['HTTP_ACCEPT_ENCODING']) OR empty($_SERVER['HTTP_ACCEPT_ENCODING'])) {
+                // don't use length if server using compression
+                header('Content-Length: ' . strlen($data));
+        }
+        header('Content-disposition: inline; filename="Ficha"');
+        header('Cache-Control: public, must-revalidate, max-age=0'); 
+        header('Pragma: public');
+        header('Expires: Sat, 26 Jul 1997 05:00:00 GMT'); 
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+        //header('Content-disposition: attachment; filename="Ficha"');
+        echo ($newtab ? "<script type='text/javascript'>window.open('data:application/pdf;base64, '" . base64_encode($data) .  ");</script>" : $data);
+        return TRUE;
+    }
+    
+    return FALSE;
+}
+
+/**
+ * Determina si un array es asociativo o no.
+ * @param array $array Array.
+ * @return boolean TRUE si el array es asociativo, FALSE si no.
+ * @link https://stackoverflow.com/questions/173400/how-to-check-if-php-array-is-associative-or-sequential Stackoverflow
+ */
+function is_assoc($array) 
+{
+  return (is_array($array) ? boolval(count(array_filter(array_keys($array), 
+                                                        'is_string'))) 
+                            : FALSE);
 }

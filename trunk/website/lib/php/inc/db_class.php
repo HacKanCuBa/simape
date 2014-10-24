@@ -47,13 +47,16 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.32
+ * @version 1.40
  */
 class DB extends mysqli
 {     
+    const CHARSET_DEFAULT = 'utf8';
+
     protected $queryStmt, $bindParam, $queryParams;
     protected $queryData;
     protected $affectedRows;
+    protected $charset;
 
     // Metodos
     // __ SPECIALS
@@ -61,16 +64,18 @@ class DB extends mysqli
     /**
      * Conecta con la DB según el modo indicado e inicializa la conexión.
      * 
-     * @param boolean $ModoRW Establece el modo RW si es TRUE, 
+     * @param boolean [opcional]<br />
+     * $ModoRW Establece el modo RW si es TRUE, 
      * RO si es FALSE (por defecto).
+     * @param string $charset [opcional]<br />
+     * Charset de la DB (UTF8 por defecto).
      */
-    function __construct($ModoRW = FALSE) 
+    function __construct($ModoRW = FALSE, $charset = self::CHARSET_DEFAULT) 
     {   
         if (!$this->conexionEstablecer($ModoRW) 
-            || !$this->conexionInicializar()) {
-            trigger_error('Error de conexion', E_USER_ERROR);
-        }
-        
+            || !$this->conexionInicializar($charset)) {
+            trigger_error('Error de conexion con la base de datos', E_USER_ERROR);
+        }       
     }
     
 //    function __destruct() 
@@ -87,7 +92,8 @@ class DB extends mysqli
     /**
      * Conecta en el modo indicado.
      * 
-     * @param boolean $ModoRW Si es TRUE, conecta en modo RW; si es FALSE,
+     * @param boolean $ModoRW [opcional]<br />
+     * Si es TRUE, conecta en modo RW; si es FALSE,
      * en modo RO (por defecto).
      * @return boolean TRUE si se estableció la conexión exitosamente, 
      * FALSE si no.
@@ -100,24 +106,22 @@ class DB extends mysqli
             parent::__construct(SMP_DB_HOST, SMP_DB_USER_RO, SMP_DB_PASS_RO, SMP_DB_NAME);
         }
         
-        if ($this->connect_error) {
-            return FALSE;
-        } else {
-            return TRUE;
-        }
+        return !boolval($this->connect_error);
     }
     
     /**
      * Configura el charset de la DB.
      * 
+     * @param string $charset Charset a configurar.
      * @return boolean TRUE si se configuró correctamente el charset, 
      * FALSE si no.
      */
-    protected function setCharset() 
+    protected function setCharset($charset)
     {
-        if ($this->character_set_name() != constant('SMP_DB_CHARSET')) {
-            if ($this->set_charset(constant('SMP_DB_CHARSET'))) {
-                return $this->real_query('SET NAMES ' . constant('SMP_DB_CHARSET'));
+        if ($this->character_set_name() != $charset) {
+            if ($this->set_charset($charset)) {
+                $this->charset = $charset;
+                return $this->real_query('SET NAMES ' . $charset);
             } else {
                 return FALSE;
             }
@@ -129,12 +133,15 @@ class DB extends mysqli
     /**
      * Ejecuta las tareas que deben realizarse luego de establecer una 
      * conexión.
+     * @param string $charset [opcional]<br />
+     * Charset de la DB.  Si no se especifica charset, no lo cambia.
+     * @return boolean TRUE si se inicializó correctamente, FALSE si no.
      */
-    protected function conexionInicializar()
+    protected function conexionInicializar($charset = NULL)
     {        
         unset($this->queryStmt, $this->bindParam, $this->queryParams, 
               $this->queryData, $this->affectedRows);
-        return $this->setCharset();
+        return ($charset ? $this->setCharset($charset) : TRUE);
     }
     
     /**
@@ -211,21 +218,24 @@ class DB extends mysqli
 //    }
 
     /**
-     * Cambia el modo de conexión con la DB.
+     * Cambia el modo de conexión con la DB, y el charset.
      * 
      * @param boolean $ModoRW Establece el modo RW si es TRUE, 
      * RO si es FALSE.
+     * @param string $charset [opcional]<br />
+     * Charset de la DB.  Si no se especifica, no lo cambia.
      * @return boolean TRUE si se cambió el modo exitosamente, FALSE si no.
      */
-    public function cambiarModo($ModoRW = FALSE) 
-    {
+    public function cambiarModo($ModoRW = FALSE, 
+                                $charset = NULL
+    ) {
         if ($ModoRW) {
             $this->change_user(SMP_DB_USER_RW, SMP_DB_PASS_RW, SMP_DB_NAME);
         } else {
             $this->change_user(SMP_DB_USER_RO, SMP_DB_PASS_RO, SMP_DB_NAME);
         }
         $this->clearParams();
-        return $this->conexionInicializar();
+        return $this->conexionInicializar($charset);
     }
     
     // Set
@@ -233,7 +243,8 @@ class DB extends mysqli
      * Prepara el objeto para ejecutar la query indicada.  Devuelve TRUE
      * si se preparó exitosamente, FALSE en caso contrario.<br />
      * Debe llamarse a setBindParam() y setQueryParams() <i>después</i> de 
-     * éste método, y nunca antes.
+     * este método, y nunca antes.
+     * Los valores serán debidamente sanitizados.
      * 
      * @param string $queryPrepared Query a ser ejecutada.  Debe ser  
      * Prepared Statement, a menos que no contenga parámetros.  NOTA: los
@@ -315,13 +326,14 @@ class DB extends mysqli
     public function getAffectedRows()
     {
         if (isset($this->affectedRows)) {
-            return (int) $this->affectedRows;
+            return intval($this->affectedRows);
         }
     }
     
     /**
      * Devuelve los datos obtenidos en la última query, asumiendo que
-     * haya sido un SELECT.
+     * haya sido un SELECT.  Si no se trató de un SELECT, devuelve TRUE o FALSE
+     * según si la consulta fue exitosa o no.
      *          
      * @return mixed Los datos obtenidos de la query (cuando la misma se trató 
      * de un SELECT) de la siguiente manera:
@@ -342,14 +354,12 @@ class DB extends mysqli
      * columnas (las filas serán índice numerado, y dentro un array 
      * asociativo con las columnas como indices).</li>
      * </ul>
+     * Si no se trató de un SELECT, devuelve TRUE o FALSE
+     * según si la consulta fue exitosa o no.
      */
     public function getQueryData() 
-    {        
-        if (isset($this->queryData)) {
-            return $this->queryData;
-        }
-        
-        return FALSE;
+    {       
+        return (isset($this->queryData) ? $this->queryData : FALSE);
     }
     // --
     // Query
@@ -359,10 +369,10 @@ class DB extends mysqli
      * Devuelve TRUE si tuvo éxito, y ejecuta commit, o FALSE si no, y 
      * hace rollback.  Si se produjo un error durante la ejecución de la query,
      * devuelve el nro. de error en lugar de FALSE.
-     * Para obtener los datos de un SELECT, llamar a queryGetData().
+     * Para obtener los datos de un SELECT, llamar a getQueryData().
      * Para obtener la cantidad de filas afectadas, llamar a getAffectedRows().
      * 
-     * @see queryGetData()
+     * @see getQueryData()
      * @see getAffectedRows().
      * @return mixed TRUE si tuvo éxito, FALSE si se produjo un error antes
      * de la ejecución de la query.  Si el error se produjo durante, devuelve
@@ -409,21 +419,6 @@ class DB extends mysqli
         return $result;
     }
     
-    /**
-     * Devuelve los datos obtenidos en la última query, asumiendo que
-     * haya sido un SELECT.
-     * Es un alias de getQueryData().
-     *          
-     * @see getQueryData()
-     * @return mixed Si la consulta produjo resultados los devuelve como 
-     * array; si no hubieron resultados pero la consulta fue exitosa, 
-     * devuelve TRUE; en caso de error, FALSE.
-     */
-    public function queryGetData()
-    {
-        return $this->getQueryData();
-    }
-
     // Otras
     /**
      * Sanitiza un valor para ser usado en una consulta.  Puede tratarse de
@@ -436,7 +431,7 @@ class DB extends mysqli
      */
     public function sanitizar($valor) 
     {
-        if ($this->setCharset() && !empty($valor)) {
+        if (!empty($valor)) {
             if (is_array($valor)) {
                 foreach ($valor as $key => $value) {
                     $result[$key] = $this->sanitizar($value);
@@ -586,104 +581,205 @@ class DB extends mysqli
     }
     
     /**
-     * Inserta una nueva tabla en la DB.  Si la cantidad de columnas no es igual
-     * a la de valores, completa automáticamente con NULL.  
+     * Inserta nuevos valores en una tabla en la DB.  Si la cantidad de columnas no es igual
+     * a la de valores, completa automáticamente con NULL.  Los valores serán
+     * debidamente sanitizados.
      * Si se indica NULL a las columnas, se insertará una tabla vacía 
      * (el parámetro values no será tenido en cuenta).  
      * NOTA: algunas tablas tienen restricciones, que podrían devolver error 
      * al hacer esto.
      * 
      * @param string $tableName Nombre de la tabla a insertar.
-     * @param string|array $columns Nombre de las columnas que recibiran un 
-     * valor.  Si se trata de un único valor, puede ser string.  Si no, debe 
-     * ser array.
-     * @param string|array $values Valores que le corresponden a las columnas. 
-     * Si se trata de un único valor, puede ser string.  Si no, debe 
-     * ser array.
+     * @param string|array $columns [opcional]<br />
+     * Nombre de las columnas que recibirán un 
+     * valor.  Puede ser array o string:
+     * <ul>
+     * <li>['col1', 'col2', ..., 'colN']</li>
+     * <li>"col1,col2,...,colN"<br />
+     * ¡Los espacios serán interpretados como parte del nombre de la columna!</li>
+     * </ul>
+     * Puede tambien recibir un array asociativo o una lista separada por comas,
+     * donde la llave será el nombre de la columna:
+     * <ul>
+     * <li>['col1' => val1, 'col2' => val2, ..., 'colN' => valN]</li>
+     * <li>"col1=val1,col2=val2,...,colN=valN"</li>
+     * </ul>
+     * <b>En este caso, la lista de valores no será tenia en cuenta</b>.
+     * Si no se especifica el valor de la columna, se interpreta que es NULL.
+     * 
+     * @param string|array $values [opcional]<br />
+     * Valores que le corresponden a las columnas. 
+     * Puede ser array o string:
+     * <ul>
+     * <li>['val1', 'val2', ..., 'valN']</li>
+     * <li>"val1,val2,...,valN"</li>
+     * </ul>
+     * Si es asociativo, las llaves NO serán tenidas en cuenta.  Si la cantidad
+     * de elementos es mayor a la de columnas, los elementos sobrantes del final
+     * serán REMOVIDOS silenciosamente.
      * @return int|boolean ID de la tabla creada, o FALSE en caso de error.
      */
     public function insert($tableName, $columns = NULL, $values = NULL)
     {
+        $this->cambiarModo(TRUE);
+        $ret = FALSE;
         if (is_string($tableName) && !empty($tableName)) {
-            if (is_null($columns)) {
+            if (empty($columns)) {
                 $this->setQuery('INSERT INTO ' . $tableName . ' () VALUES ()');
             } else {
-                is_array($columns) ?: $columns = array($columns);
-                is_array($values) ?: $values = array($values);
-                // creo que este bucle se puede implementar mas eficientemente
-                // con otras funciones de php
-                while (count($values) != count($columns)) {
-                    array_push($values, NULL);
+                $c = array_from_string_list($columns);
+                if (is_assoc($c)) {
+                    $cols = '';
+                    $vals = array();
+                    foreach ($c as $key => $value) {
+                        $cols .= (is_numeric($key) ? $value : $key) . ',';
+                        $vals[] = is_numeric($key) ? NULL : $value;
+                    }
+                    // elimino la ultima ','
+                    $cols = substr($cols, 0, -1);
+                } else {
+                    $cols = string_list_from_array($columns);
+                    $vals = array_slice(array_from_string_list($values, 
+                                                                ',', 
+                                                                TRUE), 
+                                        0, 
+                                        count($c));
+                    // creo que este bucle se puede implementar mas eficientemente
+                    // con otras funciones de php
+                    while (count($vals) < count($c)) {
+                        array_push($vals, NULL);
+                    }
                 }
 
-                $qmark = substr(str_repeat('?,', count($values)), 0, -1);
-                $cols = implode(',', $columns) ;
+                $qmark = substr(str_repeat('?,', count($vals)), 0, -1);
                 
                 $this->setQuery('INSERT INTO ' . $tableName . ' (' . $cols
                                 . ') VALUES (' . $qmark . ')');
                 
-                $this->setBindParam($this->bind_id($values));
-                $this->setQueryParams($values);
+                $this->setBindParam($this->bind_id($vals));
+                $this->setQueryParams($vals);
             }
 
             $this->queryExecute();
-            if ($this->queryGetData()) {
+            if ($this->getQueryData()) {
                 $this->setQuery('SELECT DISTINCT LAST_INSERT_ID() FROM ' 
                                     . $tableName);
                 $this->queryExecute();
-                return $this->getQueryData();
+                $ret = $this->getQueryData();
             }
         }
-             
-        return FALSE;
+        $this->cambiarModo();
+        return $ret;
     }
     
     /**
      * Actualiza una tabla de la DB.  Si la cantidad de columnas no es igual
-     * a la de valores, completa automáticamente con NULL.
+     * a la de valores, completa automáticamente con NULL.  Los valores serán
+     * debidamente sanitizados.
      * 
      * @param string $tableName Nombre de la tabla a actualizar.
-     * @param string|array $columns Nombre de las columnas que recibiran un 
-     * valor.  Si se trata de un único valor, puede ser string.  Si no, debe 
-     * ser array.
+     * @param string|array $columns Nombre de las columnas que recibirán un 
+     * valor.  Puede ser array o string:
+     * <ul>
+     * <li>['col1', 'col2', ..., 'colN']</li>
+     * <li>"col1,col2,...,colN".<br />
+     * ¡Los espacios serán interpretados como parte del nombre de la columna!</li>
+     * </ul>
+     * Puede tambien recibir un array asociativo o una lista separada por comas,
+     * donde la llave será el nombre de la columna:
+     * <ul>
+     * <li>['col1' => val1, 'col2' => val2, ..., 'colN' => valN]</li>
+     * <li>"col1=val1,col2=val2,...,colN=valN"</li>
+     * </ul>
+     * <b>En este caso, la lista de valores no será tenia en cuenta</b>.
+     * Si no se especifica el valor de la columna, se interpreta que es NULL.
+     * 
      * @param string|array $values Valores que le corresponden a las columnas. 
-     * Si se trata de un único valor, puede ser string.  Si no, debe 
-     * ser array.
-     * @param string $where [opcional]<br />
-     * Cláusula WHERE, que especifica qué registros deben actualizarse, o se 
-     * actualizarán todos los existentes.
+     * Puede ser array o string:
+     * <ul>
+     * <li>['val1', 'val2', ..., 'valN']</li>
+     * <li>"val1,val2,...,valN"</li>
+     * </ul>
+     * Si es asociativo, las llaves NO serán tenidas en cuenta.  Si la cantidad
+     * de elementos es mayor a la de columnas, los elementos sobrantes del final
+     * serán REMOVIDOS silenciosamente.
+     * @param string $where_cond Clausula WHERE como string, formada de la
+     * siguiente manera: <code>"col1 < ? AND col2 = ?"</code><br/>
+     * Esto es, NO deben colocarse valores en este parámetro, sino hacerlo en 
+     * $where_values.  De esta manera se asegura la correcta sanitización.
+     * @param string|array $where_values Valores que se insertarán en el orden 
+     * indicado en la clausula WHERE.  Puede ser array o string:
+     * <ul>
+     * <li>['val1', 'val2', ..., 'valN']</li>
+     * <li>"val1,val2,...,valN"</li>
+     * </ul>
+     * Si la cantidad supera a los <b>?</b> del parámetro anterior, los
+     * excedentes serán descartados silenciosamente.
      * @param string $limit [opcional]<br />
      * Límite de registros a actualizar o todos los registros encontrados.
      * @return boolean TRUE si tuvo éxito, FALSE si no.
      * @access public
      */
     public function update($tableName, $columns, $values, 
-                            $where = NULL, $limit = NULL)
+                            $where_cond, $where_values, $limit = NULL)
     {
         if (is_string($tableName) && !empty($tableName) 
                 && !empty($columns)
         ) {
-            is_array($columns) ?: $columns = array($columns);
-            is_array($values) ?: $values = array($values);
-            $limit = is_int($limit) ? ' LIMIT ' . $this->sanitizar($limit)
-                                        : NULL;
-            $where = is_string($where) ? ' WHERE ' . $this->sanitizar($where) 
-                                        : NULL;
-            
-            // creo que este bucle se puede implementar mas eficientemente
-            // con otras funciones de php
-            while (count($values) != count($columns)) {
-                array_push($values, NULL);
+            $c = array_from_string_list($columns);
+            if (is_assoc($c)) {
+                $cols = '';
+                $vals = array();
+                foreach ($c as $key => $value) {
+                    $cols .= (is_numeric($key) ? $value : $key) . '=?,';
+                    $vals[] = is_numeric($key) ? NULL : $value;
+                }
+                // elimino la ultima ','
+                $cols = substr($cols, 0, -1);
+            } else {
+                $cols = string_list_from_array($columns, '=?,');
+                $vals = array_slice(array_from_string_list($values, 
+                                                            ',', 
+                                                            TRUE), 
+                                    0, 
+                                    count($c));
+                // creo que este bucle se puede implementar mas eficientemente
+                // con otras funciones de php
+                while (count($vals) < count($c)) {
+                    array_push($vals, NULL);
+                }
             }
             
-            $set = implode('=?,', $columns) . '=?'; 
+            $limit = is_int($limit) ? ' LIMIT ?' : '';
+            $where = is_string($where_cond) ? ' WHERE ' . $where_cond
+                                        : '';
+            
+            $v = array_merge(
+                    $vals, 
+                    is_string($where_cond)
+                        ? array_slice(array_from_string_list($where_values, 
+                                                                ',', 
+                                                                TRUE), 
+                                        0, 
+                                        substr_count($where_cond, '?')) 
+                        : array(),
+                    is_int($limit) ? array($limit) : array()
+                );
+            
+            
+            
             $this->setQuery('UPDATE TABLE ' . $tableName 
-                                . ' SET ' . $set
+                                . ' SET ' . $cols
                                 . $where
                                 . $limit);
             
-            $this->setBindParam($this->bind_id($values));
-            $this->setQueryParams($values);            
+            $this->setBindParam($this->bind_id($v));
+            $this->setQueryParams($v);            
+            
+            die(var_dump('UPDATE TABLE ' . $tableName 
+                                . ' SET ' . $cols
+                                . $where
+                                . $limit, $v));
             
             $this->queryExecute();
             return $this->getQueryData();

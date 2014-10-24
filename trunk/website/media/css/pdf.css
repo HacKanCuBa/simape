@@ -41,7 +41,7 @@ body {
     width: 100%;
     height: auto;
     left: 0px;
-    top: 0mm;
+    top: 0px;
     background: white; /*url('/simape/imgs/header_small.png') no-repeat center center;*/
     /*alignment-adjust: m   iddle;*/
     text-align: center;
@@ -58,11 +58,10 @@ body {
 
 .data { 
     top: 35mm;
-    left: 20mm;
-    margin-left: 5px;
-    margin-right: 5px;
+    left: 15mm;
+    margin-right: 5mm;
     position: absolute;
-    max-width: 200mm;
+    max-width: 205mm;
     max-height: 220mm;
     text-align: center;
     alignment-adjust: middle;

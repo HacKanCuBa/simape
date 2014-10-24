@@ -66,7 +66,7 @@ Page::_e("<p style='text-align:center;'>" .
                             NULL, 
                             'Presentaci&oacute;n del proyecto', 
                             NULL, 
-                            'btn_blue', 
+                            'btn_green', 
                             NULL, 
                             NULL, 
                             "onClick='location.href=\"" 

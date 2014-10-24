@@ -14,6 +14,8 @@
 /*
  * Modified by HacKan
  */
+error_reporting(0);
+
 define('mPDF_VERSION','5.7.3');
 
 //Scale factor
@@ -45,8 +47,6 @@ if (!defined('_MPDF_TEMP_PATH')) define("_MPDF_TEMP_PATH", _MPDF_PATH.'tmp/');
 
 if (!defined('_MPDF_TTFONTPATH')) { define('_MPDF_TTFONTPATH',_MPDF_PATH.'ttfonts/'); }
 if (!defined('_MPDF_TTFONTDATAPATH')) { define('_MPDF_TTFONTDATAPATH',_MPDF_PATH.'ttfontdata/'); }
-
-error_reporting(error_reporting() & ~E_NOTICE);
 
 //error_reporting(E_ALL);
 
