@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.64
+ * @version 0.65
  */
 
 trait Token
@@ -363,7 +363,7 @@ trait Token
      */
     public function table_new_Token()
     {
-        $db = new DB(TRUE);
+        $db = new DB(SMP_DB_CHARSET, TRUE);
         return $this->setTokenId($db->insert('Token'));
     }
 }

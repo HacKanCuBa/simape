@@ -47,7 +47,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.40
+ * @version 1.41
  */
 class DB extends mysqli
 {     
@@ -64,15 +64,15 @@ class DB extends mysqli
     /**
      * Conecta con la DB según el modo indicado e inicializa la conexión.
      * 
+     * @param string $charset Charset de la DB.
      * @param boolean [opcional]<br />
      * $ModoRW Establece el modo RW si es TRUE, 
      * RO si es FALSE (por defecto).
-     * @param string $charset [opcional]<br />
-     * Charset de la DB (UTF8 por defecto).
      */
-    function __construct($ModoRW = FALSE, $charset = self::CHARSET_DEFAULT) 
+    function __construct($charset, $ModoRW = FALSE) 
     {   
-        if (!$this->conexionEstablecer($ModoRW) 
+        if (empty($charset) 
+            || !$this->conexionEstablecer($ModoRW) 
             || !$this->conexionInicializar($charset)) {
             trigger_error('Error de conexion con la base de datos', E_USER_ERROR);
         }       

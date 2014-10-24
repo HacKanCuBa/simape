@@ -41,7 +41,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.66
+ * @version 0.67
  */
 class Fingerprint
 {
@@ -172,7 +172,7 @@ class Fingerprint
     public function store_inDB() 
     {
         if (!empty($this->TokenId) && !empty($this->token)) {
-            $db = new DB(TRUE);
+            $db = new DB(SMP_DB_CHARSET, TRUE);
             $db->setQuery('UPDATE Token SET Fingerprint_Token = ? '
                         . 'WHERE TokenId = ?');
             $db->setBindParam('si');

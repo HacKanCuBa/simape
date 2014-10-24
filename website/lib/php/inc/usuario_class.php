@@ -32,7 +32,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.92
+ * @version 0.93
  */
 class Usuario extends Empleado
 {    
@@ -206,7 +206,7 @@ class Usuario extends Empleado
     protected function isDataReady() 
     {        
         $result = FALSE;
-        $db = new DB;
+        $db = new DB(SMP_DB_CHARSET);
         if ($db->table_exists('Token', $this->TokenId)
             && $db->table_exists('Empleado', $this->EmpleadoId)
             && $db->table_exists('UsuarioPerfil', $this->UsuarioPerfilId)
@@ -348,7 +348,7 @@ class Usuario extends Empleado
         if ($this->isDataReady()) {
             $tblUsuario = $this->get_table_array();
             
-            $db = new DB(TRUE);
+            $db = new DB(SMP_DB_CHARSET, TRUE);
             $result = $this->setUsuarioId($db->insert('Nombre', 
                                                 array_keys($tblUsuario), 
                                                 array_values($tblUsuario)));
@@ -698,7 +698,7 @@ class Usuario extends Empleado
                 }
                 if (!empty($writedata)) {
                     // escribo datos
-                    $db = new DB(TRUE);
+                    $db = new DB(SMP_DB_CHARSET, TRUE);
                     return $db->update('Usuario', 
                                 array_keys($writedata), 
                                 array_values($writedata), 
