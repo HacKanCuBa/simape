@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.62
+ * @version 1.63
  */
 class Password
 {
@@ -105,7 +105,7 @@ class Password
             $db->setBindParam('s');
             $db->setQueryParams($username);
             $db->queryExecute();
-            return $this->setPasswordEncrypted($db->queryGetData());
+            return $this->setPasswordEncrypted($db->getQueryData());
         }
         
         return FALSE;

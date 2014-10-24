@@ -239,7 +239,7 @@ Session::store(SMP_SESSINDEX_FORM_TIMESTAMP, $formToken->getTimestamp());
 // -- --
 //
 // Mostrar página
-Page::printHead('SiMaPe | Iniciar Sesi&oacute;n', ['main', 'input', 'msg']);
+Page::printHead('SiMaPe | Iniciar Sesi&oacute;n', ['main', 'input', 'msg', 'img']);
 Page::printBody();
 Page::printHeader();
 Page::printHeaderClose();
@@ -381,7 +381,7 @@ switch ($display) {
         Page::_e("<tr>", 5);
         Page::_e("<td colspan='2' style='text-align: center;' >", 6);
         Page::_e(Page::getInput('submit', 'frm_btnNewPwd', 'Cambiar contrase&ntilde;a', NULL, 'btn_blue'), 7);
-        Page::_e(Page::getInput('submit', 'frm_btnCancelRestore', 'Cancelar', NULL, 'btn_blue'), 7);
+        Page::_e(Page::getInput('submit', 'frm_btnCancelRestore', 'Cancelar', NULL, 'btn_red'), 7);
         Page::_e("</td>", 6);
         Page::_e("</tr>", 5);
         Page::_e("</tbody>", 4);
@@ -404,7 +404,7 @@ switch ($display) {
                     . "razones desconocidas.</p>", 3);
         Page::_e("<p>Por favor, <em>contacte con un administrador</em>.</p>", 3);
         Page::_e("<p style='text-align:center;'>", 3);
-        Page::_e(Page::getInput('submit', 'frm_btnCancelRestore', 'Cancelar', NULL, 'btn_blue'), 4);
+        Page::_e(Page::getInput('submit', 'frm_btnCancelRestore', 'Cancelar', NULL, 'btn_red'), 4);
         Page::_e("</p>", 3);
         break;
     
@@ -422,7 +422,7 @@ switch ($display) {
                                 'frm_btnCancelRestore', 
                                 'Cancelar', 
                                 NULL, 
-                                'btn_blue')
+                                'btn_red')
                  , 4);
         Page::_e("</p>", 3);
         break;
@@ -461,7 +461,7 @@ switch ($display) {
         Page::_e("<tr>", 5);
         Page::_e("<td colspan='2' style='text-align: center;' >", 6);
         Page::_e(Page::getInput('submit', 'frm_btnRestore', "Reestablecer contrase&ntilde;a", NULL, 'btn_blue'), 7);
-        Page::_e(Page::getInput('submit', 'frm_btnCancelRestore', "Cancelar", NULL, 'btn_blue'), 7);
+        Page::_e(Page::getInput('submit', 'frm_btnCancelRestore', "Cancelar", NULL, 'btn_red'), 7);
         Page::_e("</td>", 6);
         Page::_e("</tr>", 5);
         Page::_e("</tbody>", 4);
@@ -568,13 +568,13 @@ switch ($display) {
                                 'frm_btnForget', 
                                 'Me olvid&eacute; la contrase&ntilde;a', 
                                 NULL, 
-                                'btn_blue')
+                                'btn_green')
                 , 7);
         Page::_e(Page::getInput('submit', 
                                 'frm_btnCancelLogin', 
                                 'Cancelar', 
                                 NULL, 
-                                'btn_blue')
+                                'btn_red')
                 , 7);
         Page::_e("</td>", 6);
         Page::_e("</tr>", 5);
@@ -582,6 +582,9 @@ switch ($display) {
         Page::_e("</table>", 3);
         break;
 }
+Page::_e("<hr />");
+Page::_e("<p>Siempre <strong>verificar</strong> que aparezca el <strong>candado</strong> arriba a la derecha y que al darle click aparezca la leyenda <strong>Verificado por: SiMaPe</strong> y además que la dirección sea la indicada en la imagen:</p>", 3);
+Page::_e("<img class='img_transparent' src='" . SMP_WEB_ROOT . SMP_LOC_IMGS . "ssl-pic.png' alt='Direccion del servidor: 5.224.0.250'/>", 3);
 Page::_e(Page::getInput('hidden', 'formToken', $formToken->getToken()), 3);
 Page::_e(Page::getForm(Page::FORM_TYPE_CLOSE), 2);
 
