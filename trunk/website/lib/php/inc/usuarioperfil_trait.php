@@ -31,7 +31,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.2
+ * @version 0.21
  */
 
 trait UsuarioPerfil
@@ -51,7 +51,7 @@ trait UsuarioPerfil
      */
     protected function table_new_UsuarioPerfil()
     {
-        $db = new DB(TRUE);
+        $db = new DB(SMP_DB_CHARSET, TRUE);
         return $this->setTokenId($db->insert('UsuarioPerfil'));
     }
     

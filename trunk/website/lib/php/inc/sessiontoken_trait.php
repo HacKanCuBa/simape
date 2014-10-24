@@ -168,7 +168,7 @@ trait SessionToken
             && isset($this->randToken)
             && isset($this->timestamp)
         ) {
-            $db = new DB(TRUE);
+            $db = new DB(SMP_DB_CHARSET, TRUE);
             $db->setQuery('UPDATE Token '
                         . 'SET Session_RandomToken = ?, Session_Timestamp = ? '
                         . 'WHERE TokenId = ?');

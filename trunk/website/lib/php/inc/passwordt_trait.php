@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.13
+ * @version 1.14
  */
 trait Passwordt
 {   
@@ -233,7 +233,7 @@ trait Passwordt
             && isset($this->randToken)
             && isset($this->timestamp)
         ) {
-            $db = new DB(TRUE);
+            $db = new DB(SMP_DB_CHARSET, TRUE);
             $db->setQuery('UPDATE Token '
                         . 'SET PasswordRestore_RandomToken = ?, '
                         . 'PasswordRestore_Timestamp = ? '

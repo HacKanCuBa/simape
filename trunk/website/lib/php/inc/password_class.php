@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.63
+ * @version 1.64
  */
 class Password
 {
@@ -73,7 +73,7 @@ class Password
             && !empty($username) 
             && is_string($username)
         ) {
-            $db = new DB(TRUE);
+            $db = new DB(SMP_DB_CHARSET, TRUE);
             $db->setQuery('UPDATE Usuario SET PasswordSalted = ? '
                         . 'WHERE Nombre = ?');
             $db->setBindParam('ss');
