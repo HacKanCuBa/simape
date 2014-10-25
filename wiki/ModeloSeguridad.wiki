@@ -36,6 +36,14 @@ Puede encriptarse repetidas veces sin límite dentro de un bucle, pero esto no s
 Tanto la contraseña como la sal deben ser strings, o valores convertidos a strings.
 Nota: se desaconseja emplear arrays, objetos u otros tipos de datos como contraseña/sal dado que el resultado puede ser totalmente inesperado.
 
+== Cifrado ==
+ "Anyone who attempts to generate random numbers by deterministic means is, 
+ of course, living in a state of sin."
+*John von Neumann*
+
+La clase Crypto maneja todos lo relativo a esta área: (des)cifrar, hashing, Secure RNG, etc.  Ver más info en la [http://man.simape.cf/classes/Crypto.html documentación].
+
+
 == Sesión ==
 
 Los datos almacenados en la cookie y en `$_SESSION` deben estar encriptados en todo momento.  Para ello, se genera una contraseña aleatoria al comienzo, y se encripta con una de dos contraseñas, dependiendo de si el usuario está loggeado o no.
