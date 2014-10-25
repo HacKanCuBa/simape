@@ -1,0 +1,5 @@
+#summary Documentación de la API y demás
+
+Gracias a PHP Documentor.
+
+== [http://man.simape.cf Documentación] ==
