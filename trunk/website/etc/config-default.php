@@ -34,7 +34,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.21
+ * @version 1.22
  */
 
 // << Config
@@ -42,6 +42,9 @@
 // -- Misc
 /**
  * Email del administrador de sistema, o del grupo de administradores.
+ * Se emplea para mostrar un enlace mailto junto a la palabra 'administrador'
+ * vía la función contactar_administrador().
+ * Por defecto: ''.
  */
 const SMP_ADMIN_EMAIL = '';
 // --
@@ -115,8 +118,20 @@ const SMP_SESSIONKEY_LIFETIME = 28800; // 8hs
 define('SMP_HOME', 'usr/index.php');
 // --
 // 
-// Activar conexion SSL?
+// Conexion SSL/TLS
+/**
+ * TRUE para activar la conexión vía SSL/TLS.
+ * Por defecto: FALSE.
+ */
 const SMP_SSL = FALSE;
+
+/**
+ * TRUE para indicar que la conexión emplea HSTS
+ * (solo válido si SMP_SSL = TRUE).
+ * La configuración de Apache de simape_ssl lo utiliza por defecto.
+ * Por defecto: TRUE.
+ */
+const SMP_SSL_HSTS = TRUE;
 // --
 // 
 // Dirección IP del servidor (no es necesario salvo que se emplee SSL).
