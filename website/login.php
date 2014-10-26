@@ -88,7 +88,7 @@ $display = LOGIN_DISPLAY_DEFAULT;
 
 // Si SSL está habilitado pero el usuario cargó la página de manera insegura,
 // recarga por SSL.
-force_connect(FORCE_CONNECT_SSL);
+Page::force_connect(Page::FORCE_CONNECT_SSL);
 
 // Inicializaciones
 // Iniciar o continuar sesion
