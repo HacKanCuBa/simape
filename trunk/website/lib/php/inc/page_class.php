@@ -56,7 +56,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.45
+ * @version 1.46
  */
 class Page
 {  
@@ -109,6 +109,16 @@ class Page
     
     const FORM_OPEN = TRUE;
     const FORM_CLOSE = FALSE;
+    
+    /**
+     * Fuerza la conexion en texto plano para el método Page::force_connect
+     */
+    const FORCE_CONNECT_PLAIN = 1;
+    
+    /**
+     * Fuerza la conexion en SSL para el método Page::force_connect
+     */
+    const FORCE_CONNECT_SSL = 2;
     
     /**
      * Nombre de la hoja de estilos que será cargada 
@@ -1084,5 +1094,56 @@ class Page
         }
         
         return FALSE;
+    }
+    
+    /**
+     * Fuerza la conexión actual al modo seleccionado:
+     * <ol>
+     * <li>FORCE_CONNECT_PLAIN</li>
+     * <li>FORCE_CONNECT_SSL</li>
+     * </ol>
+     * Si la conexión actual no se encuentra en el modo indicado, recarga el script.
+     * Si no, continúa la ejecución.
+     * Si se desea forzar el modo SSL, SMP_SSL debe ser TRUE, o la conexión 
+     * permanecerá en modo actual.
+     * @param int $mode Modo de conexión a forzar.
+     */
+    public static function force_connect($mode = self::FORCE_CONNECT_PLAIN) 
+    {
+        $exit = FALSE;
+        $file = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[0]['file'];
+        $loc = str_ireplace(SMP_FS_ROOT, '', dirname($file) . '/');
+        $loc = (empty($loc) ? '' : $loc) . basename($file);
+        switch ($mode) {
+            case self::FORCE_CONNECT_PLAIN:
+                /*
+                 * Si está activado Strict-Transport-Security en las opciones de 
+                 * Apache, Chrome forzará la conexión a https (con Firefox no me 
+                 * sucedió).
+                 * Debido a ésto, el programa se cuelga en un bucle y no puede 
+                 * mostrar la página (el navegador detiene la ejecución).
+                 * Entonces, debo salir sin más.
+                 * Lamentablemente, no hay forma de determinarlo.  Se podría 
+                 * examinar el archivo de config de Apache, pero no es posible 
+                 * debido a la restricción open_basedir.
+                 * Emplearé una constante.
+                 */
+                $exit = SMP_SSL_HSTS ? 
+                            FALSE : 
+                            (is_connection_ssl() ? 
+                                static::go_to($loc, NULL, NULL, TRUE) : 
+                                FALSE);
+                break;
+
+            case self::FORCE_CONNECT_SSL:
+                $exit = is_connection_ssl() ? FALSE : (SMP_SSL ? 
+                                                                static::go_to($loc) :
+                                                                FALSE);
+                break;
+
+            default:
+                break;
+        }
+        $exit ? exit() : NULL;
     }
 }
