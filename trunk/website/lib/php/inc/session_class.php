@@ -198,7 +198,7 @@ class Session
      * Sal criptográfica para la contraseña.
      * @return boolean TRUE si se almacenó el valor satisfactoriamente, 
      * FALSE si no.
-     * @see setPassword().
+     * @see Session::setPassword().
      */
     public static function store($key,
                                  $value = NULL, 
@@ -239,8 +239,8 @@ class Session
      * Si es TRUE, sanitiza el valor antes de almacenarlo (por defecto).
      * @return boolean TRUE si se almacenó el valor satisfactoriamente, 
      * FALSE si no.
-     * @see setPassword()
-     * @see setPasswordSalt()
+     * @see Session::setPassword()
+     * @see Session::setPasswordSalt()
      */
     public function storeEnc($key, $value = NULL, $sanitize = TRUE)
     {
@@ -393,7 +393,7 @@ class Session
      * Tener en cuenta que cada llamada<br />
      * a initiate() podría cambiarlo.
      * 
-     * @see initiate()
+     * @see Session::initiate()
      * @return string Nombre actual de la sesión.
      */
     public static function getName()
@@ -421,7 +421,7 @@ class Session
      * Devuelve el ID actual de la sesión.  Tener en cuenta que cada llamada
      * a initiate() podría cambiar este ID.
      * 
-     * @see initiate()
+     * @see Session::initiate()
      * @return string ID actual de la sesión.
      * @access public
      */

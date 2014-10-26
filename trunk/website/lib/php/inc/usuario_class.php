@@ -32,7 +32,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.93
+ * @version 0.94
  */
 class Usuario extends Empleado
 {    
@@ -234,7 +234,7 @@ class Usuario extends Empleado
      */
     protected static function retrieve_tblUsuario($searchParam) {
         if (!empty($searchParam)) {
-            $db = new DB;
+            $db = new DB(SMP_DB_CHARSET);
             if (DB::isValid_TblId($searchParam)) {
                 $db->setQuery('SELECT * FROM Usuario WHERE UsuarioId = ?');
                 $db->setBindParam('i');
@@ -489,7 +489,7 @@ class Usuario extends Empleado
 
     /**
      * Indica que el usuario es nuevo.  Se emplea al guardar en la DB.
-     * @see store_inDB
+     * @see Usuario::store_inDB()
      * @param boolean $value TRUE para indicar que el usuario es nuevo, 
      * FALSE para actualizar.
      */
@@ -641,7 +641,7 @@ class Usuario extends Empleado
     /**
      * Guarda el usuario en la DB.  Solo se almacenan los
      * cambios realizados, o bien todo si se trata de uno nuevo.
-     * @see setNuevoUsuario
+     * @see Usuario::setNuevoUsuario()
      * @return boolean TRUE si tuvo éxito, FALSE si no.
      * @access public
      */
@@ -904,7 +904,7 @@ class Usuario extends Empleado
     /**
      * Autentica un token de restablecimiento de contraseña.
      * Debe fijarse primero el mismo mediante setToken().
-     * @see setToken
+     * @see Token::setToken()
      * @return boolean TRUE si el token de restablecimiento de contraseña es 
      * válido, FALSE si no.
      * @access public

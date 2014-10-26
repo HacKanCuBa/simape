@@ -30,7 +30,7 @@
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @uses PHPExcel Clase lectora de archivos XLS
- * @version 0.81
+ * @version 0.82
  */
 class SaperFicha
 {
@@ -345,7 +345,7 @@ class SaperFicha
         $str .= Page::_e("<tbody>", $indent + 1, TRUE, FALSE);
         
         if (isset($this->ficha) && is_array($this->ficha)) {
-            foreach ($this->ficha as $fila) {
+            foreach ($this->ficha as $m => $fila) {
                 $str .= Page::_e("<tr>", $indent + 2, TRUE, FALSE);
                 foreach ($fila as $n => $col) {
                     $style = '';
@@ -361,36 +361,41 @@ class SaperFicha
                             break;
                         
                         case 7:
+                            // tarde
+                            if ($col != '-') {
+                                $style = "color: #EF9D09;";
+                                $style .= ($m < (count($this->ficha) - 1)) 
+                                                        ? ' font-size: 25px;' 
+                                                        : '';
+                            }
+                            break;
+                        
+                        case 8:
                             // hs faltan
                             if ($col != '-') {
                                 $style = "color: red;";
                             }
                             break;
                             
-                        case 8:
+                        case 9:
                             // hs comp
                             if ($col != '-') {
                                 $style = "color: blue;";
                             }
                             break;
                             
-                        case 9:
+                        case 10:
                             // hs extra
                             if ($col != '-') {
                                 $style = "color: green;";
                             }
                             break;
                             
-                        case 10:
-                            // tarde
-                            if ($col != '-') {
-                                $style = "color: #D19934;";
-                            }
-                            break;
 
                         default:
                             break;
                     }
+                    //$style .= ($m == (count($this->ficha) - 1)) ? ' font-size: medium;' : '';
                     $str .= Page::_e("<td style='" . $style . "'>", $indent + 3, TRUE, FALSE);
                     $str .= Page::_e($col, 0, FALSE, FALSE);
                     $str .= Page::_e("</td>", 0, FALSE, FALSE);
@@ -558,7 +563,7 @@ class SaperFicha
             $extras_total += $tiempo[0];
             $faltan[] = $tiempo[2] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[2])->format('H:i:s') : '';
             $faltan_total += $tiempo[2];
-            $tarde[] = $tiempo[3] ? '*' : '';
+            $tarde[] = $tiempo[3] ? '•' : '';
         }       
         // el ultimo valor es 0, lo reemplazo por el total de extras
         end($extras);
@@ -726,5 +731,26 @@ class SaperFicha
         if (!empty($this->tardes) && is_array($this->tardes)) {
             $this->add_column('Tarde', $this->tardes);
         }
+    }
+    
+    /**
+     * Devuelve el texto de los detalles de calculo y uso de la planilla
+     * @return type
+     */
+    public static function getDescripcionFicha()
+    {
+        return "\n<strong>Los c&aacute;lculos se realizan bajo las siguientes condiciones:</strong>" .
+        "\n<ul style='text-align: left;'>" .
+        "\n\t<li>No se consideran los segundos en los fichajes (se truncan a 0).</li>" .
+        "\n\t<li>Si la hora a la que el agente ingres&oacute; es anterior a la hora a la que debe ingresar, se emplear&aacute; esta &uacute;ltima para el c&aacute;lculo.  Esto es, no se toma en cuenta el tiempo anterior a la hora de ingreso.</li>" .
+        "\n\t<li>Se considera Hora Extra a todo tiempo trabajado superior a 1 hora respecto de las horas laborales ordinarias.</li>" .
+        "\n\t<li>Se considera Tiempo Compensado a todo tiempo adicional a las horas laborales ordinarias inferior a 1h.</li>" .
+        "\n\t<li>Se considera Tiempo Faltante o Adeudado cuando no se hayan cumplido las horas laborales ordinarias.</li>" .
+        "\n\t<li>Las columnas de la planilla muestran valores propios, esto es, sin interacción entre sí.</li>" .
+        "\n\t<li>Cuando se presente m&aacute;s de un par de fichajes, a cada período se le aplicarán las reglas anteriores.</li>" .
+        "\n\t<li>La operación matemática realizada para las horas extras reales es: Horas Extra - (Horas Adeudadas - Horas Compensadas), si (Horas Adeudadas - Horas Compensadas) resulta mayor que 0 (esto es, el agente adeuda horas que no compensa y se descuentan de las extras).</li>" .
+        "\n\t<li>El Tiempo Compensado nunca se suma a las Horas Extra.</li>" .
+        "\n\t<li>Cuando ocurra una llegada tarde (ingreso luego de 15' de la hora de entrada), ser&aacute; indicada en la columna apropiada con un *.  Al final de la misma se indica el total.</li>" .
+        "\n</ul>";
     }
 }

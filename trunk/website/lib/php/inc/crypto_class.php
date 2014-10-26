@@ -30,7 +30,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.3
+ * @version 1.31
  */
 
 class Crypto
@@ -351,8 +351,8 @@ class Crypto
      * Devuelve un IV aleatorio para los métodos encrypt() y decrypt().
      * 
      * @return string IV aleatorio de 16Bytes.
-     * @see encrypt()
-     * @see decrypt()
+     * @see Crypto::encrypt()
+     * @see Crypto::decrypt()
      */
     public static function getRandomIV()
     {
@@ -422,8 +422,8 @@ class Crypto
      * @param string $salt Sal criptográfica para la contraseña.
      * @return mixed String con los datos encriptados
      * o bien FALSE en caso de error.
-     * @see getRandomIV()
-     * @see decypt()
+     * @see Crypto::getRandomIV()
+     * @see Crypto::decypt()
      */
     public static function encrypt($data, $password, $salt = NULL)
     {

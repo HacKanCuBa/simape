@@ -28,7 +28,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.21
+ * @version 0.22
  * @uses PHPMailer PHP email creation and transport class.
  */
 class Email
@@ -140,7 +140,7 @@ class Email
 
     /**
      * Envía un email.  En caso de error, ver getLastError.
-     * @see getLastError
+     * @see Email::getLastError
      * @return boolean TRUE si se envió correctamente, FALSE si no.
      */
     public function send()

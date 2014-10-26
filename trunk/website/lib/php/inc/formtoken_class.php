@@ -47,7 +47,7 @@ class FormToken
      * @param string $token Form Token.
      * @param string $randToken Random Token.
      * @param float $timestamp Timestamp.
-     * @see authenticateToken
+     * @see FormToken::authenticateToken()
      */
     public function __construct($token = NULL,
                                 $randToken = NULL, 

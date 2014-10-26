@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.65
+ * @version 0.66
  */
 
 trait Token
@@ -329,7 +329,7 @@ trait Token
      */
     public function retrieve_fromDB_TokenId($username)
     {
-        $db = new DB;
+        $db = new DB(SMP_DB_CHARSET);
         return $this->setTokenId($db->retrieve_tableId('Usuario', 
                                                         'Nombre', 
                                                         's', 
@@ -340,13 +340,13 @@ trait Token
      * Recupera de la DB la tabla Token y la almacena en el objeto.  Debe 
      * haberse fijado el valor de TokenId previamente.
      * 
-     * @see retrieve_fromDB_TokenId
+     * @see Token::retrieve_fromDB_TokenId
      * @return boolean TRUE si se recuperó correctamente, FALSE si no.
      */
     public function retrieve_tblToken()
     {
         if(!empty($this->TokenId)) {
-            $db = new DB;
+            $db = new DB(SMP_DB_CHARSET);
             $tblToken = $db->retrieve_table('Token', $this->TokenId);
             if (is_array($tblToken)) {
                 $this->tblToken = $tblToken;

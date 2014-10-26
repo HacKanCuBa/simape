@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.64
+ * @version 1.66
  */
 class Password
 {
@@ -44,7 +44,7 @@ class Password
      * restricciones (es decir, es válida), y prepara para encriptarla.
      * Llamar a encryptPassword() para encriptarla.
      * 
-     * @see encryptPassword()
+     * @see Passwordt::encryptPassword()
      * @param string $passwordPT Contraseña en texto plano
      * @param string $passwordEC Contraseña encriptada.
      */
@@ -100,7 +100,7 @@ class Password
     public function retrieve_fromDB($username)
     {
         if (!empty($username) && is_string($username)) {
-            $db = new DB;
+            $db = new DB(SMP_DB_CHARSET);
             $db->setQuery('SELECT PasswordSalted FROM Usuario WHERE Nombre = ?');
             $db->setBindParam('s');
             $db->setQueryParams($username);

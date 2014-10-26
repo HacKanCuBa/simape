@@ -22,6 +22,7 @@ RedirectMatch 403 \.(htaccess|htpasswd|errordocs|logs)$
 # all bots to make a HEAD request then remove HEAD from the Request Method filter.
 # The TRACE, DELETE, TRACK and DEBUG request methods should never be allowed against your website.
 RewriteEngine On
+RewriteCond %{ENV:REDIRECT_STATUS} ^$
 RewriteCond %{REQUEST_METHOD} ^(HEAD|TRACE|DELETE|TRACK|DEBUG) [NC]
 RewriteRule ^(.*)$ - [F,L]
 
@@ -30,6 +31,7 @@ RewriteRule ^(.*)$ - [F,L]
 # Good sites such as W3C use it for their W3C-LinkChecker. 
 # Add or remove user agents temporarily or permanently from the first User Agent filter below.
 # If you want a list of bad bots / User Agents to block then scroll to the end of this file.
+RewriteCond %{ENV:REDIRECT_STATUS} ^$
 RewriteCond %{HTTP_USER_AGENT} (havij|libwww-perl|wget|python|nikto|curl|scan|java|winhttp|clshttp|loader) [NC,OR]
 RewriteCond %{HTTP_USER_AGENT} (%0A|%0D|%27|%3C|%3E|%00) [NC,OR]
 RewriteCond %{HTTP_USER_AGENT} (;|<|>|'|"|\)|\(|%0A|%0D|%22|%27|%28|%3C|%3E|%00).*(libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner) [NC,OR]
@@ -79,6 +81,7 @@ RewriteCond %{QUERY_STRING} (;|<|>|'|"|\)|%0A|%0D|%22|%27|%3C|%3E|%00).*(/\*|uni
 RewriteCond %{QUERY_STRING} (sp_executesql) [NC]
 RewriteRule ^(.*)$ - [F,L]
 
+RewriteCond %{ENV:REDIRECT_STATUS} ^$
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.php [L]
@@ -139,6 +142,7 @@ Satisfy All
 #TraceEnable off
 
 # Allow only GET and POST verbs
+RewriteCond %{ENV:REDIRECT_STATUS} ^$
 # ‘Coz most vul scanners use HEAD for hunting buggy files existence
 RewriteCond %{REQUEST_METHOD} !^(GET|POST)$ [NC,OR]
 

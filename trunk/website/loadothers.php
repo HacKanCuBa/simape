@@ -21,7 +21,7 @@
  * 
  *****************************************************************************/
 
-/**
+/*
  * loadothers.php
  * Permite cargar archivos adicionales que no puedan ser cargados por la 
  * autocarga de clases.

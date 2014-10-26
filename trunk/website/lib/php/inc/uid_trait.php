@@ -85,8 +85,8 @@ trait UID
 //    /**
 //     * Almacena en la DB el UID guardado en el objeto, si lo hay.
 //     * 
-//     * @see generate
-//     * @see set
+//     * @see UID::generateUID()
+//     * @see UID::setUID()
 //     * @param string $username Nombre de usuario al que le pertenece el UID.
 //     * @return boolean TRUE si se almacenó en la DB exitosamente, 
 //     * FALSE en caso contrario.
@@ -113,8 +113,8 @@ trait UID
     /**
      * Devuelve el UID generado por generate o almacenado por set.
      * 
-     * @see generate
-     * @see set
+     * @see UID::generateUID()
+     * @see UID::setUID()
      * @return string UID o string vacío.
      * @access public
      */
