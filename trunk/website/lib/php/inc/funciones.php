@@ -224,8 +224,28 @@ function is_assoc($array)
  * 
  * @return string Palabra 'administrador' con enlace mailto o no.
  */
-function contactar_administrador() {
+function contactar_administrador()
+{
     return SMP_ADMIN_EMAIL 
             ?  "<a href='mailto:" . SMP_ADMIN_EMAIL . "'>administrador</a>" 
             : "administrador";
+}
+
+/**
+ * Determina si el valor 'needle' se encuentra en el array 'haystack'.  No
+ * distingue entre mayúsculas y minúsculas.
+ * @param mixed $needle Valor buscado.
+ * @param array $haystack Array donde buscar.
+ * @return boolean TRUE si se encontró el valor, FALSE si no.
+ */
+function in_array_partial($needle, array $haystack) 
+{
+    $ret = FALSE;
+    foreach ($haystack as $value) {
+        if (stristr($value, $needle)) {
+            $ret = TRUE;
+            break;
+        }
+    }
+    return $ret;
 }
