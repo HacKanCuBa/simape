@@ -165,19 +165,37 @@ const FORCE_CONNECT_SSL = 2;
  */
 function force_connect($mode = FORCE_CONNECT_PLAIN) 
 {
+    $exit = FALSE;
     $file = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[0]['file'];
     $loc = str_ireplace(SMP_FS_ROOT, '', dirname($file) . '/');
     $loc = (empty($loc) ? '' : $loc) . basename($file);
-    $exit = FALSE;
     switch ($mode) {
         case FORCE_CONNECT_PLAIN:
-            $exit = is_connection_ssl() ? Page::go_to($loc, NULL, NULL, TRUE) : FALSE;
+            /*
+             * Si está activado Strict-Transport-Security en las opciones de 
+             * Apache, Chrome forzará la conexión a https (con Firefox no me 
+             * sucedió).
+             * Debido a ésto, el programa se cuelga en un bucle y no puede 
+             * mostrar la página (el navegador detiene la ejecución).
+             * Entonces, debo salir sin más.
+             * Lamentablemente, no hay forma de determinarlo.  Se podría 
+             * examinar el archivo de config de Apache, pero no es posible 
+             * debido a la restricción open_basedir.
+             * Emplearé una constante.
+             */
+            $exit = SMP_SSL_HSTS ? 
+                        FALSE : 
+                        (is_connection_ssl() ? 
+                            Page::go_to($loc, NULL, NULL, TRUE) : 
+                            FALSE);
             break;
 
         case FORCE_CONNECT_SSL:
-            $exit = is_connection_ssl() ? FALSE : (SMP_SSL ? Page::go_to($loc) : FALSE);
+            $exit = is_connection_ssl() ? FALSE : (SMP_SSL ? 
+                                                            Page::go_to($loc) :
+                                                            FALSE);
             break;
-        
+
         default:
             break;
     }
