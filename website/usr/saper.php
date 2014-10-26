@@ -27,25 +27,8 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.83
+ * @version 0.84
  */
-
-function getCondiciones()
-{
-    return "\n<strong>Los c&aacute;lculos se realizan bajo las siguientes condiciones:</strong>" .
-    "\n<ul style='text-align: left;'>" .
-    "\n\t<li>No se consideran los segundos en los fichajes (se truncan a 0).</li>" .
-    "\n\t<li>Si la hora a la que el agente ingres&oacute; es anterior a la hora a la que debe ingresar, se emplear&aacute; esta &uacute;ltima para el c&aacute;lculo.  Esto es, no se toma en cuenta el tiempo anterior a la hora de ingreso.</li>" .
-    "\n\t<li>Se considera Hora Extra a todo tiempo trabajado superior a 1 hora respecto de las horas laborales ordinarias.</li>" .
-    "\n\t<li>Se considera Tiempo Compensado a todo tiempo adicional a las horas laborales ordinarias inferior a 1h.</li>" .
-    "\n\t<li>Se considera Tiempo Faltante o Adeudado cuando no se hayan cumplido las horas laborales ordinarias.</li>" .
-    "\n\t<li>Las columnas de la planilla muestran valores propios, esto es, sin interacción entre sí.</li>" .
-    "\n\t<li>Cuando se presente m&aacute;s de un par de fichajes, a cada período se le aplicarán las reglas anteriores.</li>" .
-    "\n\t<li>La operación matemática realizada para las horas extras reales es: Horas Extra - (Horas Adeudadas - Horas Compensadas), si (Horas Adeudadas - Horas Compensadas) resulta mayor que 0 (esto es, el agente adeuda horas que no compensa y se descuentan de las extras).</li>" .
-    "\n\t<li>El Tiempo Compensado nunca se suma a las Horas Extra.</li>" .
-    "\n\t<li>Cuando ocurra una llegada tarde (ingreso luego de 15' de la hora de entrada), ser&aacute; indicada en la columna apropiada con un *.  Al final de la misma se indica el total.</li>" .
-    "\n</ul>";
-}
 
 require_once 'autoload.php';
 
@@ -136,51 +119,60 @@ if ($page->authenticateToken()
             if (is_a($ficha, 'SaperFicha')) {
 //                var_dump($ficha);
                 $ficha->procesarFicha($entrada);
+                $ficha->add_column_tardes();
                 $ficha->add_column_faltantes();
                 $ficha->add_column_compensadas();
                 $ficha->add_column_extras();
-                $ficha->add_column_tardes();
                 
                 $display = SAPER_DISPLAY_CALC;
             } else {
                 Session::store(SMP_SESSINDEX_NOTIF_ERR, 'No se ha podido recuperar la ficha del agente seleccionado: al menos un par&aacute;metro inv&aacute;lido o bien no hay resultados para la b&uacute;squeda');
                 Session::remove(SAPER_SESSINDEX_FICHA);
             }
-        } elseif (!empty(Sanitizar::glPOST('frm_btnImprimir'))) {
+        } elseif (!empty(Sanitizar::glPOST('frm_btnDescargar'))
+                    || !empty(Sanitizar::glPOST('frm_btnImprimir'))
+        ) {
             $ficha = Session::retrieve(SAPER_SESSINDEX_FICHA);
             if (is_a($ficha, 'SaperFicha')) {
                 $ficha->procesarFicha(Sanitizar::glPOST('frm_txtHoraIni'));
+                $ficha->add_column_tardes();
                 $ficha->add_column_faltantes();
                 $ficha->add_column_compensadas();
                 $ficha->add_column_extras();
-                $ficha->add_column_tardes();
                 // mpdf no interpreta bien el css
                 $html = Page::getHeader(SMP_FS_ROOT) .
                         Page::getHeaderClose() .
                         Page::getMain() .
                         $ficha->imprimir(2, 'ficha', FALSE) .
                         "\n<br />" .
-                        getCondiciones() .
+                        SaperFicha::getDescripcionFicha() .
                         Page::getMainClose();                
 //                echo $html;
 //                die();
 //                
                 require_once SMP_FS_ROOT . SMP_LOC_EXT . 'mpdf/mpdf.php';
-                ob_start(); // necesario pq la libreria mpdf es una cagada...
+                //ob_start(); // necesario pq la libreria mpdf es una cagada...
                 $mpdf = new mPDF('utf-8', 'A4', '','' , 0 , 0 , 0 , 0 , 0 , 0);
                 $mpdf->SetDisplayMode('fullpage');
                 $css = file_get_contents(SMP_FS_ROOT . SMP_LOC_CSS . 'pdf.css');
                 $mpdf->shrink_tables_to_fit = 1;
                 $mpdf->keep_table_proportions = TRUE;
 //                $mpdf->showImageErrors = true;
+                $mpdf->SetJS('this.print();');
                 $mpdf->WriteHTML($css, 1);
                 $mpdf->WriteHTML($html, 2);
-                $mpdf->Output('Fichaje SiMaPe.pdf', 'D');
-                unset($css, $html, $ficha);
-                ob_end_flush();
-                exit;
+                if (Sanitizar::glPOST('frm_btnDescargar')) {
+                    $pdf = $mpdf->Output(SMP_FS_ROOT . SMP_LOC_TMPS . Crypto::getRandomFilename('Fichaje') . '.pdf', 'S');
+                    //send_to_browser($pdf, TRUE);
+                    header('Content-Type: application/pdf');
+                    Page::_e('<script type="text/javascript">window.open("data:application/pdf;base64, "' . base64_encode($pdf) . ");</script>");
+                    unset($css, $html, $ficha);
+                    //ob_end_flush();
+                }
+                exit();
             } else {
-                die('No hay ficha para imprimir!');
+                Session::store(SMP_SESSINDEX_NOTIF_ERR, 'No se ha podido recuperar la ficha del agente seleccionado.  Por favor, repita la b&uacute;squeda.');
+                $display = SAPER_DISPLAY_SEARCH;
             }
         }
     }
@@ -214,7 +206,7 @@ Page::printDefaultNavbarVertical($usuario->getNombre());
 Page::printMain();
 
 Page::_e("<h2 style='text-align: center;'>Fichaje mensual de los agentes</h2>", 2);
-Page::_e(Page::getForm(Page::FORM_TYPE_OPEN, 
+Page::_e(Page::getForm(Page::FORM_OPEN, 
                         'frm_saper', 
                         'text-align: center; margin: 0 auto; width: 100%;', 
                         Page::FORM_METHOD_POST, 
@@ -308,7 +300,7 @@ switch($display) {
                                 'frm_btnReiniciar', 
                                 'Volver a buscar', 
                                 NULL, 
-                                'btn_blue'), 
+                                'btn_red'), 
                 7);
         Page::_e("</td>", 6);
         Page::_e("</tr>", 5);
@@ -349,10 +341,18 @@ switch($display) {
         Page::_e("</tr>", 5);
         
         Page::_e("<tr>", 5);
+        Page::_e("<td>", 6);
+        Page::_e(Page::getInput('submit', 
+                                    'frm_btnReiniciar', 
+                                    'Volver a buscar', 
+                                    NULL, 
+                                    'btn_red'), 
+                    7);
+        Page::_e("</td>", 6);
         Page::_e("<td colspan='2'>", 6);
         Page::_e(Page::getInput('submit', 
-                                    'frm_btnCalcular', 
-                                    'Calcular horas extras', 
+                                    'frm_btnDescargar', 
+                                    'Descargar ficha en PDF', 
                                     NULL, 
                                     'btn_blue'), 
                     7);
@@ -362,13 +362,13 @@ switch($display) {
                                     'frm_btnImprimir', 
                                     'Imprimir ficha', 
                                     NULL, 
-                                    'btn_blue'), 
+                                    'btn_green'), 
                     7);
         Page::_e("</td>", 6);
-        Page::_e("<td colspan='2'>", 6);
+        Page::_e("<td>", 6);
         Page::_e(Page::getInput('submit', 
-                                    'frm_btnReiniciar', 
-                                    'Volver a buscar', 
+                                    'frm_btnCalcular', 
+                                    'Calcular horas extras', 
                                     NULL, 
                                     'btn_blue'), 
                     7);
@@ -385,7 +385,7 @@ switch($display) {
         Page::_e("</table>", 3);
                 
         Page::_e("<br />", 3);
-        Page::_e(getCondiciones(), 3);
+        Page::_e(SaperFicha::getDescripcionFicha(), 3);
         break;
     
     case SAPER_DISPLAY_NORESULT:
@@ -440,7 +440,7 @@ switch($display) {
 }
 
 Page::_e(Page::getInput('hidden', 'formToken', $formToken->getToken()), 7);
-Page::_e(Page::getForm(Page::FORM_TYPE_CLOSE));
+Page::_e(Page::getForm(Page::FORM_CLOSE));
 
 Page::printMainClose();
 Page::printFooter();

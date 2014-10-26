@@ -33,7 +33,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.12
+ * @version 0.13
  */
 class Empleado 
 {
@@ -219,7 +219,7 @@ class Empleado
     protected static function retrieve_tblEmpleado($searchParam)
     {
         if (!empty($searchParam)) {
-            $db = new DB;
+            $db = new DB(SMP_DB_CHARSET);
             if (self::isValid_EmpleadoId($searchParam)) {
                 $db->setQuery('SELECT * FROM Empleado WHERE EmpleadoId = ?');
                 $db->setBindParam('i');

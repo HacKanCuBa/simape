@@ -217,3 +217,15 @@ function is_assoc($array)
                                                         'is_string'))) 
                             : FALSE);
 }
+
+/**
+ * Si se ha definido un email en SMP_ADMIN_EMAIL, creará un enlace mailto
+ * en la palabra 'administrador'.  Si no, simplemente devolverá esta palabla.
+ * 
+ * @return string Palabra 'administrador' con enlace mailto o no.
+ */
+function contactar_administrador() {
+    return SMP_ADMIN_EMAIL 
+            ?  "<a href='mailto:" . SMP_ADMIN_EMAIL . "'>administrador</a>" 
+            : "administrador";
+}

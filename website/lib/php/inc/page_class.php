@@ -107,8 +107,8 @@ class Page
     const FORM_METHOD_GET = 'get';
     const FORM_METHOD_POST = 'post';
     
-    const FORM_TYPE_OPEN = TRUE;
-    const FORM_TYPE_CLOSE = FALSE;
+    const FORM_OPEN = TRUE;
+    const FORM_CLOSE = FALSE;
     
     /**
      * Nombre de la hoja de estilos que será cargada 
@@ -333,7 +333,7 @@ class Page
     * Devuelve el head del documento HTML.
     * Debe continuarse con getBody, que cierra head y abre body.
     * 
-    * @see getBody()
+    * @see Page::getBody()
     * @param string $title Título de la página.
     * @param array|string $stylesheet Array de nombres de hojas de estilos que serán 
     * cargadas, con la forma: ['miCss1', 'miCss2', ...]. <br />
@@ -386,7 +386,7 @@ class Page
      * Imprime el head del documento HTML.
      * Debe continuarse con printBody, que cierra head y abre body.
      * 
-     * @see printBody()
+     * @see Page::printBody()
      * @param string $title Título de la página.
      * @param array|string $stylesheet Array de nombres de hojas de estilos que serán 
      * cargadas, con la forma: ['miCss1', 'miCss2', ...]. <br />
@@ -410,7 +410,7 @@ class Page
      * Devuelve el cierre de head y apertura de body.
      * Debe continuarse con getHeader, que carga el encabezado.
      * 
-     * @see getHeader()
+     * @see Page::getHeader()
      * @return string Código HTML de cierre del Head y apertura de Body.
      */
     public static function getBody() 
@@ -421,7 +421,7 @@ class Page
     /**
      * Imprime el cierre de head y apertura de body.
      * Debe continuarse con printHeader, que carga el encabezado.
-     * @see printHeader()
+     * @see Page::printHeader()
      */
     public static function printBody()
     {
@@ -434,7 +434,7 @@ class Page
      * 
      * @param string $imgroot Raíz del directorio donde está la imágen del 
      * encabezado (SMP_WEB_ROOT o SMP_FS_ROOT).
-     * @see getHeaderClose()
+     * @see Page::getHeaderClose()
      * @return string Código HTML del encabezado del sitio.
      */
     public static function getHeader($imgroot = SMP_WEB_ROOT)
@@ -451,7 +451,7 @@ class Page
     /**
      * Imprime el encabezado.
      * Debe continuarse con printHeaderClose().
-     * @see printHeaderClose()
+     * @see Page::printHeaderClose()
      * @param string $imgroot Raíz del directorio donde está la imágen del 
      * encabezado (SMP_WEB_ROOT o SMP_FS_ROOT).
      */
@@ -462,7 +462,7 @@ class Page
 
     /**
      * Cierra el encabezado.  Permite incluir código personalizado en el
-     * encabezado (entre getHeader() y getHeaderClose()).
+     * encabezado (entre Page::getHeader() y Page::getHeaderClose()).
      * 
      * @return string Código HTML de cierre del encabezado.
      */
@@ -485,8 +485,8 @@ class Page
      * Debe ir antes de getMain() y después de getHeaderClose().
      * 
      * @param string $name Nombre con el cual dirigirse a la persona/usuario.
-     * @see getMain()
-     * @see getHeaderClose()
+     * @see Page::getMain()
+     * @see Page::getHeaderClose()
      * @return string Código HTML de la barra de navegación vertical.
      */
     public static function getDefaultNavbarVertical($name = NULL) 
@@ -758,9 +758,9 @@ class Page
      * <li> Token de página que será autenticado, mediante setPageToken().</li>
      * </ul> 
      * 
-     * @see setRandomToken()
-     * @see setTimestamp()
-     * @see setPageToken()
+     * @see Token::setRandomToken()
+     * @see Token::setTimestamp()
+     * @see Token::setPageToken()
      * @return bool TRUE si el Token de página auténtico, FALSE si no.
      */
     public function authenticateToken() 
@@ -813,7 +813,7 @@ class Page
      * FALSE por defecto.
      * @return boolean TRUE si se enviaron correctamente los headers, 
      * FALSE si no.
-     * @see setLocation
+     * @see Page::setLocation()
      */
     public function go($params = NULL, $intLink = NULL, $overrideSSL = FALSE)
     {
@@ -961,10 +961,10 @@ class Page
      * Devuelve el código HTML para un formulario, con las características 
      * deseadas.  No debe emplearse entrada directa del usuario con este
      * método sin sanitizar apropiadamente, en especial el parámetro $url.
-     * Debe cerrarse con getForm(FORM_TYPE_CLOSE).
+     * Debe cerrarse con getForm(FORM_CLOSE).
      * 
      * @param boolean $type [opcional]<br />
-     * Apertura (FORM_TYPE_OPEN) o cierre (FORM_TYPE_CLOSE) del formulario.
+     * Apertura (FORM_OPEN) o cierre (FORM_CLOSE) del formulario.
      * @param string $name [opcional]<br />
      * Nombre del formulario.
      * @param string $style [opcional]<br />
@@ -987,7 +987,7 @@ class Page
      * directiva HTML.
      * @return string Codigo HTML del formulario, de apertura o cierre.
      */    
-    public static function getForm($type = self::FORM_TYPE_OPEN,
+    public static function getForm($type = self::FORM_OPEN,
                                     $name = NULL, 
                                     $style = NULL,
                                     $method = self::FORM_METHOD_POST,
@@ -996,7 +996,7 @@ class Page
                                     $url = NULL,
                                     $other = NULL
     ) {
-        if ($type == self::FORM_TYPE_OPEN) {
+        if ($type == self::FORM_OPEN) {
             $html = '<form ';
             $html .= $name ? 'name="' . $name . '" ' : '';
             $html .= $style ? 'style="' . $style . '" ' : '';

@@ -21,7 +21,7 @@
  * 
  *****************************************************************************/
 
-/**
+/*
  * Archivo de configuración para SiMaPe.
  * Todas las opciones pueden modificarse acorde a la necesidad; prestar
  * especial atención a la categorizada como "Config interna".
@@ -39,6 +39,12 @@
 
 // << Config
 // 
+// -- Misc
+/**
+ * Email del administrador de sistema, o del grupo de administradores.
+ */
+const SMP_ADMIN_EMAIL = '';
+// --
 // -- Base de datos
 const SMP_DB_HOST = 'localhost';
 const SMP_DB_NAME = 'SiMaPe';

@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.14
+ * @version 1.15
  */
 trait Passwordt
 {   
@@ -219,11 +219,11 @@ trait Passwordt
      * Debe fijarse primero el identificador de tabla Token y los valores 
      * respectivos.
      * 
-     * @see setTokenId
-     * @see setRandomToken
-     * @see generateToken
-     * @see setTimestamp
-     * @see generateTimestamp
+     * @see Token::setTokenId()
+     * @see Token::setRandomToken()
+     * @see Passwordt::generateToken()
+     * @see Token::setTimestamp()
+     * @see Token::generateTimestamp()
      * @return boolean TRUE si se almacenó en la DB exitosamente, 
      * FALSE en caso contrario.
      */
@@ -255,7 +255,7 @@ trait Passwordt
      * Devuelve la contraseña encriptada.  Debe haberse llamado primero a 
      * encryptPassword() o en su defecto setPasswordEncrypted().
      * 
-     * @see encryptPassword()
+     * @see Passwordt::encryptPassword()
      * @return string|FALSE La contraseña encriptada.
      */
     public function getPasswordEncrypted()
@@ -326,13 +326,13 @@ trait Passwordt
      * en el objeto.  Usar los respectivos get... para obtener los valores.
      * 
      * @return boolean TRUE si tuvo exito, FALSE si no.
-     * @see setTokenId
+     * @see Token::setTokenId()
      * @access public
      */
     public function retrieve_fromDB_PwdRestore() 
     {
         if (!empty($this->TokenId)) {
-            $db = new DB;
+            $db = new DB(SMP_DB_CHARSET);
             $db->setQuery('SELECT PasswordRestore_RandomToken, '
                             . 'PasswordRestore_Timestamp '
                             . 'FROM Token WHERE TokenId = ?');
@@ -372,7 +372,7 @@ trait Passwordt
      * Encripta la contraseña almacenada en texto plano.  Para obtener el 
      * resultado: getPasswordEncrypted().
      * NOTA: ¡puede demorar varios segundos!
-     * @see getPasswordEncrypted()
+     * @see Passwordt::getPasswordEncrypted()
      * @return boolean TRUE si se encriptó correctamente, FALSE si no.
      */
     public function encryptPassword() 
@@ -393,8 +393,8 @@ trait Passwordt
      * NOTA: A fin de evitar en cierta medida un ataque de timing oracle,
      * esta función implementa un restraso cuando passwordEC es nulo.
      * 
-     * @see setPasswordPlaintext()
-     * @see setPasswordEncrypted()
+     * @see Passwordt::setPasswordPlaintext()
+     * @see Passwordt::setPasswordEncrypted()
      * @return boolean TRUE si la contraseña es válida (idéntica a la 
      * encriptada), FALSE en caso contrario.
      */
@@ -455,7 +455,7 @@ trait Passwordt
      * Determina si la contraseña ya ha expirado o no.<br />
      * Debe fijarse el valor de Password Timestamp.
      * 
-     * @see setModificationTimestamp()
+     * @see Passwordt::setModificationTimestamp()
      * @return boolean|null TRUE si la contraseña expiró, FALSE si no.<br />
      * Si no se puede determinar, devuelve NULL.
      */

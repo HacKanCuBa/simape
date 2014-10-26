@@ -21,7 +21,17 @@
  * 
  *****************************************************************************/
 /* 
-    Created on : 24-oct-2014, 10:53:19
+    Created on : 25/10/2014, 22:21:41
     Author     : Ivan Ariel Barrera Oro
     Version    : 0.1
 */
+
+.transparent {
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+}
+
+.transparent:hover {
+    opacity: 0.9;
+    filter: alpha(opacity=90); /* For IE8 and earlier */
+}

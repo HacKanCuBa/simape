@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.36
+ * @version 1.37
  */
 
 /*
@@ -239,7 +239,7 @@ Session::store(SMP_SESSINDEX_FORM_TIMESTAMP, $formToken->getTimestamp());
 // -- --
 //
 // Mostrar página
-Page::printHead('SiMaPe | Iniciar Sesi&oacute;n', ['main', 'input', 'msg', 'img']);
+Page::printHead('SiMaPe | Iniciar Sesi&oacute;n', ['main', 'input', 'msg', 'effects']);
 Page::printBody();
 Page::printHeader();
 Page::printHeaderClose();
@@ -247,7 +247,7 @@ Page::printMain();
 //var_dump($end - $start);
 Page::_e("<h2 style='text-align: center;'>"
             . "Sistema Integrado de Manejo de Personal</h2>", 2);
-Page::_e(Page::getForm(Page::FORM_TYPE_OPEN, 
+Page::_e(Page::getForm(Page::FORM_OPEN, 
                         'loginform',
                         'text-align:center;margin:0 auto;width:100%;'), 
         2);
@@ -582,11 +582,23 @@ switch ($display) {
         Page::_e("</table>", 3);
         break;
 }
-Page::_e("<hr />");
-Page::_e("<p>Siempre <strong>verificar</strong> que aparezca el <strong>candado</strong> arriba a la derecha y que al darle click aparezca la leyenda <strong>Verificado por: SiMaPe</strong> y además que la dirección sea la indicada en la imagen:</p>", 3);
-Page::_e("<img class='img_transparent' src='" . SMP_WEB_ROOT . SMP_LOC_IMGS . "ssl-pic.png' alt='Direccion del servidor: 5.224.0.250'/>", 3);
+
+Page::_e("<div style='position: fixed; bottom: 0px; left: 0px; width: 100%;'>", 3);
+Page::_e("<div class='transparent' style='text-align: center;'>", 4);
+Page::_e("<p>Siempre <strong>verificar</strong> que aparezca el "
+        . "<strong>candado</strong> arriba a la derecha, que al darle click "
+        . "la leyenda sea similar a <strong>Verificado por: SiMaPe</strong> "
+        . "y además que la dirección sea " . server_ip() . " como se aprecia "
+        . "en la imagen:</p>", 5);
+Page::_e("<img src='" . SMP_WEB_ROOT . SMP_LOC_IMGS 
+        . "ssl-pic.png' alt='Direccion del servidor: 5.224.0.250'/>", 5);
+Page::_e("<p>De no ser as&iacute;, informar de lo sucedido inmediatamente a un "
+        . contactar_administrador() 
+        . " y <em>NO escribir usuario y contrase&ntilde;a</em>.</p>", 5);
+Page::_e("</div>", 4);
+Page::_e("</div>", 3);
 Page::_e(Page::getInput('hidden', 'formToken', $formToken->getToken()), 3);
-Page::_e(Page::getForm(Page::FORM_TYPE_CLOSE), 2);
+Page::_e(Page::getForm(Page::FORM_CLOSE), 2);
 
 Page::printMainClose();
 Page::printFooter();

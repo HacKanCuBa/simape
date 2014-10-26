@@ -125,7 +125,7 @@ class Saper extends Curl
     /**
      * Array de agentes encontrados por buscarAgentes.
      * @return array Agentes.
-     * @see buscarAgentes
+     * @see Saper::buscarAgentes()
      */
     public function getAgentes()
     {
@@ -168,7 +168,7 @@ class Saper extends Curl
      * Estado del agente buscado: ESTADO_ACTIVO para Activo (por defecto), 
      * ESTADO_BAJA para Baja.
      * @return boolean TRUE si tuvo éxito, FALSE si no.
-     * @see getAgentes
+     * @see Saper::getAgentes()
      */
     public function buscarAgentes($tipobusqueda, 
                                     $valor, 
@@ -299,8 +299,8 @@ class Saper extends Curl
     /**
      * Recupera la ficha el agente seleccionado y la almacena en el objeto.
      * 
-     * @see getFicha
-     * @see printFicha
+     * @see Saper::getFicha()
+     * @see Saper::printFicha()
      * @param int $doc Tipo y nro. de documento.
      * @param int $year Nro. del año.
      * @param int $month Nro. del mes.

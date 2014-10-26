@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.81
+ * @version 0.82
  */
 trait SessionToken 
 {
@@ -126,12 +126,12 @@ trait SessionToken
      * valores.
      * 
      * @return boolean TRUE si tuvo exito, FALSE si no.
-     * @see setTokenId
+     * @see Token::setTokenId()
      */
     public function retrieve_fromDB_SessionToken()
     {
         if (!empty($this->TokenId)) {
-            $db = new DB;
+            $db = new DB(SMP_DB_CHARSET);
             $db->setQuery('SELECT Session_RandomToken, Session_Timestamp '
                         . 'FROM Token WHERE TokenId = ?');
             $db->setBindParam('i');
@@ -154,11 +154,11 @@ trait SessionToken
      * Debe fijarse primero el identificador de tabla Token y los valores 
      * respectivos.
      * 
-     * @see setTokenId
-     * @see setRandomToken
-     * @see generateToken
-     * @see setTimestamp
-     * @see generateTimestamp
+     * @see Token::setTokenId()
+     * @see Token::setRandomToken()
+     * @see SessionToken::generateToken()
+     * @see Token::setTimestamp()
+     * @see Token::generateTimestamp()
      * @return boolean TRUE si se almacenó en la DB exitosamente, 
      * FALSE en caso contrario.
      */

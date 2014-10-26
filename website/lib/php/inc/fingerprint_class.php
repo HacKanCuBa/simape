@@ -41,7 +41,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.67
+ * @version 0.69
  */
 class Fingerprint
 {
@@ -120,8 +120,8 @@ class Fingerprint
      * <i>MODE_USEIP</i>.<br />
      * Para obtenerlo, usar getToken.
      * 
-     * @see mode
-     * @see getToken
+     * @see Fingerprint::mode()
+     * @see Token::getToken()
      * @return boolean TRUE si tuvo éxito, FALSE si no.
      */ 
     public function generateToken()
@@ -139,13 +139,13 @@ class Fingerprint
      * Recupera el Fingerprint Token almacenado en la DB y lo guarda en el 
      * objeto.  Usar getToken para obtener el valor.
      * 
-     * @see getToken
+     * @see Token::getToken()
      * @return boolean TRUE si tuvo exito, FALSE si no.
      */
     public function retrieve_fromDB() 
     {
         if (!empty($this->TokenId)) {
-            $db = new DB;
+            $db = new DB(SMP_DB_CHARSET);
             $db->setQuery('SELECT Fingerprint_Token FROM Token '
                         . 'WHERE TokenId = ?');
             $db->setBindParam('i');
@@ -163,9 +163,9 @@ class Fingerprint
      * Debe fijarse primero el identificador de tabla Token y el valor del 
      * Token (mediante setToken o generateToken).
      * 
-     * @see setTokenId
-     * @see setToken
-     * @see generateToken
+     * @see Token::setTokenId()
+     * @see Token::setToken()
+     * @see Fingerprint::generateToken()
      * @return boolean TRUE si se almacenó en la DB exitosamente, 
      * FALSE en caso contrario.
      */
@@ -192,7 +192,7 @@ class Fingerprint
      * Autentica el Token de Figerprint almacenado en el objeto contra uno 
      * generado nuevo.
      * 
-     * @see setToken
+     * @see Token::setToken()
      * @return boolean TRUE si el Token de Fingerprint es auténtico, 
      * FALSE si no.<br />
      */

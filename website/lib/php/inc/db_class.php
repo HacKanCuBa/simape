@@ -26,7 +26,7 @@
  * 
  * Ejemplo de uso:
  * <pre><code>
- * $db = new DB(); // modo RO
+ * $db = new DB(SMP_DB_CHARSET); // modo RO
  * $db->setQuery('SELECT * FROM mitabla WHERE micolumna = ?');
  * $db->setBindParam('s');
  * $db->setQueryParams('valor');
@@ -47,7 +47,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.41
+ * @version 1.43
  */
 class DB extends mysqli
 {     
@@ -372,8 +372,8 @@ class DB extends mysqli
      * Para obtener los datos de un SELECT, llamar a getQueryData().
      * Para obtener la cantidad de filas afectadas, llamar a getAffectedRows().
      * 
-     * @see getQueryData()
-     * @see getAffectedRows().
+     * @see DB::getQueryData()
+     * @see DB::getAffectedRows().
      * @return mixed TRUE si tuvo éxito, FALSE si se produjo un error antes
      * de la ejecución de la query.  Si el error se produjo durante, devuelve
      * el nro. de error.
