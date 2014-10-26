@@ -588,7 +588,7 @@ Page::_e("<div class='transparent' style='text-align: center;'>", 4);
 Page::_e("<p>Siempre <strong>verificar</strong> que aparezca el "
         . "<strong>candado</strong> arriba a la derecha, que al darle click "
         . "la leyenda sea similar a <strong>Verificado por: SiMaPe</strong> "
-        . "y además que la dirección sea " . server_ip() . " como se aprecia "
+        . "y además que la dirección sea " . IP::getServerIP() . " como se aprecia "
         . "en la imagen:</p>", 5);
 Page::_e("<img src='" . SMP_WEB_ROOT . SMP_LOC_IMGS 
         . "ssl-pic.png' alt='Direccion del servidor: 5.224.0.250'/>", 5);

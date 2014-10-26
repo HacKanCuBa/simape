@@ -319,9 +319,9 @@ class Page
         if (empty($loc) || self::pageExists($loc)) {
             header("Location: " . 
                     (($overrideSSL && (SMP_SSL || is_connection_ssl())) ? 
-                        'http://' . server_ip() : 
+                        'http://' . IP::getServerIP() : 
                         ((SMP_SSL || is_connection_ssl()) ? 
-                            'https://' . server_ip() : 
+                            'https://' . IP::getServerIP() : 
                             '')) .
                     self::urlMake($loc, $params, $intLink));
             return TRUE;

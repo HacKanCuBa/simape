@@ -59,53 +59,6 @@ function delete_row_from_matrix(&$matrix, $row)
 }
 
 /**
- * Devuelve la IP del servidor.
- * @return string IP del servidor.
- */
-function server_ip()
-{
-    return SMP_SERVER_ADDR ?: 
-                    (stristr(Sanitizar::glSERVER('SERVER_SOFTWARE'), 'win') ? 
-                                        Sanitizar::glSERVER('LOCAL_ADDR') : 
-                                        Sanitizar::glSERVER('SERVER_ADDR'));
-}
-
-/**
- * Devuelve la IP del cliente, tratando de resolver aún en caso de proxy.
- * No es 100% fiable, es más efectivo un script en java o similar.
- * @return string IP del cliente o string vacío.
- */
-function client_ip()
-{
-    // https://stackoverflow.com/questions/15699101/get-the-client-ip-address-using-php
-    $possible_ip = [    
-                        Sanitizar::value(getenv('HTTP_CLIENT_IP')),
-                        Sanitizar::value(getenv('HTTP_X_FORWARDED_FOR')),
-                        Sanitizar::value(getenv('HTTP_X_FORWARDED')),
-                        Sanitizar::value(getenv('HTTP_FORWARDED_FOR')),
-                        Sanitizar::value(getenv('HTTP_CLIENT_IP')),
-                        Sanitizar::value(getenv('HTTP_FORWARDED')),
-                        Sanitizar::glSERVER('HTTP_CLIENT_IP'),
-                        Sanitizar::glSERVER('HTTP_X_FORWARDED_FOR'),
-                        Sanitizar::glSERVER('HTTP_X_FORWARDED'),
-                        Sanitizar::glSERVER('HTTP_FORWARDED_FOR'),
-                        Sanitizar::glSERVER('HTTP_FORWARDED'),
-                        Sanitizar::glSERVER('REMOTE_ADDR'),
-                        Sanitizar::value(getenv('REMOTE_ADDR')),
-                    ];
-    $client_ip = '';
-    
-    foreach ($possible_ip as $ip) {
-        $client_ip = filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
-        if ($client_ip) {
-            break;
-        }
-    }
-    
-    return $client_ip ?: '';
-}
-
-/**
  * Devuelve un array a partir una lista separada por el separador indicado.  
  * Asimismo, si la lista tiene valores del tipo "llave=valor", el array será 
  * asociativo donde el índice será <i>llave</i>.  Si solo contiene valores, 

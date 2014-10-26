@@ -835,7 +835,7 @@ class Usuario extends Empleado
                     && $this->store_inDB_PwdRestore()
             ) {
                 $passrestore_url = (SMP_SSL ? 'https://' : 'http://')
-                                    . server_ip()
+                                    . IP::getServerIP()
                                     . '/login.php' 
                                     . '?' . SMP_NAV_ACTION . '=' . SMP_RESTOREPWD 
                                     . '&' . SMP_SESSINDEX_USERNAME . '=' . $this->UsuarioNombre 
