@@ -10,9 +10,13 @@ Los campos del listado hacen referencia a:
  * Llave PGP ID y fingerprint (P)
  * Descripción (D)
 
-(Sí, como la que escribió Linus)
+(Sí, como [https://www.kernel.org/pub/linux/kernel/CREDITS la que escribió Linus])
  
 
 = Contribuidores =
 
-_Aún no hay contribuidores_
+N: Pedro Tamborindeguy
+E: [http://www.google.com/recaptcha/mailhide/d?k=01oRWyiNznfHa7AOsjdJsjDA==&c=NL8JrVqMTzFpJctNRHc9v5SyNHP1-JLCcANnd3jCIHI= ped*****@***.com]
+P: -
+D: Contribuidor de código,
+D: Desarrollo, debugging, testing, documenting.
