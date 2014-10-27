@@ -94,15 +94,17 @@ Page::force_connect(Page::FORCE_CONNECT_SSL);
 // Iniciar o continuar sesion
 $session = new Session;
 $formToken = new FormToken;
+$db = new DB(SMP_DB_CHARSET);
+$fingp = new Fingerprint();
 
 // Recuperar el nombre de usuario
 $session->useSystemPassword();
 $username = trim(Sanitizar::glPOST('frm_txtLogin')) ?: 
                 $session->retrieveEnc(SMP_SESSINDEX_USERNAME);
 
-// TODO hay un error en esta funcion! si el nombre de usuario es valido, se cuelga todo y no se ve ningun error :S
-// error en metodo rtreive_fromDB
-$usuario = new Usuario($username);
+$usuario = new Usuario($db, $username);
+$usuario->setFingerprint($fingp);
+$usuario->setSession($session);
 
 if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
     //$start = time();
@@ -591,7 +593,8 @@ Page::_e("<p>Siempre <strong>verificar</strong> que aparezca el "
         . "y además que la dirección sea " . IP::getServerIP() . " como se aprecia "
         . "en la imagen:</p>", 5);
 Page::_e("<img src='" . SMP_WEB_ROOT . SMP_LOC_IMGS 
-        . "ssl-pic.png' alt='Direccion del servidor: 5.224.0.250'/>", 5);
+        . "ssl-pic.png' alt='Direccion del servidor: 5.224.0.250' "
+        . "width='314'/>", 5);
 Page::_e("<p>De no ser as&iacute;, informar de lo sucedido inmediatamente a un "
         . contactar_administrador() 
         . " y <em>NO escribir usuario y contrase&ntilde;a</em>.</p>", 5);

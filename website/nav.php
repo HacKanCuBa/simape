@@ -31,7 +31,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.46
+ * @version 1.47
  */
 
 require_once 'load.php';
@@ -47,7 +47,12 @@ $intLink = NULL;
 
 $page = new Page;
 $session->useSystemPassword();
-$usuario = new Usuario($session->retrieveEnc(SMP_SESSINDEX_USERNAME));
+$db = new DB(SMP_DB_CHARSET);
+$fingp = new Fingerprint();
+
+$usuario = new Usuario($db, $session->retrieveEnc(SMP_SESSINDEX_USERNAME));
+$usuario->setFingerprint($fingp);
+$usuario->setSession($session);
 
 switch($action) {
     case SMP_LOGOUT:

@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.66
+ * @version 0.67
  */
 
 trait Token
@@ -61,6 +61,12 @@ trait Token
      * @var array
      */
     protected $tblToken;
+    
+    /**
+     *
+     * @var DB objeto de base de datos
+     */
+    protected $db;
 
 
     // __ PRIV
@@ -279,6 +285,16 @@ trait Token
     }
     
     /**
+     * Almacena el objeto de base de datos.
+     * @param DB $db objeto de base de datos.
+     */
+    public function setDB(DB $db) 
+    {
+        //DI
+        $this->db = $db;
+    }
+
+        /**
      * Fija el valor del identificador de tabla Token de la DB.
      * 
      * @param int $TokenId Identificador de la tabla Token.
@@ -329,8 +345,7 @@ trait Token
      */
     public function retrieve_fromDB_TokenId($username)
     {
-        $db = new DB(SMP_DB_CHARSET);
-        return $this->setTokenId($db->retrieve_tableId('Usuario', 
+        return $this->setTokenId($this->db->retrieve_tableId('Usuario', 
                                                         'Nombre', 
                                                         's', 
                                                         $username));
@@ -346,8 +361,7 @@ trait Token
     public function retrieve_tblToken()
     {
         if(!empty($this->TokenId)) {
-            $db = new DB(SMP_DB_CHARSET);
-            $tblToken = $db->retrieve_table('Token', $this->TokenId);
+            $tblToken = $this->db->retrieve_table('Token', $this->TokenId);
             if (is_array($tblToken)) {
                 $this->tblToken = $tblToken;
                 return TRUE;
@@ -363,7 +377,6 @@ trait Token
      */
     public function table_new_Token()
     {
-        $db = new DB(SMP_DB_CHARSET, TRUE);
-        return $this->setTokenId($db->insert('Token'));
+        return $this->setTokenId($this->db->insert('Token'));
     }
 }

@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.66
+ * @version 1.67
  */
 class Password
 {
@@ -73,14 +73,15 @@ class Password
             && !empty($username) 
             && is_string($username)
         ) {
-            $db = new DB(SMP_DB_CHARSET, TRUE);
-            $db->setQuery('UPDATE Usuario SET PasswordSalted = ? '
+            $this->db->cambiarModo(TRUE);
+            $this->db->setQuery('UPDATE Usuario SET PasswordSalted = ? '
                         . 'WHERE Nombre = ?');
-            $db->setBindParam('ss');
-            $db->setQueryParams([$this->passwordEC, $username]);
+            $this->db->setBindParam('ss');
+            $this->db->setQueryParams([$this->passwordEC, $username]);
             //// atenti porque la func devuelve tb nro de error
             // ToDo: procesar nro de error
-            $retval = $db->queryExecute();
+            $retval = $this->db->queryExecute();
+            $this->db->cambiarModo(FALSE);
             if (is_bool($retval)) {
                 return $retval;
             }
@@ -100,12 +101,11 @@ class Password
     public function retrieve_fromDB($username)
     {
         if (!empty($username) && is_string($username)) {
-            $db = new DB(SMP_DB_CHARSET);
-            $db->setQuery('SELECT PasswordSalted FROM Usuario WHERE Nombre = ?');
-            $db->setBindParam('s');
-            $db->setQueryParams($username);
-            $db->queryExecute();
-            return $this->setPasswordEncrypted($db->getQueryData());
+            $this->db->setQuery('SELECT PasswordSalted FROM Usuario WHERE Nombre = ?');
+            $this->db->setBindParam('s');
+            $this->db->setQueryParams($username);
+            $this->db->queryExecute();
+            return $this->setPasswordEncrypted($this->db->getQueryData());
         }
         
         return FALSE;

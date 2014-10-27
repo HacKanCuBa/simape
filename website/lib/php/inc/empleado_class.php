@@ -33,7 +33,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.13
+ * @version 0.14
  */
 class Empleado 
 {
@@ -216,27 +216,25 @@ class Empleado
      * @return mixed Todos los valores en un array o FALSE si se produjo
      * un error.
      */
-    protected static function retrieve_tblEmpleado($searchParam)
+    protected function retrieve_tblEmpleado($searchParam)
     {
         if (!empty($searchParam)) {
-            $db = new DB(SMP_DB_CHARSET);
             if (self::isValid_EmpleadoId($searchParam)) {
-                $db->setQuery('SELECT * FROM Empleado WHERE EmpleadoId = ?');
-                $db->setBindParam('i');
+                $this->db->setQuery('SELECT * FROM Empleado WHERE EmpleadoId = ?');
+                $this->db->setBindParam('i');
             } elseif (self::isValid_Legajo($searchParam)) {
-                $db->setQuery('SELECT * FROM Empleado WHERE Legajo = ?');
-                $db->setBindParam('i');
+                $this->db->setQuery('SELECT * FROM Empleado WHERE Legajo = ?');
+                $this->db->setBindParam('i');
             } elseif (self::isValid_Email($searchParam)) {
-                $db->setQuery('SELECT * FROM Empleado WHERE Email = ?');
-                $db->setBindParam('s');
+                $this->db->setQuery('SELECT * FROM Empleado WHERE Email = ?');
+                $this->db->setBindParam('s');
             } else {
                 return FALSE;
             }
 
-            $db->setQueryParams($searchParam);
-            $db->queryExecute();
-            $result = $db->getQueryData();
-            unset($db);
+            $this->db->setQueryParams($searchParam);
+            $this->db->queryExecute();
+            $result = $this->db->getQueryData();
             return $result;
         }
         

@@ -41,7 +41,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.69
+ * @version 0.70
  */
 class Fingerprint
 {
@@ -145,14 +145,13 @@ class Fingerprint
     public function retrieve_fromDB() 
     {
         if (!empty($this->TokenId)) {
-            $db = new DB(SMP_DB_CHARSET);
-            $db->setQuery('SELECT Fingerprint_Token FROM Token '
+            $this->db->setQuery('SELECT Fingerprint_Token FROM Token '
                         . 'WHERE TokenId = ?');
-            $db->setBindParam('i');
-            $db->setQueryParams($this->TokenId);
-            $db->queryExecute();
+            $this->db->setBindParam('i');
+            $this->db->setQueryParams($this->TokenId);
+            $this->db->queryExecute();
             
-            return $this->setToken($db->getQueryData());
+            return $this->setToken($this->db->getQueryData());
         }
         
         return FALSE;
@@ -171,15 +170,19 @@ class Fingerprint
      */
     public function store_inDB() 
     {
-        if (!empty($this->TokenId) && !empty($this->token)) {
-            $db = new DB(SMP_DB_CHARSET, TRUE);
-            $db->setQuery('UPDATE Token SET Fingerprint_Token = ? '
+        if (!empty($this->TokenId) 
+                && !empty($this->token) 
+                && isset($this->db)
+        ) {
+            $this->db->cambiarModo(TRUE);
+            $this->db->setQuery('UPDATE Token SET Fingerprint_Token = ? '
                         . 'WHERE TokenId = ?');
-            $db->setBindParam('si');
-            $db->setQueryParams([$this->token, $this->TokenId]);
+            $this->db->setBindParam('si');
+            $this->db->setQueryParams([$this->token, $this->TokenId]);
             //// atenti porque la func devuelve tb nro de error
             // ToDo: procesar nro de error
-            $retval = $db->queryExecute();
+            $retval = $this->db->queryExecute();
+            $this->db->cambiarModo(FALSE);
             if (is_bool($retval)) {
                 return $retval;
             }

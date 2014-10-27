@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.82
+ * @version 0.83
  */
 trait SessionToken 
 {
@@ -131,13 +131,12 @@ trait SessionToken
     public function retrieve_fromDB_SessionToken()
     {
         if (!empty($this->TokenId)) {
-            $db = new DB(SMP_DB_CHARSET);
-            $db->setQuery('SELECT Session_RandomToken, Session_Timestamp '
+            $this->db->setQuery('SELECT Session_RandomToken, Session_Timestamp '
                         . 'FROM Token WHERE TokenId = ?');
-            $db->setBindParam('i');
-            $db->setQueryParams($this->TokenId);
-            if ($db->queryExecute()) {
-                $tokens = $db->getQueryData();
+            $this->db->setBindParam('i');
+            $this->db->setQueryParams($this->TokenId);
+            if ($this->db->queryExecute()) {
+                $tokens = $this->db->getQueryData();
                 $this->setRandomToken($tokens['Session_RandomToken']);
                 $this->setTimestamp($tokens['Session_Timestamp']);
                 
@@ -168,15 +167,16 @@ trait SessionToken
             && isset($this->randToken)
             && isset($this->timestamp)
         ) {
-            $db = new DB(SMP_DB_CHARSET, TRUE);
-            $db->setQuery('UPDATE Token '
+            $this->db->cambiarModo(TRUE);
+            $this->db->setQuery('UPDATE Token '
                         . 'SET Session_RandomToken = ?, Session_Timestamp = ? '
                         . 'WHERE TokenId = ?');
-            $db->setBindParam('sii');
-            $db->setQueryParams([$this->randToken, $this->timestamp, $this->TokenId]);
+            $this->db->setBindParam('sii');
+            $this->db->setQueryParams([$this->randToken, $this->timestamp, $this->TokenId]);
             //// atenti porque la func devuelve tb nro de error
             // ToDo: procesar nro de error
-            $retval = $db->queryExecute();
+            $retval = $this->db->queryExecute();
+            $this->db->cambiarModo(FALSE);
             if (is_bool($retval)) {
                 return $retval;
             }
