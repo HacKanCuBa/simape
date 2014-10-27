@@ -15,12 +15,8 @@ Los campos del listado hacen referencia a:
 
 = Contribuidores =
 
-N: Pedro Tamborindeguy
-
-E: [http://www.google.com/recaptcha/mailhide/d?k=01oRWyiNznfHa7AOsjdJsjDA==&c=NL8JrVqMTzFpJctNRHc9v5SyNHP1-JLCcANnd3jCIHI= p****@****.com]
-
-P: -
-
-D: Contribuidor de código,
-
-D: Developing, debugging, testing, documenting.
+ * N: Pedro Tamborindeguy
+ * E: [http://www.google.com/recaptcha/mailhide/d?k=01oRWyiNznfHa7AOsjdJsjDA==&c=NL8JrVqMTzFpJctNRHc9v5SyNHP1-JLCcANnd3jCIHI= p****@****.com]
+ * P: -
+ * D: Contribuidor de código,
+ * D: Developing, debugging, testing, documenting.
