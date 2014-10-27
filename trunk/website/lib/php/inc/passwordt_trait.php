@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.15
+ * @version 1.17
  */
 trait Passwordt
 {   
@@ -212,7 +212,7 @@ trait Passwordt
         
         return FALSE;
     }
-
+    
     /**
      * Almacena en la DB el Random Token y el Timestamp guardados en el objeto.
      * <br />
@@ -233,16 +233,17 @@ trait Passwordt
             && isset($this->randToken)
             && isset($this->timestamp)
         ) {
-            $db = new DB(SMP_DB_CHARSET, TRUE);
-            $db->setQuery('UPDATE Token '
+            $this->db->cambiarModo(TRUE);
+            $this->db->setQuery('UPDATE Token '
                         . 'SET PasswordRestore_RandomToken = ?, '
                         . 'PasswordRestore_Timestamp = ? '
                         . 'WHERE TokenId = ?');
-            $db->setBindParam('sii');
-            $db->setQueryParams([$this->randToken, $this->timestamp, $this->TokenId]);
+            $this->db->setBindParam('sii');
+            $this->db->setQueryParams([$this->randToken, $this->timestamp, $this->TokenId]);
             //// atenti porque la func devuelve tb nro de error
             // ToDo: procesar nro de error
-            $retval = $db->queryExecute();
+            $retval = $this->db->queryExecute();
+            $this->db->cambiarModo(FALSE);
             if (is_bool($retval)) {
                 return $retval;
             }
@@ -332,14 +333,13 @@ trait Passwordt
     public function retrieve_fromDB_PwdRestore() 
     {
         if (!empty($this->TokenId)) {
-            $db = new DB(SMP_DB_CHARSET);
-            $db->setQuery('SELECT PasswordRestore_RandomToken, '
+            $this->db->setQuery('SELECT PasswordRestore_RandomToken, '
                             . 'PasswordRestore_Timestamp '
                             . 'FROM Token WHERE TokenId = ?');
-            $db->setBindParam('i');
-            $db->setQueryParams($this->TokenId);
-            if ($db->queryExecute()) {
-                $tokens = $db->getQueryData();
+            $this->db->setBindParam('i');
+            $this->db->setQueryParams($this->TokenId);
+            if ($this->db->queryExecute()) {
+                $tokens = $this->db->getQueryData();
                 if ($this->setRandomToken($tokens['PasswordRestore_RandomToken'])
                     && $this->setTimestamp($tokens['PasswordRestore_Timestamp'])
                 ) {

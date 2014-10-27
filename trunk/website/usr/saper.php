@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.84
+ * @version 0.85
  */
 
 require_once 'autoload.php';
@@ -55,7 +55,12 @@ $display = SAPER_DISPLAY_SEARCH;
 /*--*/
 
 $session->useSystemPassword();
-$usuario = new Usuario($session->retrieveEnc(SMP_SESSINDEX_USERNAME));
+$db = new DB(SMP_DB_CHARSET);
+$fingp = new Fingerprint();
+
+$usuario = new Usuario($db, $session->retrieveEnc(SMP_SESSINDEX_USERNAME));
+$usuario->setFingerprint($fingp);
+$usuario->setSession($session);
 
 $page = new Page(SMP_LOC_USR . 'saper.php', 
                  Session::retrieve(SMP_SESSINDEX_PAGE_RANDOMTOKEN), 
@@ -158,17 +163,22 @@ if ($page->authenticateToken()
                 $mpdf->shrink_tables_to_fit = 1;
                 $mpdf->keep_table_proportions = TRUE;
 //                $mpdf->showImageErrors = true;
-                $mpdf->SetJS('this.print();');
+                $mpdf->SetJS('this.print();');  
                 $mpdf->WriteHTML($css, 1);
                 $mpdf->WriteHTML($html, 2);
                 if (Sanitizar::glPOST('frm_btnDescargar')) {
-                    $pdf = $mpdf->Output(SMP_FS_ROOT . SMP_LOC_TMPS . Crypto::getRandomFilename('Fichaje') . '.pdf', 'S');
+                    $mpdf->Output('SiMaPe Ficha', 'D');
+                } /*elseif (Sanitizar::glPOST('frm_btnImprimir')) {
+                    $pdf_fname = Crypto::getRandomFilename('Fichaje') . '.pdf';
+                    $mpdf->Output(SMP_FS_ROOT . SMP_LOC_TMPS . $pdf_fname, 'F');
+                    $pdf = file_get_contents($pdf_fname);
                     //send_to_browser($pdf, TRUE);
                     header('Content-Type: application/pdf');
-                    Page::_e('<script type="text/javascript">window.open("data:application/pdf;base64, "' . base64_encode($pdf) . ");</script>");
+                    header('Content-disposition: attachment; filename="' . $pdf_fname . '"');
+                    Page::_e('<script type="text/javascript">window.open("data:application/pdf;base64, ' . base64_encode($pdf) . '");</script>');// . SMP_WEB_ROOT . SMP_LOC_TMPS . $pdf . '");</script>');
                     unset($css, $html, $ficha);
                     //ob_end_flush();
-                }
+                }*/
                 exit();
             } else {
                 Session::store(SMP_SESSINDEX_NOTIF_ERR, 'No se ha podido recuperar la ficha del agente seleccionado.  Por favor, repita la b&uacute;squeda.');
@@ -349,22 +359,22 @@ switch($display) {
                                     'btn_red'), 
                     7);
         Page::_e("</td>", 6);
-        Page::_e("<td colspan='2'>", 6);
+        Page::_e("<td colspan='3'>", 6);
         Page::_e(Page::getInput('submit', 
                                     'frm_btnDescargar', 
                                     'Descargar ficha en PDF', 
                                     NULL, 
-                                    'btn_blue'), 
-                    7);
-        Page::_e("</td>", 6);
-        Page::_e("<td>", 6);
-        Page::_e(Page::getInput('submit', 
-                                    'frm_btnImprimir', 
-                                    'Imprimir ficha', 
-                                    NULL, 
                                     'btn_green'), 
                     7);
         Page::_e("</td>", 6);
+//        Page::_e("<td>", 6);
+//        Page::_e(Page::getInput('submit', 
+//                                    'frm_btnImprimir', 
+//                                    'Imprimir ficha', 
+//                                    NULL, 
+//                                    'btn_green'), 
+//                    7);
+//        Page::_e("</td>", 6);
         Page::_e("<td>", 6);
         Page::_e(Page::getInput('submit', 
                                     'frm_btnCalcular', 

@@ -32,7 +32,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.94
+ * @version 0.96
  */
 class Usuario extends Empleado
 {    
@@ -79,7 +79,18 @@ class Usuario extends Empleado
      * @var boolean
      */
     protected $esNuevoUsuario = FALSE;
-       
+    
+    /**
+     * @var Fingerprint Objeto.
+     */
+    protected $fingerprint;
+
+    /**
+     *
+     * @var Session Objeto.
+     */
+    protected $session;
+
     // Metodos
     // __ SPECIALS
     /**
@@ -92,16 +103,18 @@ class Usuario extends Empleado
      * <i>No es recomendable crear un nuevo usuario con UsuarioId manual,
      * dado que la DB genera uno automáticamente.</i>
      * 
+     * @param DB $db Objeto de base de datos.
      * @param string $Nombre Nombre de usuario.
      * @param string $UID UID del usuario.
      * @param int $UsuarioId Id de la tabla Usuario.
      */
-    function __construct($Nombre = NULL, $UID = NULL, $UsuarioId = NULL) 
+    function __construct(DB $db, $Nombre = NULL, $UID = NULL, $UsuarioId = NULL) 
     {        
         // Es necesario incializar passwordcost!
         $this->setPasswordCost();
         
         // Búsqueda
+        $this->setDB($db);
         $this->setNombre($Nombre);
         $this->setUID($UID);
         $this->setUsuarioId($UsuarioId);
@@ -206,10 +219,9 @@ class Usuario extends Empleado
     protected function isDataReady() 
     {        
         $result = FALSE;
-        $db = new DB(SMP_DB_CHARSET);
-        if ($db->table_exists('Token', $this->TokenId)
-            && $db->table_exists('Empleado', $this->EmpleadoId)
-            && $db->table_exists('UsuarioPerfil', $this->UsuarioPerfilId)
+        if ($this->db->table_exists('Token', $this->TokenId)
+            && $this->db->table_exists('Empleado', $this->EmpleadoId)
+            && $this->db->table_exists('UsuarioPerfil', $this->UsuarioPerfilId)
             && !is_null($this->UsuarioNombre)
             && !is_null($this->uid)
             && !is_null($this->passwordEC)
@@ -220,7 +232,6 @@ class Usuario extends Empleado
         ) {
             $result = TRUE;
         }
-        unset($db);
         return $result;
     }
 
@@ -232,31 +243,28 @@ class Usuario extends Empleado
      * @return array|boolean Todos los valores en un array, FALSE si se produjo
      * un error.
      */
-    protected static function retrieve_tblUsuario($searchParam) {
-        if (!empty($searchParam)) {
-            $db = new DB(SMP_DB_CHARSET);
+    protected function retrieve_tblUsuario($searchParam) {
+        $result = FALSE;
+        if (!empty($searchParam) && isset($this->db)) {
             if (DB::isValid_TblId($searchParam)) {
-                $db->setQuery('SELECT * FROM Usuario WHERE UsuarioId = ?');
-                $db->setBindParam('i');
+                $this->db->setQuery('SELECT * FROM Usuario WHERE UsuarioId = ?');
+                $this->db->setBindParam('i');
             } elseif (self::isValid_UID($searchParam)) {
-                $db->setQuery('SELECT * FROM Usuario WHERE UID = ?');
-                $db->setBindParam('s');
+                $this->db->setQuery('SELECT * FROM Usuario WHERE UID = ?');
+                $this->db->setBindParam('s');
             } elseif (self::isValid_username($searchParam)) {
-                $db->setQuery('SELECT * FROM Usuario WHERE Nombre = ?');
-                $db->setBindParam('s');
+                $this->db->setQuery('SELECT * FROM Usuario WHERE Nombre = ?');
+                $this->db->setBindParam('s');
             } else {
                 return FALSE;
             }
 
-            $db->setQueryParams($searchParam);
-            $db->queryExecute();
-            $result = $db->getQueryData();
-            unset($db);
-            
-            return $result;
+            $this->db->setQueryParams($searchParam);
+            $this->db->queryExecute();
+            $result = $this->db->getQueryData();
         }
         
-        return FALSE;
+        return $result;
     }
     
     /**
@@ -348,11 +356,9 @@ class Usuario extends Empleado
         if ($this->isDataReady()) {
             $tblUsuario = $this->get_table_array();
             
-            $db = new DB(SMP_DB_CHARSET, TRUE);
-            $result = $this->setUsuarioId($db->insert('Nombre', 
+            $result = $this->setUsuarioId($this->db->insert('Nombre', 
                                                 array_keys($tblUsuario), 
                                                 array_values($tblUsuario)));
-            unset($db);
         }
        
         return $result;
@@ -614,7 +620,7 @@ class Usuario extends Empleado
                                 $this->UsuarioNombre, 
                                 $this->uid);
         foreach ($searchParams as $searchP) {
-            $usuario = static::retrieve_tblUsuario($searchP);
+            $usuario = $this->retrieve_tblUsuario($searchP);
             if (is_array($usuario) && !empty($usuario)) {
                 //$this->Usuario = $usuario;
                 list($this->UsuarioId, 
@@ -680,7 +686,7 @@ class Usuario extends Empleado
                                     $this->UsuarioNombre, 
                                     $this->uid);
             foreach ($searchParams as $searchP) {
-                $olddata = static::retrieve_tblUsuario($searchP);
+                $olddata = $this->retrieve_tblUsuario($searchP);
                 if (is_array($olddata) && !empty($olddata)) {
                     //encontrado
                     break;
@@ -698,8 +704,7 @@ class Usuario extends Empleado
                 }
                 if (!empty($writedata)) {
                     // escribo datos
-                    $db = new DB(SMP_DB_CHARSET, TRUE);
-                    return $db->update('Usuario', 
+                    return $this->db->update('Usuario', 
                                 array_keys($writedata), 
                                 array_values($writedata), 
                                 'UsuarioId=' . $this->UsuarioId);
@@ -710,9 +715,29 @@ class Usuario extends Empleado
     }
     
     /**
+     * Almacena un objeto Fingerprint.
+     * @param type $fingp Objeto.
+     */
+    public function setFingerprint(Fingerprint $fingp) 
+    {
+        $this->fingerprint = $fingp;
+        isset($this->db) ? $this->fingerprint->setDB($this->db) : NULL;
+    }
+    
+    /**
+     * Almacena un objeto Session.
+     * @param type $sess Objeto.
+     */
+    public function setSession(Session $sess) 
+    {
+        $this->session = $sess;
+    }
+    
+    /**
      * Inicia una nueva sesión de usuario, esto es, realiza el log in al 
      * sistema.<br />
-     * <i>Se requiere el UID del usuario antes de llamar a este método.</i><br />
+     * <i>Se requiere el UID del usuario antes de llamar a este método, 
+     * así como también objetos Fingerprint y Session.</i><br />
      * <ul>
      * <li>Almacena en $_SESSION el nombre de usuario;</li>
      * <li>Genera una nueva llave de sesión, almacena las partes 
@@ -724,17 +749,21 @@ class Usuario extends Empleado
      * De ser así, no prosigue con las siguientes, que se ejecutan en el orden 
      * indicado.
      * @access public
+     * @see Usuario::setFingerprint()
+     * @see Usuario::setSession()
      */
     public function sesionIniciar()
     {
-        if (!(isset($this->isLoggedIn) && is_bool($this->isLoggedIn))) {
+        if (!(isset($this->isLoggedIn) && is_bool($this->isLoggedIn))
+            && isset($this->session)
+            && isset($this->fingerprint)
+        ) {
             // Guardo el nombre de usuario en $_SESSION
-            $session = new Session;
-            $session->useSystemPassword();
-            $session->storeEnc(SMP_SESSINDEX_USERNAME, $this->getNombre());
-            unset($session);
+            $this->session->useSystemPassword();
+            $this->session->storeEnc(SMP_SESSINDEX_USERNAME, $this->getNombre());
             
             $this->isLoggedIn = FALSE;
+            
             // Genero nuevo sessionkey
             $this->generateRandomToken();
             $this->generateTimestamp();
@@ -744,17 +773,15 @@ class Usuario extends Empleado
                 if($this->store_inDB_SessionToken()) {
                     Session::store(SMP_SESSINDEX_SESSIONKEY_TOKEN, 
                                                         $this->getToken());
-                    // en este punto la sesión está iniciada
-                    $this->isLoggedIn = TRUE;   // podria considerarse o no el fingTkn...
-                    //
                     // Fingerprint
-                    $fingerprint = new Fingerprint;
-                    $fingerprint->setMode(Fingerprint::MODE_USEIP);
-                    $fingerprint->generateToken();
+                    $this->fingerprint->setDB($this->db);
+                    $this->fingerprint->setMode(Fingerprint::MODE_USEIP);
+                    $this->fingerprint->generateToken();
                     // Guardarlo en DB
-                    $fingerprint->setTokenId($this->getTokenId());
-                    $fingerprint->store_inDB(); // si falla, cómo proceder?
-                    unset($fingerprint);
+                    $this->fingerprint->setTokenId($this->getTokenId());
+                    $this->fingerprint->store_inDB(); // si falla, cómo proceder?
+
+                    $this->isLoggedIn = TRUE;
                 }
             }
         }
@@ -797,12 +824,13 @@ class Usuario extends Empleado
                 if(!empty($this->uid) ?: $this->retrieve_fromDB()
                     && !empty($this->TokenId) ?: $this->retrieve_fromDB_TokenId($this->UsuarioNombre)
                 ) {
-                    $fingerprint = new Fingerprint;
-                    $fingerprint->setTokenId($this->TokenId);
-                    $fingerprint->retrieve_fromDB();
-                    if ($fingerprint->authenticateToken()) {
-                        if ($this->retrieve_fromDB_SessionToken()) {
-                            $this->isLoggedIn = $this->SessionToken_authenticateToken();
+                    if (isset($this->fingerprint)) {
+                        $this->fingerprint->setTokenId($this->TokenId);
+                        $this->fingerprint->retrieve_fromDB();
+                        if ($this->fingerprint->authenticateToken()) {
+                            if ($this->retrieve_fromDB_SessionToken()) {
+                                $this->isLoggedIn = $this->SessionToken_authenticateToken();
+                            }
                         }
                     }
                 }

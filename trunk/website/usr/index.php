@@ -38,7 +38,11 @@ $session = new Session;
 // -- --
 // -- CODE
 $session->useSystemPassword();
-$usuario = new Usuario($session->retrieveEnc(SMP_SESSINDEX_USERNAME));
+$db = new DB(SMP_DB_CHARSET);
+$fingp = new Fingerprint();
+$usuario = new Usuario($db, $session->retrieveEnc(SMP_SESSINDEX_USERNAME));
+$usuario->setFingerprint($fingp);
+$usuario->setSession($session);
 
 $page = new Page(SMP_LOC_USR . 'index.php', 
                  Session::retrieve(SMP_SESSINDEX_PAGE_RANDOMTOKEN), 
