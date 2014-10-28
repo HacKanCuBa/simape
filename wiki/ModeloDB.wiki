@@ -6,5 +6,3 @@
 Se adjunta imagen del modelo de datos de la base de datos.
 
 <a href="https://simape.googlecode.com/svn/trunk/db/DB.png" target="_blank"><img src="https://simape.googlecode.com/svn/trunk/db/DB.png" border="0" alt="SiMaPe DB" title="Modelo de datos" /></a>
-
-_CC BY-SA
