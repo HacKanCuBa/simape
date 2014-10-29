@@ -1,0 +1,70 @@
+/*****************************************************************************
+ *  Este archivo forma parte de SiMaPe
+ *  Sistema Integrado de Manejo de Personal
+ *  Copyright (C) <2013>  <Ivan Ariel Barrera Oro>
+ *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ *
+ *  SiMaPe is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ * 
+ *  SiMaPe is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
+ * 
+ *****************************************************************************/
+/* 
+    Created on : 27-oct-2014, 13:07:21
+    Author     : Ivan Ariel Barrera Oro
+    Version    : 0.1
+*/
+
+/** warn **/
+#warn {
+    width: auto; 
+    text-align: right; 
+    height: auto;
+    margin-right: 0px;
+    position: relative;
+    right: 1px;
+    margin-right: 1%;
+    bottom: 0px;
+    margin-bottom: 0px;
+    font-size: smaller;
+    z-index: -10;
+    overflow: hidden;
+    display: block;
+}
+#warn .warn_visible {
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+    position:relative;
+    visibility: visible;
+}
+#warn .warn_hidden {
+    position:relative;
+    visibility: hidden;
+    /*color: #c0c0c0;*/
+}
+
+#warn:hover .warn_hidden {
+    visibility:visible;
+    opacity: 0.9;
+    filter: alpha(opacity=90); /* For IE8 and earlier */
+}
+
+#warn:hover .warn_visible {
+    visibility:hidden;
+}
+
+/*#warn:hover .warn_visible{
+    visibility: hidden;    
+}*/
+/**/

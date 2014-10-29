@@ -241,7 +241,7 @@ Session::store(SMP_SESSINDEX_FORM_TIMESTAMP, $formToken->getTimestamp());
 // -- --
 //
 // Mostrar página
-Page::printHead('SiMaPe | Iniciar Sesi&oacute;n', ['main', 'input', 'msg', 'effects']);
+Page::printHead('SiMaPe | Iniciar Sesi&oacute;n', ['main', 'login', 'input', 'msg']);
 Page::printBody();
 Page::printHeader();
 Page::printHeaderClose();
@@ -585,8 +585,8 @@ switch ($display) {
         break;
 }
 
-Page::_e("<div style='position: fixed; bottom: 0px; left: 0px; width: 100%;'>", 3);
-Page::_e("<div class='transparent' style='text-align: center;'>", 4);
+Page::_e("<div id='warn' style='position: fixed; bottom: 0px; left: 0px; width: 100%;'>", 3);
+Page::_e("<div class='warn_hidden' style='text-align: center;'>", 4);
 Page::_e("<p>Siempre <strong>verificar</strong> que aparezca el "
         . "<strong>candado</strong> arriba a la derecha, que al darle click "
         . "la leyenda sea similar a <strong>Verificado por: SiMaPe</strong> "
@@ -594,10 +594,17 @@ Page::_e("<p>Siempre <strong>verificar</strong> que aparezca el "
         . "en la imagen:</p>", 5);
 Page::_e("<img src='" . SMP_WEB_ROOT . SMP_LOC_IMGS 
         . "ssl-pic.png' alt='Direccion del servidor: 5.224.0.250' "
-        . "width='314'/>", 5);
+        . "width='250'/>", 5);
 Page::_e("<p>De no ser as&iacute;, informar de lo sucedido inmediatamente a un "
-        . contactar_administrador() 
-        . " y <em>NO escribir usuario y contrase&ntilde;a</em>.</p>", 5);
+        . "administrador y <em>NO escribir usuario y contrase&ntilde;a</em>."
+        . "</p>", 5);
+Page::_e("</div>", 4);
+Page::_e("<div class='warn_visible' style='text-align: center;'>", 4);
+Page::_e("<p>Siempre <strong>verificar</strong> que aparezca el "
+        . "<strong>candado</strong> arriba a la derecha, que al darle click "
+        . "la leyenda sea similar a <strong>Verificado por: SiMaPe</strong> "
+        . "y además que la dirección sea " . IP::getServerIP() . " como se aprecia "
+        . "en la imagen:</p>", 5);
 Page::_e("</div>", 4);
 Page::_e("</div>", 3);
 Page::_e(Page::getInput('hidden', 'formToken', $formToken->getToken()), 3);
