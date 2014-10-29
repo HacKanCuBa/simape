@@ -29,7 +29,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.11
+ * @version 0.12
  */
 class Curl
 {
@@ -61,7 +61,11 @@ class Curl
     function __construct() 
     {
         $this->ch = curl_init();
-        $this->cookiePath = Crypto::getRandomFilename('SMPSAPER', 9, SMP_FS_ROOT . SMP_LOC_TMPS);
+        $this->cookiePath = Crypto::getRandomFilename('SMPSAPER', 
+                                                        '', 
+                                                        9, 
+                                                        SMP_FS_ROOT 
+                                                            . SMP_LOC_TMPS);
         $this->curl_defaults = array(
                 CURLOPT_AUTOREFERER => 1,
                 CURLOPT_MAXREDIRS => 20,

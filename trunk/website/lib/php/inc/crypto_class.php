@@ -30,7 +30,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.31
+ * @version 1.32
  */
 
 class Crypto
@@ -365,6 +365,8 @@ class Crypto
      * 
      * @param string $prefix [opcional]<br />
      * Prefijo para el nombre de archivo.
+     * @param string $extension [opcional]<br />
+     * Extensión del archivo.
      * @param int $len [opcional]<br />
      * Longitud de la parte aleatoria (sin considerar el prefijo).
      * @param string $path [opcional]<br />
@@ -374,17 +376,24 @@ class Crypto
      * @return string Nombre completo de archivo.
      */
     public static function getRandomFilename($prefix = '', 
+                                                $extension = '',
                                                 $len = 9,
                                                 $path = '',                                               
                                                 $secure = FALSE
     ) {
-        $len = intval($len);
-        $path = print_r($path, TRUE);
-        $prefix = print_r($prefix, TRUE);
-        $rand = $secure ? static::getRandomHexStr($len) : substr(str_shuffle(md5(mt_rand())), 0, $len);
-        return (($path ? ((substr($path, -1, 1) == '/') ? $path : $path . '/')  : '')
-                . $prefix
-                . $rand);
+        $long = intval($len);
+        $ruta = print_r($path, TRUE);
+        $rand = $secure ? static::getRandomHexStr($long) 
+                        : substr(str_shuffle(md5(mt_rand() . microtime())), 
+                                            0, 
+                                            $long);
+        return (($ruta 
+                    ? ((substr($ruta, -1, 1) == '/') ? $ruta : $ruta . '/')  
+                    : '')
+                . print_r($prefix, TRUE)
+                . $rand
+                . ($extension ? '.' . print_r($extension, TRUE) : '')
+                );
     }
 
     /**
