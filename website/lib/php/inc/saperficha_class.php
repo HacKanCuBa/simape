@@ -30,7 +30,7 @@
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @uses PHPExcel Clase lectora de archivos XLS
- * @version 0.82
+ * @version 0.83
  */
 class SaperFicha
 {
@@ -51,7 +51,7 @@ class SaperFicha
     protected $apellido, $nombre, $dni, $cargo, $dependencia;
     protected $hs_extras, $hs_extras_total, $hs_compensadas, $hs_compensadas_total;
     protected $hs_faltantes_total, $hs_extras_real_total, $hs_faltantes;
-    protected $tardes;
+    protected $tardes, $mes;
 
 
     /**
@@ -243,6 +243,8 @@ class SaperFicha
             $i++;
         }
 
+        $this->mes = ucfirst(strftime('%B', strtotime(explode('/', 
+                                        $this->ficha[0][0])[1] . '/01/2014')));
         return TRUE;
     }
     
@@ -288,9 +290,10 @@ class SaperFicha
      * TRUE para imprimir en pantalla (por defecto), FALSE para no hacerlo.
      * @return string Devuelve el string armado de la ficha del agente.
      */
-    public function imprimir($indent = 0, $class = 'ficha', $print = TRUE)
+    public function imprimir($indent = 0, $class = NULL, $print = TRUE)
     {
-        $str = Page::_e("<table class='" . $class . "'>", $indent, TRUE, FALSE);
+        $str = Page::_e("<table" . ($class ? " class='" . $class . "'" : '') 
+                        . ">", $indent, TRUE, FALSE);
         $str .= Page::_e("<thead>", $indent + 1, TRUE, FALSE);
 
 //        $str .= Page::_e("<tr>", $indent + 2, TRUE, FALSE);
@@ -446,6 +449,15 @@ class SaperFicha
     public function procesarFicha(array $entrada_diaria = 
                                 ["07:30", "07:30", "07:30", "07:30", "07:30"])
     {
+        // si existe algún gap, poner la hr de entrada x defecto
+        foreach ($entrada_diaria as $key => $value) {
+            $entrada_diaria[$key] = $value 
+                                        ? ((strlen($value) <= 2) 
+                                                ? $value . ':00' 
+                                                : $value) 
+                                        : '07:30';
+        }
+        
         $extras = array();
         $extras_total = 0;
         $compensa = array();
@@ -683,6 +695,15 @@ class SaperFicha
     public function getTardesTotal()
     {
         return (isset($this->tardes) ? end($this->tardes) : 0);
+    }
+    
+    /**
+     * Devuelve el mes correspondiente a la ficha, como texto.  P. E.: Enero.
+     * @return string Mes de la ficha seleccionada.
+     */
+    public function getMes() 
+    {
+        return isset($this->mes) ? $this->mes : '';
     }
 
     /**

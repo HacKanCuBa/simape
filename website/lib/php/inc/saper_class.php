@@ -33,7 +33,7 @@
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @uses PHPExcel Clase lectora de archivos XLS
- * @version 0.22
+ * @version 0.30
  */
 
 class Saper extends Curl
@@ -81,7 +81,7 @@ class Saper extends Curl
     const ESTADO_BAJA = 'B';
     
     const DNI_SEARCH_STR = "onchange='eleccionOpcion(this,";
-    
+        
     /**
      * Array de agentes encontrados por la búsqueda.
      * @var array
@@ -95,8 +95,8 @@ class Saper extends Curl
     protected $Ficha_fname = '';
     
     /**
-     * Ficha del agente como objeto.
-     * @var SaperFicha
+     * Array de objetos SaperFicha del agente.
+     * @var array
      */
     protected $Ficha;
 
@@ -104,7 +104,6 @@ class Saper extends Curl
     function __construct() 
     {
         parent::__construct();
-        $this->Ficha = new SaperFicha;
     }
     // __PRIV
     
@@ -132,6 +131,12 @@ class Saper extends Curl
         return $this->Agentes;
     }
     
+    /**
+     * Realiza el login al SAPER
+     * @return boolean TRUE si se logeo correctamente, FALSE si no.
+     * @todo Lo cierto es que casi siempre devuelve TRUE, aún si no se realizó 
+     * correctamente.  Hay que hallar una forma de detectar que el login sea correcto.
+     */
     public function login()
     {
         $url = static::urlMake(self::P_LOGIN);
@@ -297,13 +302,15 @@ class Saper extends Curl
     }
 
     /**
-     * Recupera la ficha el agente seleccionado y la almacena en el objeto.
+     * Recupera la/s ficha/s del agente seleccionado y la/s almacena en el 
+     * objeto.
+     * Si $month = Saper::SEARCH_FULLYEAR, buscará el año completo.
      * 
      * @see Saper::getFicha()
      * @see Saper::printFicha()
      * @param int $doc Tipo y nro. de documento.
      * @param int $year Nro. del año.
-     * @param int $month Nro. del mes.
+     * @param int $month Nro. del mes o > 12 para buscar todos los meses.
      * @param string $format Formato exportado: FORMAT_XLS (por defecto) o 
      * FORMAT_PDF.
      * @return boolean TRUE si tuvo éxito, FALSE si no.
@@ -322,38 +329,63 @@ class Saper extends Curl
                     CURLOPT_HEADER => 0,
                     CURLOPT_TIMEOUT => 120,
         );
-        $params = array(
-                        'method' => urlencode('exportarInformeIndividual'),
-                        'fichajeMes' => urlencode('Calendario'),
-                        'interno' => urlencode(1),
-                        'tipo' => urlencode($formato),
-                        'legajo' => urlencode($doc),
-                        'anio' => urlencode($year),
-                        'mes' => urlencode($month)
-        );
         
-        if ($this->get($url, $params, $options)) {
-            $fname = Crypto::getRandomFilename('SMPFICHAJE', 
+        $mes = ($month > 12) ? array('Enero', 
+                                        'Febrero', 
+                                        'Marzo', 
+                                        'Abril', 
+                                        'Mayo', 
+                                        'Junio', 
+                                        'Julio', 
+                                        'Agosto', 
+                                        'Septiembre', 
+                                        'Octubre', 
+                                        'Noviembre', 
+                                        'Diciembre') 
+                                : array(ucfirst(strftime('%B', 
+                                            strtotime($month . '/01/2014'))));
+        
+        $ret = FALSE;
+        foreach ($mes as $m) {
+            $params = array(
+                            'method' => urlencode('exportarInformeIndividual'),
+                            'fichajeMes' => urlencode('Calendario'),
+                            'interno' => urlencode(1),
+                            'tipo' => urlencode($formato),
+                            'legajo' => urlencode($doc),
+                            'anio' => urlencode($year),
+                            'mes' => urlencode($m)
+            );
+
+            if ($this->get($url, $params, $options)) {
+                $fname = Crypto::getRandomFilename('SMPFICHAJE',
+                                                    '',
                                                     9, 
                                                     SMP_FS_ROOT . SMP_LOC_TMPS);
-            if(file_put_contents($fname, $this->result, LOCK_EX)) {
-                unset($this->result);
-                $this->Ficha->read_xls($fname);
-                unlink($fname);
-                return TRUE;
+                if(file_put_contents($fname, $this->result, LOCK_EX)) {
+                    unset($this->result);
+                    // TODO implementar DI... ¿cómo?
+                    $Fichas[] = new SaperFicha($fname);
+                    unlink($fname);
+                    $ret = TRUE;
+                }
             }
         }
         
-        return FALSE;        
+        $this->Ficha = isset($Fichas) ? $Fichas : NULL;
+        
+        return $ret;        
     }
     
     /**
-     * Devuelve la ficha previamente cargada del agente como array.
-     * @return SaperFicha La ficha como objeto SaperFicha o NULL.
+     * Devuelve la/s ficha/s previamente cargada del agente como array de 
+     * objetos SaperFicha.
+     * @return mixed La ficha como como array de 
+     * objetos SaperFicha o FALSE en caso de error.
      */
     public function getFicha()
     {
-        return (isset($this->Ficha) ? $this->Ficha : NULL);
+        return (isset($this->Ficha) ? $this->Ficha : FALSE);
     }
     
     /**

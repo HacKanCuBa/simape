@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.85
+ * @version 0.86
  */
 
 require_once 'autoload.php';
@@ -92,103 +92,127 @@ if ($page->authenticateToken()
                     $display = SAPER_DISPLAY_NORESULT;
                 }
             } else {
-                Session::store(SMP_SESSINDEX_NOTIF_ERR, 'Error grave en SAPER login: ' . $saper->getError() . '. Contacte a un administrador.');
+                Session::store(SMP_SESSINDEX_NOTIF_ERR, 'Error grave en SAPER login: ' . $saper->getError() . '. Contacte a un ' . contactar_administrador() . '.');
             }
-        } elseif (!empty(Sanitizar::glPOST('frm_btnCalcular'))) {
-            $ficha = Session::retrieve(SAPER_SESSINDEX_FICHA);
-            if (empty($ficha)) {
-                // procesar agente seleccionado
-                // buscar ficha
-                $saper = new Saper;
-                if ($saper->login()) {
-                    if($saper->retrieveFicha(Sanitizar::glPOST('frm_radAgente'), 
-                                                (Sanitizar::glPOST('frm_txtYear') ?: date("Y")), 
-                                                    Sanitizar::glPOST('frm_optMes'))
-                    ) {
-                        $ficha = $saper->getFicha();
+        } elseif (!empty(Sanitizar::glPOST ('frm_btnVerFicha'))) {
+            Session::store(SMP_SESSINDEX_NOTIF_ERR, 
+                            'No se ha podido recuperar la ficha del '
+                            . 'agente seleccionado: al menos un '
+                            . 'par&aacute;metro inv&aacute;lido o bien '
+                            . 'no hay resultados para la b&uacute;squeda');
+            $saper = new Saper;
+            if ($saper->login()) {
+                if($saper->retrieveFicha(Sanitizar::glPOST('frm_radAgente'), 
+                                            (Sanitizar::glPOST('frm_txtYear') ?: date("Y")), 
+                                                Sanitizar::glPOST('frm_optMes'))
+                ) {
+                    $ficha = $saper->getFicha();
+                    if (is_array($ficha)) {
+                        // debo guardarla sin procesar
                         Session::store(SAPER_SESSINDEX_FICHA, $ficha);
-                        // calculo incial con hora de entrada 7:30
-                        $entrada = Session::retrieve(SAPER_SESSINDEX_HINI) ?: 
-                                    ["07:30", "07:30", "07:30", "07:30", "07:30"];
-                    }  
-                }
-            } else {
-                $entrada = Sanitizar::glPOST('frm_txtHoraIni');
-                foreach ($entrada as $key => $value) {
-                    if (strlen($value) <= 2) {
-                        $entrada[$key] .= ':00';
+                        foreach ($ficha as $mes => $f) {
+                            // cálculo incial con hora de entrada 7:30
+                            $entrada[$mes] = ["07:30", "07:30", "07:30", "07:30", "07:30"];
+                            $f->procesarFicha($entrada[$mes]);
+                            $f->add_column_tardes();
+                            $f->add_column_faltantes();
+                            $f->add_column_compensadas();
+                            $f->add_column_extras();
+                        }
+                        Session::store(SAPER_SESSINDEX_HINI, $entrada);
+                        Session::remove(SMP_SESSINDEX_NOTIF_ERR);
+                        $display = SAPER_DISPLAY_CALC;
                     }
                 }
-                Session::store(SAPER_SESSINDEX_HINI, $entrada);
             }
-            if (is_a($ficha, 'SaperFicha')) {
-//                var_dump($ficha);
-                $ficha->procesarFicha($entrada);
-                $ficha->add_column_tardes();
-                $ficha->add_column_faltantes();
-                $ficha->add_column_compensadas();
-                $ficha->add_column_extras();
+        } elseif (!empty(Sanitizar::glPOST('frm_btnCalcular'))) {
+            Session::store(SMP_SESSINDEX_NOTIF_ERR, 
+                                'No se ha podido procesar correctamente la '
+                                . 'ficha del agente seleccionado: reintente '
+                                . 'o repita la b&uacute;squeda');
+            $ficha = Session::retrieve(SAPER_SESSINDEX_FICHA);
+            if (is_array($ficha)) {
+                $entrada = Sanitizar::glPOST('frm_txtHoraIni');
+                Session::store(SAPER_SESSINDEX_HINI, $entrada);
                 
-                $display = SAPER_DISPLAY_CALC;
-            } else {
-                Session::store(SMP_SESSINDEX_NOTIF_ERR, 'No se ha podido recuperar la ficha del agente seleccionado: al menos un par&aacute;metro inv&aacute;lido o bien no hay resultados para la b&uacute;squeda');
-                Session::remove(SAPER_SESSINDEX_FICHA);
+                foreach ($ficha as $mes => $f) {
+                    if (is_a($f, 'SaperFicha')) {
+                        $f->procesarFicha(isset($entrada[$mes]) ? $entrada[$mes] : NULL);
+                        $f->add_column_tardes();
+                        $f->add_column_faltantes();
+                        $f->add_column_compensadas();
+                        $f->add_column_extras();
+                    } else {
+                        $err = TRUE;
+                        break;
+                    }
+                }
+                
+                if (!isset($err)) {
+                    $display = SAPER_DISPLAY_CALC;
+                    Session::remove(SMP_SESSINDEX_NOTIF_ERR); 
+                }
             }
         } elseif (!empty(Sanitizar::glPOST('frm_btnDescargar'))
                     || !empty(Sanitizar::glPOST('frm_btnImprimir'))
         ) {
+            Session::store(SMP_SESSINDEX_NOTIF_ERR, 
+                            'No se ha podido recuperar la ficha del agente '
+                            . 'seleccionado.  Por favor, repita la '
+                            . 'b&uacute;squeda.');
             $ficha = Session::retrieve(SAPER_SESSINDEX_FICHA);
-            if (is_a($ficha, 'SaperFicha')) {
-                $ficha->procesarFicha(Sanitizar::glPOST('frm_txtHoraIni'));
-                $ficha->add_column_tardes();
-                $ficha->add_column_faltantes();
-                $ficha->add_column_compensadas();
-                $ficha->add_column_extras();
-                // mpdf no interpreta bien el css
-                $html = Page::getHeader(SMP_FS_ROOT) .
-                        Page::getHeaderClose() .
-                        Page::getMain() .
-                        $ficha->imprimir(2, 'ficha', FALSE) .
-                        "\n<br />" .
-                        SaperFicha::getDescripcionFicha() .
-                        Page::getMainClose();                
-//                echo $html;
-//                die();
-//                
-                require_once SMP_FS_ROOT . SMP_LOC_EXT . 'mpdf/mpdf.php';
-                //ob_start(); // necesario pq la libreria mpdf es una cagada...
-                $mpdf = new mPDF('utf-8', 'A4', '','' , 0 , 0 , 0 , 0 , 0 , 0);
-                $mpdf->SetDisplayMode('fullpage');
-                $css = file_get_contents(SMP_FS_ROOT . SMP_LOC_CSS . 'pdf.css');
-                $mpdf->shrink_tables_to_fit = 1;
-                $mpdf->keep_table_proportions = TRUE;
-//                $mpdf->showImageErrors = true;
-                $mpdf->SetJS('this.print();');  
-                $mpdf->WriteHTML($css, 1);
-                $mpdf->WriteHTML($html, 2);
-                if (Sanitizar::glPOST('frm_btnDescargar')) {
-                    $mpdf->Output('SiMaPe Ficha', 'D');
-                } /*elseif (Sanitizar::glPOST('frm_btnImprimir')) {
-                    $pdf_fname = Crypto::getRandomFilename('Fichaje') . '.pdf';
-                    $mpdf->Output(SMP_FS_ROOT . SMP_LOC_TMPS . $pdf_fname, 'F');
-                    $pdf = file_get_contents($pdf_fname);
-                    //send_to_browser($pdf, TRUE);
-                    header('Content-Type: application/pdf');
-                    header('Content-disposition: attachment; filename="' . $pdf_fname . '"');
-                    Page::_e('<script type="text/javascript">window.open("data:application/pdf;base64, ' . base64_encode($pdf) . '");</script>');// . SMP_WEB_ROOT . SMP_LOC_TMPS . $pdf . '");</script>');
-                    unset($css, $html, $ficha);
-                    //ob_end_flush();
-                }*/
-                exit();
-            } else {
-                Session::store(SMP_SESSINDEX_NOTIF_ERR, 'No se ha podido recuperar la ficha del agente seleccionado.  Por favor, repita la b&uacute;squeda.');
-                $display = SAPER_DISPLAY_SEARCH;
+            $entrada = Sanitizar::glPOST('frm_txtHoraIni');
+            $btn = Sanitizar::glPOST('frm_btnDescargar');
+            foreach ($btn as $mes => $value) {
+                if ($value && is_a($ficha[$mes], 'SaperFicha')) {
+                    $ficha[$mes]->procesarFicha(isset($entrada[$mes]) ? $entrada[$mes] : NULL);
+                    $ficha[$mes]->add_column_tardes();
+                    $ficha[$mes]->add_column_faltantes();
+                    $ficha[$mes]->add_column_compensadas();
+                    $ficha[$mes]->add_column_extras();
+                   
+                    require_once SMP_FS_ROOT . SMP_LOC_EXT . 'mpdf/mpdf.php';
+                    //ob_start(); // necesario pq la libreria mpdf es una cagada...
+                    $mpdf = new mPDF('utf-8', 'A4', '','' , 0 , 0 , 0 , 0 , 0 , 0);
+                    $mpdf->SetDisplayMode('fullpage');
+                    $css = file_get_contents(SMP_FS_ROOT . SMP_LOC_CSS . 'pdf.css');
+                    $mpdf->shrink_tables_to_fit = 1;
+                    $mpdf->keep_table_proportions = TRUE;
+    //                $mpdf->showImageErrors = true;
+                    $mpdf->SetJS('this.print();');
+                    $mpdf->WriteHTML($css, 1);
+
+                    $html = Page::getHeader(SMP_FS_ROOT)
+                                . Page::getHeaderClose()
+                                . Page::getMain()
+                                . $ficha[$mes]->imprimir(5, 'ficha', FALSE)
+                                . Page::_e("<br />", 2, TRUE, FALSE)
+                                . SaperFicha::getDescripcionFicha()
+                                . Page::getMainClose();
+
+                    $mpdf->WriteHTML($html, 2);
+                    if (Sanitizar::glPOST('frm_btnDescargar')) {
+                        $mpdf->Output('SiMaPe Ficha.pdf', 'D');
+                    } /*elseif (Sanitizar::glPOST('frm_btnImprimir')) {
+                        $pdf_fname = Crypto::getRandomFilename('Fichaje') . '.pdf';
+                        $mpdf->Output(SMP_FS_ROOT . SMP_LOC_TMPS . $pdf_fname, 'F');
+                        $pdf = file_get_contents($pdf_fname);
+                        //send_to_browser($pdf, TRUE);
+                        header('Content-Type: application/pdf');
+                        header('Content-disposition: attachment; filename="' . $pdf_fname . '"');
+                        Page::_e('<script type="text/javascript">window.open("data:application/pdf;base64, ' . base64_encode($pdf) . '");</script>');// . SMP_WEB_ROOT . SMP_LOC_TMPS . $pdf . '");</script>');
+                        unset($css, $html, $ficha);
+                        //ob_end_flush();
+                    }*/
+                    Session::remove(SMP_SESSINDEX_NOTIF_ERR); 
+                    exit();
+                }
             }
         }
     }
 } else {
     $usuario->sesionFinalizar();
-    $nav = '403.php';
+    $nav = SMP_ERR_403;
 }
 
 isset($nav) ? $page->nav($nav) : NULL;
@@ -208,7 +232,8 @@ Session::store(SMP_SESSINDEX_FORM_TIMESTAMP, $formToken->getTimestamp());
 // -- --
 //
 // Mostrar página
-Page::printHead('SiMaPe | SAPER', ['main', 'msg', 'navbar', 'tabla', 'input']);
+Page::printHead('SiMaPe | Fichas de los empleados', 
+                    ['main', 'msg', 'navbar', 'tabla', 'input']);
 Page::printBody();
 Page::printHeader();
 Page::printHeaderClose();
@@ -279,8 +304,11 @@ switch($display) {
         Page::_e("<select name='frm_optMes'>", 7);
         for ($i = 1; $i < 13; $i ++) {  
             $mes = ucfirst(strftime('%B', strtotime($i . '/01/2014')));
-            Page::_e("<option value='" . $mes . "'" . (($i == date("m")) ? " selected" : '') . ">" . $mes . "</option>", 8);
+            Page::_e("<option value='" . $i . "'" 
+                    . (($i == date("m")) ? " selected" : '') . ">" 
+                    . $mes . "</option>", 8);
         }
+        Page::_e("<option value='13'>Todo el a&ntilde;o</option>", 8);
         Page::_e("</select>", 7);
         Page::_e("</td>", 6);
         Page::_e("<td>", 6);
@@ -299,7 +327,7 @@ switch($display) {
         Page::_e("<tr>", 5);
         Page::_e("<td>", 6);
         Page::_e(Page::getInput('submit', 
-                                'frm_btnCalcular', 
+                                'frm_btnVerFicha', 
                                 'Ver datos del agente seleccionado', 
                                 NULL, 
                                 'btn_blue'), 
@@ -320,36 +348,61 @@ switch($display) {
         break;
         
     case SAPER_DISPLAY_CALC:
-        Page::_e("<td colspan='5'>", 6);
+        Page::_e("<td colspan='2'>", 6);
         Page::_e("<h2>C&aacute;lculo de horas extras</h2>", 7);
         Page::_e("</td>", 6);
         Page::_e("</tr>", 5);
-        Page::_e("<tr>", 5);
-        Page::_e("<td colspan='5'><h4>Hora de inicio de tareas</h4></td>", 6);
-        Page::_e("</tr>", 5);
+        
+        $horaInicio = Session::retrieve(SAPER_SESSINDEX_HINI);
         
         Page::_e("<tr>", 5);
-        $dias = array('Lunes', 'Martes', 'Mi&eacute;rcoles', 'Jueves', 'Viernes');
-        foreach ($dias as $dia) {
-            Page::_e("<td><em>" . $dia . "</em></td>", 6);
-        }
-        Page::_e("</tr>", 5);
+        Page::_e("<td colspan='2'>", 6);
+        Page::_e("<table style='border-spacing: 0px; width: 100%'>", 7);
+        foreach ($ficha as $mes => $f) {
+            Page::_e("<tr>", 8);
+            Page::_e("<td colspan='6'>", 9);
+            Page::_e("<h4>Hora de inicio de tareas en " . $f->getMes() 
+                    . "</h4>", 10);
+            Page::_e("</td>", 9);
+            Page::_e("</tr>", 8);
 
-        Page::_e("<tr>", 5);
-        $horaInicio = Session::retrieve(SAPER_SESSINDEX_HINI) ?: ["07:30", "07:30", "07:30", "07:30", "07:30"];
-        for ($i = 0; $i < 5; $i++) {
-            Page::_e("<td>", 6);
-            Page::_e(Page::getInput('time', 
-                                    "frm_txtHoraIni[" . $i . "]", 
-                                    $horaInicio[$i], 
-                                    NULL, 
-                                    NULL,
-                                    5), 
-                    7);
-            Page::_e("</td>", 6);
+            Page::_e("<tr>", 8);
+            $dias = array('Lunes', 
+                            'Martes', 
+                            'Mi&eacute;rcoles', 
+                            'Jueves', 
+                            'Viernes');
+            foreach ($dias as $dia) {
+                Page::_e("<td><em>" . $dia . "</em></td>", 9);
+            }
+            Page::_e("</tr>", 8);
+
+            Page::_e("<tr>", 8);
+            for ($i = 0; $i < 5; $i++) {
+                Page::_e("<td>", 9);
+                Page::_e(Page::getInput('time', 
+                                        "frm_txtHoraIni[" . $mes . "][" . $i . "]", 
+                                        (isset($horaInicio[$mes][$i]) ? $horaInicio[$mes][$i] : "07:30"), 
+                                        NULL, 
+                                        NULL,
+                                        5), 
+                        10);
+                Page::_e("</td>", 9);
+            }
+            Page::_e("<td>", 9);
+            Page::_e(Page::getInput('submit', 
+                                        'frm_btnDescargar[' . $mes . ']', 
+                                        'Descargar ficha en PDF', 
+                                        NULL, 
+                                        'btn_green'), 
+                                    10);
+            Page::_e("</td>", 9);
+            Page::_e("</tr>", 8);
         }
+        Page::_e("</table>", 7);
+        Page::_e("</td>", 6);
         Page::_e("</tr>", 5);
-        
+            
         Page::_e("<tr>", 5);
         Page::_e("<td>", 6);
         Page::_e(Page::getInput('submit', 
@@ -359,22 +412,7 @@ switch($display) {
                                     'btn_red'), 
                     7);
         Page::_e("</td>", 6);
-        Page::_e("<td colspan='3'>", 6);
-        Page::_e(Page::getInput('submit', 
-                                    'frm_btnDescargar', 
-                                    'Descargar ficha en PDF', 
-                                    NULL, 
-                                    'btn_green'), 
-                    7);
-        Page::_e("</td>", 6);
-//        Page::_e("<td>", 6);
-//        Page::_e(Page::getInput('submit', 
-//                                    'frm_btnImprimir', 
-//                                    'Imprimir ficha', 
-//                                    NULL, 
-//                                    'btn_green'), 
-//                    7);
-//        Page::_e("</td>", 6);
+
         Page::_e("<td>", 6);
         Page::_e(Page::getInput('submit', 
                                     'frm_btnCalcular', 
@@ -384,12 +422,14 @@ switch($display) {
                     7);
         Page::_e("</td>", 6);
         Page::_e("</tr>", 5);
-        
-        Page::_e("<tr>", 5);
-        Page::_e("<td colspan='5'>", 6);
-        $ficha->imprimir(7);
-        Page::_e("</td>", 6);
-        Page::_e("</tr>", 5);
+            
+        foreach ($ficha as $f) {
+            Page::_e("<tr>", 5);
+            Page::_e("<td colspan='6'>", 6);
+            $f->imprimir(7, 'ficha');
+            Page::_e("</td>", 6);
+            Page::_e("</tr>", 5);
+        }
         
         Page::_e("</tbody>", 4);
         Page::_e("</table>", 3);
@@ -430,7 +470,8 @@ switch($display) {
                                 'txt_resizable', 
                                 NULL, 
                                 NULL, 
-                                'placeholder="Apellido/Nombre/DNI/Legajo"'), 
+                                'placeholder="Apellido/Nombre/DNI/Legajo" '
+                                    . 'required'), 
                 7);
         Page::_e("</td>", 6);
         Page::_e("</tr>", 5);
