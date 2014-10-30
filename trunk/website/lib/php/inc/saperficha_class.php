@@ -30,7 +30,7 @@
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @uses PHPExcel Clase lectora de archivos XLS
- * @version 0.83
+ * @version 0.84
  */
 class SaperFicha
 {
@@ -625,22 +625,22 @@ class SaperFicha
     
     /**
      * 
-     * @return int Total de horas extras, en segundos.
+     * @return int Total de horas extras, en segundos, o NULL.
      */
     public function getExtrasTotal()
     {
-        return (isset($this->hs_extras_total) ? $this->hs_extras_total : 0);
+        return (isset($this->hs_extras_total) ? $this->hs_extras_total : NULL);
     }
     
     /**
      * 
-     * @return int Total de horas extras reales, en segundos.
+     * @return int Total de horas extras reales, en segundos, o NULL.
      */
     public function getExtrasRealTotal()
     {
         return (isset($this->hs_extras_real_total) ? 
                                                 $this->hs_extras_real_total : 
-                                                0);
+                                                NULL);
     }
     
     /**
@@ -655,12 +655,12 @@ class SaperFicha
   
     /**
      * 
-     * @return int Total de horas compensadas, en segundos.
+     * @return int Total de horas compensadas, en segundos, o NULL.
      */
     public function getHorasCompensadasTotal()
     {
         return (isset($this->hs_compensadas_total) ? 
-                                            $this->hs_compensadas_total : 0);
+                                            $this->hs_compensadas_total : NULL);
     }  
     
     /**
@@ -675,31 +675,26 @@ class SaperFicha
     
     /**
      * 
-     * @return int Total de horas faltantes, en segundos.
+     * @return int Total de horas faltantes, en segundos, o NULL.
      */
     public function getHorasFaltantesTotal()
     {
         return (isset($this->hs_faltantes_total) ? 
-                                            $this->hs_faltantes_total : 0);
-    }
-    
-    public function getTardes()
-    {
-        return (isset($this->tardes) ? $this->tardes : NULL);
+                                            $this->hs_faltantes_total : NULL);
     }
     
     /**
      * 
-     * @return int Total de llegadas tarde.
+     * @return int Total de llegadas tarde, o NULL.
      */
     public function getTardesTotal()
     {
-        return (isset($this->tardes) ? end($this->tardes) : 0);
+        return (isset($this->tardes) ? end($this->tardes) : NULL);
     }
     
     /**
      * Devuelve el mes correspondiente a la ficha, como texto.  P. E.: Enero.
-     * @return string Mes de la ficha seleccionada.
+     * @return string Mes de la ficha seleccionada, o string vacío.
      */
     public function getMes() 
     {
