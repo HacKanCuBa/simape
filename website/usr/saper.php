@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.86
+ * @version 0.87
  */
 
 require_once 'autoload.php';
@@ -375,6 +375,7 @@ switch($display) {
             foreach ($dias as $dia) {
                 Page::_e("<td><em>" . $dia . "</em></td>", 9);
             }
+            Page::_e("<td></td>", 9);
             Page::_e("</tr>", 8);
 
             Page::_e("<tr>", 8);
@@ -423,10 +424,25 @@ switch($display) {
         Page::_e("</td>", 6);
         Page::_e("</tr>", 5);
             
+        $tardes_total = 0;
         foreach ($ficha as $f) {
             Page::_e("<tr>", 5);
-            Page::_e("<td colspan='6'>", 6);
+            Page::_e("<td colspan='2'>", 6);
             $f->imprimir(7, 'ficha');
+            Page::_e("</td>", 6);
+            Page::_e("</tr>", 5);
+            
+            $tardes_total += $f->getTardesTotal();
+        }
+        
+        if (count($ficha) > 1) {
+            Page::_e("<tr>", 5);
+            Page::_e("<td colspan='2'>", 6);
+            Page::_e("<h3 style='font-size: medium; font-weight: bold; "
+                    . "color: #EF9D09; border: 2px solid black; margin: 0px; "
+                    . "padding: 10px 0px;'>El total de llegadas tarde, "
+                    . "sumando todos los meses, es: " . $tardes_total, 7);
+            Page::_e("</h3>", 7);
             Page::_e("</td>", 6);
             Page::_e("</tr>", 5);
         }
