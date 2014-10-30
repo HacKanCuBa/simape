@@ -1,7 +1,0 @@
-1) Mover el contenido de sites-available a /etc/apache2
-2) Crear enlace en sites-enabled
-3) 
-sudo mkdir /var/www/simape
-sudo chown www-data:www-data /var/www/simape
-sudo chmod 0775 /var/www/simape
-sudo adduser hackan www-data    # para poder escribir sin sudo
