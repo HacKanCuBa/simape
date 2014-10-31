@@ -149,11 +149,12 @@ sudo apt-get update && sudo apt-get upgrade
 == Apache ==
 */etc/apache2/conf.d*/_simape_
 
-Deshabilitar mostrar errores, fundamental para un servidor de producción:
+Deshabilitar mostrar errores y TRACE, fundamental para un servidor de producción:
 
 {{{
 ServerSignature Off
 ServerTokens Prod
+TraceEnable Off
 }}}
 
 */etc/apache2/sites-available*/
