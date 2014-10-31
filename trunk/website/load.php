@@ -32,14 +32,11 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.43
+ * @version 1.44
  */
 
 // Para asegurar que toda la aplicación está bien hecha
 error_reporting(E_ALL);
-
-// Modo mantenimiento?
-file_exists('.mantenimiento') ? header('Location: mantenimiento.html') && exit() : NULL;
 
 // Raiz para inclusion de archivos
 define('SMP_FS_ROOT', dirname(__FILE__) .'/');
@@ -66,5 +63,15 @@ spl_autoload_register();
 //Session::store('req_o', [ 'dependencia1.php', 'dependencia2.php' ]);
 //require_once 'loadothers.php';
 // --
+
+// Modo mantenimiento?
+if (file_exists('.mantenimiento')
+        && !in_array_partial(IP::getClientIP(), 
+                                array_from_string_list(SMP_MAINTENANCE_IP))
+) { 
+    
+    header('Location: mantenimiento.html');
+    exit();
+}
 
 // --

@@ -202,3 +202,18 @@ function in_array_partial($needle, array $haystack)
     }
     return $ret;
 }
+
+/**
+ * Devuelve el nombre del mes a partir del número de mes.  Si el número o 
+ * el equivalente entero del valor pasado es mayor a 12 o menor a 1, 
+ * el resultado siempre será 'Diciembre' (en el idioma configurado).
+ * @param int $month Número de mes.
+ * @return string Nombre del mes.
+ */
+function month_name_from_number($month)
+{
+    $mes = intval($month);
+    return (($mes > 0) && ($mes < 13)) 
+                            ? strftime('%B', strtotime($mes . '/01/2014')) 
+                            : strftime('%B', strtotime( '12/01/2014'));
+}

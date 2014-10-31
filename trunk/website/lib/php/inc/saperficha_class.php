@@ -30,7 +30,7 @@
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @uses PHPExcel Clase lectora de archivos XLS
- * @version 0.84
+ * @version 0.90
  */
 class SaperFicha
 {
@@ -51,7 +51,7 @@ class SaperFicha
     protected $apellido, $nombre, $dni, $cargo, $dependencia;
     protected $hs_extras, $hs_extras_total, $hs_compensadas, $hs_compensadas_total;
     protected $hs_faltantes_total, $hs_extras_real_total, $hs_faltantes;
-    protected $tardes, $mes;
+    protected $tardes, $mes, $anio, $horario_entrada;
 
 
     /**
@@ -245,6 +245,7 @@ class SaperFicha
 
         $this->mes = ucfirst(strftime('%B', strtotime(explode('/', 
                                         $this->ficha[0][0])[1] . '/01/2014')));
+        $this->anio = intval(explode('/', $this->ficha[0][0])[2]);
         return TRUE;
     }
     
@@ -295,12 +296,8 @@ class SaperFicha
         $str = Page::_e("<table" . ($class ? " class='" . $class . "'" : '') 
                         . ">", $indent, TRUE, FALSE);
         $str .= Page::_e("<thead>", $indent + 1, TRUE, FALSE);
-
-//        $str .= Page::_e("<tr>", $indent + 2, TRUE, FALSE);
-//        $str .= Page::_e("<td colspan='" . count($this->titulos) . "'><h2>Fichaje mensual</h2>", $indent + 3, TRUE, FALSE);
-//        $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
-//        $str .= Page::_e("</tr>", $indent + 2, TRUE, FALSE);
         
+        // Datos personales
         $str .= Page::_e("<tr>", $indent + 2, TRUE, FALSE);
         $cols = 0;
         if (isset($this->nombre) || isset($this->apellido)) {
@@ -333,7 +330,32 @@ class SaperFicha
         }
         unset($cols);
         $str .= Page::_e("</tr>", $indent + 2, TRUE, FALSE);
-            
+        // --
+        // 
+        // Horario entrada
+        if (isset($this->horario_entrada)) {
+            $str .= Page::_e("<tr>", $indent + 2, TRUE, FALSE);
+            $str .= Page::_e("<td>", $indent + 3, TRUE, FALSE);
+            $str .= Page::_e("<b>Horario de entrada</b>", $indent + 4, TRUE, FALSE);
+            $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
+            $str .= Page::_e("<td colspan='" . (count($this->titulos) - 1) 
+                    . "' style='text-align: center;'>", $indent + 3, TRUE, FALSE);
+            $dias = array('Lunes', 
+                            'Martes', 
+                            'Mi&eacute;rcoles', 
+                            'Jueves', 
+                            'Viernes');
+            foreach ($this->horario_entrada as $d => $h) {
+                $str .= Page::_e($dias[$d] . ": " . $h 
+                        . (($d < (count($this->horario_entrada) - 1)) 
+                                                ? " | " : ''), 0, FALSE, FALSE);
+            }
+            $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
+            $str .= Page::_e("</tr>", $indent + 2, TRUE, FALSE);
+        }
+        // --
+        //
+        // Titulos
         if (isset($this->titulos)) {
             $str .= Page::_e("<tr>", $indent + 2, TRUE, FALSE);
             foreach ($this->titulos as $col) {
@@ -343,10 +365,12 @@ class SaperFicha
             }
             $str .= Page::_e("</tr>", $indent + 2, TRUE, FALSE);
         }
+        // --
 
         $str .= Page::_e("</thead>", $indent + 1, TRUE, FALSE);
         $str .= Page::_e("<tbody>", $indent + 1, TRUE, FALSE);
         
+        // Ficha
         if (isset($this->ficha) && is_array($this->ficha)) {
             foreach ($this->ficha as $m => $fila) {
                 $str .= Page::_e("<tr>", $indent + 2, TRUE, FALSE);
@@ -429,6 +453,7 @@ class SaperFicha
                 . "</h3>";
         $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
         $str .= Page::_e("</tr>", $indent + 2, TRUE, FALSE);
+        //--
         
         $str .= Page::_e("</tbody>", $indent + 1, TRUE, FALSE);
         $str .= Page::_e("</table>", $indent, TRUE, FALSE);
@@ -442,7 +467,7 @@ class SaperFicha
     * tiempo adeudado.
     * 
     * @param array $entrada_diaria array con la hora de entrada por dia 
-    * (formato HH:MM:SS), donde lunes es 0 y viernes, 4.
+    * (formato HH:MM:SS/HH:MM/HH), donde lunes es 0 y viernes, 4.
     * 
     * @return boolean TRUE si se ejecutó con éxito, FALSE si no.
     */
@@ -611,6 +636,8 @@ class SaperFicha
                                                 ($adeuda > 0 ? $adeuda : 0);
 
         $this->tardes = $tarde;
+        
+        $this->horario_entrada = $entrada_diaria;
         return TRUE;
     }
     
@@ -699,6 +726,15 @@ class SaperFicha
     public function getMes() 
     {
         return isset($this->mes) ? $this->mes : '';
+    }
+    
+    /**
+     * Devuelve el año correspondiente a la ficha, como entero.  P. E.: 2014.
+     * @return int Año de la ficha seleccionada, o NULL.
+     */
+    public function getAnio() 
+    {
+        return isset($this->anio) ? $this->anio : NULL;
     }
 
     /**

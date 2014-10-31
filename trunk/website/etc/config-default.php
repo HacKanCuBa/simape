@@ -34,7 +34,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.22
+ * @version 1.23
  */
 
 // << Config
@@ -132,6 +132,13 @@ const SMP_SSL = FALSE;
  * Por defecto: TRUE.
  */
 const SMP_SSL_HSTS = TRUE;
+// --
+// -- IP
+/**
+ * Define una lista de IPs que tienen permitido el acceso en modo mantenimiento.
+ * Deben estar separadas por comas, sin espacios.  Puede ser solo una.
+ */
+const SMP_MAINTENANCE_IP = 'IP1,IP2,IPn';
 // --
 // 
 // Dirección IP del servidor (no es necesario salvo que se emplee SSL).

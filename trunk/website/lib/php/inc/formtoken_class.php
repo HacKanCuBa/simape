@@ -37,7 +37,7 @@ class FormToken
     /**
      * Tiempo de vida de un Form Token.
      */
-    const FORMTOKEN_LIFETIME = 3600;
+    const FORMTOKEN_LIFETIME = 1800;
 
     // __ SPECIALS
     /**

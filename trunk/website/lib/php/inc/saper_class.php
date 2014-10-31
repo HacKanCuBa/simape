@@ -33,7 +33,7 @@
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @uses PHPExcel Clase lectora de archivos XLS
- * @version 0.30
+ * @version 0.32
  */
 
 class Saper extends Curl
@@ -304,13 +304,13 @@ class Saper extends Curl
     /**
      * Recupera la/s ficha/s del agente seleccionado y la/s almacena en el 
      * objeto.
-     * Si $month = Saper::SEARCH_FULLYEAR, buscará el año completo.
      * 
      * @see Saper::getFicha()
-     * @see Saper::printFicha()
      * @param int $doc Tipo y nro. de documento.
-     * @param int $year Nro. del año.
-     * @param int $month Nro. del mes o > 12 para buscar todos los meses.
+     * @param array|int $year Array de int conteniendo nro. del año de inicio 
+     * y de fin o bien un único año como entero.
+     * @param array|int $month Array de int conteniendo nro. del mes de inicio 
+     * y de fin, o bien un único mes como entero.
      * @param string $format Formato exportado: FORMAT_XLS (por defecto) o 
      * FORMAT_PDF.
      * @return boolean TRUE si tuvo éxito, FALSE si no.
@@ -330,44 +330,38 @@ class Saper extends Curl
                     CURLOPT_TIMEOUT => 120,
         );
         
-        $mes = ($month > 12) ? array('Enero', 
-                                        'Febrero', 
-                                        'Marzo', 
-                                        'Abril', 
-                                        'Mayo', 
-                                        'Junio', 
-                                        'Julio', 
-                                        'Agosto', 
-                                        'Septiembre', 
-                                        'Octubre', 
-                                        'Noviembre', 
-                                        'Diciembre') 
-                                : array(ucfirst(strftime('%B', 
-                                            strtotime($month . '/01/2014'))));
+        $mes = is_array($month) 
+                            ? $month
+                            : array($month, $month);
+        $anio = is_array($year) ? $year : array($year, $year);
         
         $ret = FALSE;
-        foreach ($mes as $m) {
-            $params = array(
-                            'method' => urlencode('exportarInformeIndividual'),
-                            'fichajeMes' => urlencode('Calendario'),
-                            'interno' => urlencode(1),
-                            'tipo' => urlencode($formato),
-                            'legajo' => urlencode($doc),
-                            'anio' => urlencode($year),
-                            'mes' => urlencode($m)
-            );
+        for ($y = reset($anio); $y <= end($anio); $y++) {
+            $m_ini = ($y == reset($anio)) ? reset($mes) : 1;
+            $m_fin = ($y < end($anio)) ? 12 : end($mes);
+            for($m = $m_ini; $m <= $m_fin; $m++) {
+                $params = array(
+                                'method' => urlencode('exportarInformeIndividual'),
+                                'fichajeMes' => urlencode('Calendario'),
+                                'interno' => urlencode(1),
+                                'tipo' => urlencode($formato),
+                                'legajo' => urlencode($doc),
+                                'anio' => urlencode($y),
+                                'mes' => urlencode(ucfirst(month_name_from_number($m)))
+                );
 
-            if ($this->get($url, $params, $options)) {
-                $fname = Crypto::getRandomFilename('SMPFICHAJE',
-                                                    '',
-                                                    9, 
-                                                    SMP_FS_ROOT . SMP_LOC_TMPS);
-                if(file_put_contents($fname, $this->result, LOCK_EX)) {
-                    unset($this->result);
-                    // TODO implementar DI... ¿cómo?
-                    $Fichas[] = new SaperFicha($fname);
-                    unlink($fname);
-                    $ret = TRUE;
+                if ($this->get($url, $params, $options)) {
+                    $fname = Crypto::getRandomFilename('SMPFICHAJE',
+                                                        '',
+                                                        9, 
+                                                        SMP_FS_ROOT . SMP_LOC_TMPS);
+                    if(file_put_contents($fname, $this->result, LOCK_EX)) {
+                        unset($this->result);
+                        // TODO implementar DI... ¿cómo?
+                        $Fichas[$y - reset($anio)][$m - reset($mes)] = new SaperFicha($fname);
+                        unlink($fname);
+                        $ret = TRUE;
+                    }
                 }
             }
         }
