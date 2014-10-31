@@ -23,7 +23,7 @@
 /* 
     Created on : 06/10/2014, 14:07:18
     Author     : hackan
-    Version    : 0.11
+    Version    : 0.12
 */
 
 .btn_blue {
@@ -179,7 +179,6 @@
 .txt_resizable:focus {
   width: 210px;
   cursor: default;
-  padding: -13px 20px 0;
   -webkit-transition: all 601ms cubic-bezier(0.68, -0.75, 0.265, 1.75);
   -moz-transition: all 601ms cubic-bezier(0.68, -0.75, 0.265, 1.75);
   -o-transition: all 601ms cubic-bezier(0.68, -0.75, 0.265, 1.75);
@@ -227,7 +226,6 @@
 
 .txt_fixed:focus {
   cursor: default;
-  padding: -13px 20px 0;
   -webkit-transition: all 601ms cubic-bezier(0.68, -0.75, 0.265, 1.75);
   -moz-transition: all 601ms cubic-bezier(0.68, -0.75, 0.265, 1.75);
   -o-transition: all 601ms cubic-bezier(0.68, -0.75, 0.265, 1.75);

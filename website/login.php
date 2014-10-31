@@ -375,7 +375,7 @@ switch ($display) {
                                 NULL, 
                                 NULL, 
                                 "title='Ingrese el resultado de la "
-                                    . "operaci&oacute;n' maxlength='3'"), 
+                                    . "operaci&oacute;n'"), 
                 7);
         Page::_e("</td>", 6);
         Page::_e("</tr>", 5);
@@ -519,7 +519,7 @@ switch ($display) {
                                     'txt_fixed', 
                                     NULL, 
                                     NULL, 
-                                    'autofocus maxlength="3" title="Ingrese el resultado de la operaci&oacute;n"')
+                                    'autofocus title="Ingrese el resultado de la operaci&oacute;n"')
                     , 7);
             Page::_e("</td>", 6);
             Page::_e("</tr>", 5);

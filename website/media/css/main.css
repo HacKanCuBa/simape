@@ -23,7 +23,7 @@
 /* 
     Created on : 25/11/2013, 00:06:43
     Author     : Ivan Ariel Barrera Oro
-    Version    : 2.04
+    Version    : 2.05
     Principal
 */
 
@@ -104,7 +104,6 @@ body {
 
 hr {
     opacity: 0.5;
-    filter: alpha(opacity=50); /* For IE8 and earlier */
 }
 
 a {

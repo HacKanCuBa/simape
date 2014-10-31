@@ -24,6 +24,7 @@
 /* 
     Created on : 16/09/2014, 11:19:08
     Author     : hackan
+    Version    : 0.2
 */
 
 body {
@@ -91,7 +92,6 @@ body {
 .ficha tbody td {
     border: 0.1mm solid black;
     border-spacing: 0px;
-    //padding: 3px;
     font-family: sans-serif;
     font-size: 3mm;
 }

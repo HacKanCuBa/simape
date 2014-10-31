@@ -23,7 +23,7 @@
 /* 
     Created on : 27-oct-2014, 13:07:21
     Author     : Ivan Ariel Barrera Oro
-    Version    : 0.1
+    Version    : 0.11
 */
 
 /** warn **/
@@ -44,7 +44,6 @@
 }
 #warn .warn_visible {
     opacity: 0.5;
-    filter: alpha(opacity=50); /* For IE8 and earlier */
     position:relative;
     visibility: visible;
 }
@@ -57,7 +56,6 @@
 #warn:hover .warn_hidden {
     visibility:visible;
     opacity: 0.9;
-    filter: alpha(opacity=90); /* For IE8 and earlier */
 }
 
 #warn:hover .warn_visible {
