@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.87
+ * @version 0.88
  */
 
 require_once 'autoload.php';
@@ -110,14 +110,16 @@ if ($page->authenticateToken()
                     if (is_array($ficha)) {
                         // debo guardarla sin procesar
                         Session::store(SAPER_SESSINDEX_FICHA, $ficha);
-                        foreach ($ficha as $mes => $f) {
-                            // cálculo incial con hora de entrada 7:30
-                            $entrada[$mes] = ["07:30", "07:30", "07:30", "07:30", "07:30"];
-                            $f->procesarFicha($entrada[$mes]);
-                            $f->add_column_tardes();
-                            $f->add_column_faltantes();
-                            $f->add_column_compensadas();
-                            $f->add_column_extras();
+                        foreach ($ficha as $anio => $year) {
+                            foreach ($year as $mes => $f) {
+                                // cálculo incial con hora de entrada 7:30
+                                $entrada[$anio][$mes] = ["07:30", "07:30", "07:30", "07:30", "07:30"];
+                                $f->procesarFicha($entrada[$anio][$mes]);
+                                $f->add_column_tardes();
+                                $f->add_column_faltantes();
+                                $f->add_column_compensadas();
+                                $f->add_column_extras();
+                            }
                         }
                         Session::store(SAPER_SESSINDEX_HINI, $entrada);
                         Session::remove(SMP_SESSINDEX_NOTIF_ERR);
@@ -135,16 +137,18 @@ if ($page->authenticateToken()
                 $entrada = Sanitizar::glPOST('frm_txtHoraIni');
                 Session::store(SAPER_SESSINDEX_HINI, $entrada);
                 
-                foreach ($ficha as $mes => $f) {
-                    if (is_a($f, 'SaperFicha')) {
-                        $f->procesarFicha(isset($entrada[$mes]) ? $entrada[$mes] : NULL);
-                        $f->add_column_tardes();
-                        $f->add_column_faltantes();
-                        $f->add_column_compensadas();
-                        $f->add_column_extras();
-                    } else {
-                        $err = TRUE;
-                        break;
+                foreach ($ficha as $anio => $year) {
+                    foreach ($year as $mes => $f) {
+                        if (is_a($f, 'SaperFicha')) {
+                            $f->procesarFicha(isset($entrada[$anio][$mes]) ? $entrada[$anio][$mes] : NULL);
+                            $f->add_column_tardes();
+                            $f->add_column_faltantes();
+                            $f->add_column_compensadas();
+                            $f->add_column_extras();
+                        } else {
+                            $err = TRUE;
+                            break;
+                        }
                     }
                 }
                 
@@ -163,49 +167,51 @@ if ($page->authenticateToken()
             $ficha = Session::retrieve(SAPER_SESSINDEX_FICHA);
             $entrada = Sanitizar::glPOST('frm_txtHoraIni');
             $btn = Sanitizar::glPOST('frm_btnDescargar');
-            foreach ($btn as $mes => $value) {
-                if ($value && is_a($ficha[$mes], 'SaperFicha')) {
-                    $ficha[$mes]->procesarFicha(isset($entrada[$mes]) ? $entrada[$mes] : NULL);
-                    $ficha[$mes]->add_column_tardes();
-                    $ficha[$mes]->add_column_faltantes();
-                    $ficha[$mes]->add_column_compensadas();
-                    $ficha[$mes]->add_column_extras();
-                   
-                    require_once SMP_FS_ROOT . SMP_LOC_EXT . 'mpdf/mpdf.php';
-                    //ob_start(); // necesario pq la libreria mpdf es una cagada...
-                    $mpdf = new mPDF('utf-8', 'A4', '','' , 0 , 0 , 0 , 0 , 0 , 0);
-                    $mpdf->SetDisplayMode('fullpage');
-                    $css = file_get_contents(SMP_FS_ROOT . SMP_LOC_CSS . 'pdf.css');
-                    $mpdf->shrink_tables_to_fit = 1;
-                    $mpdf->keep_table_proportions = TRUE;
-    //                $mpdf->showImageErrors = true;
-                    $mpdf->SetJS('this.print();');
-                    $mpdf->WriteHTML($css, 1);
+            foreach ($btn as $anio => $year) {
+                foreach ($year as $mes => $value) {
+                    if ($value && is_a($ficha[$anio][$mes], 'SaperFicha')) {
+                        $ficha[$anio][$mes]->procesarFicha(isset($entrada[$anio][$mes]) ? $entrada[$anio][$mes] : NULL);
+                        $ficha[$anio][$mes]->add_column_tardes();
+                        $ficha[$anio][$mes]->add_column_faltantes();
+                        $ficha[$anio][$mes]->add_column_compensadas();
+                        $ficha[$anio][$mes]->add_column_extras();
 
-                    $html = Page::getHeader(SMP_FS_ROOT)
-                                . Page::getHeaderClose()
-                                . Page::getMain()
-                                . $ficha[$mes]->imprimir(5, 'ficha', FALSE)
-                                . Page::_e("<br />", 2, TRUE, FALSE)
-                                . SaperFicha::getDescripcionFicha()
-                                . Page::getMainClose();
+                        require_once SMP_FS_ROOT . SMP_LOC_EXT . 'mpdf/mpdf.php';
+                        //ob_start(); // necesario pq la libreria mpdf es una cagada...
+                        $mpdf = new mPDF('utf-8', 'A4', '','' , 0 , 0 , 0 , 0 , 0 , 0);
+                        $mpdf->SetDisplayMode('fullpage');
+                        $css = file_get_contents(SMP_FS_ROOT . SMP_LOC_CSS . 'pdf.css');
+                        $mpdf->shrink_tables_to_fit = 1;
+                        $mpdf->keep_table_proportions = TRUE;
+        //                $mpdf->showImageErrors = true;
+                        $mpdf->SetJS('this.print();');
+                        $mpdf->WriteHTML($css, 1);
 
-                    $mpdf->WriteHTML($html, 2);
-                    if (Sanitizar::glPOST('frm_btnDescargar')) {
-                        $mpdf->Output('SiMaPe Ficha.pdf', 'D');
-                    } /*elseif (Sanitizar::glPOST('frm_btnImprimir')) {
-                        $pdf_fname = Crypto::getRandomFilename('Fichaje') . '.pdf';
-                        $mpdf->Output(SMP_FS_ROOT . SMP_LOC_TMPS . $pdf_fname, 'F');
-                        $pdf = file_get_contents($pdf_fname);
-                        //send_to_browser($pdf, TRUE);
-                        header('Content-Type: application/pdf');
-                        header('Content-disposition: attachment; filename="' . $pdf_fname . '"');
-                        Page::_e('<script type="text/javascript">window.open("data:application/pdf;base64, ' . base64_encode($pdf) . '");</script>');// . SMP_WEB_ROOT . SMP_LOC_TMPS . $pdf . '");</script>');
-                        unset($css, $html, $ficha);
-                        //ob_end_flush();
-                    }*/
-                    Session::remove(SMP_SESSINDEX_NOTIF_ERR); 
-                    exit();
+                        $html = Page::getHeader(SMP_FS_ROOT)
+                                    . Page::getHeaderClose()
+                                    . Page::getMain()
+                                    . $ficha[$anio][$mes]->imprimir(5, 'ficha', FALSE)
+                                    . Page::_e("<br />", 2, TRUE, FALSE)
+                                    . SaperFicha::getDescripcionFicha()
+                                    . Page::getMainClose();
+
+                        $mpdf->WriteHTML($html, 2);
+                        if (Sanitizar::glPOST('frm_btnDescargar')) {
+                            $mpdf->Output('SiMaPe Ficha.pdf', 'D');
+                        } /*elseif (Sanitizar::glPOST('frm_btnImprimir')) {
+                            $pdf_fname = Crypto::getRandomFilename('Fichaje') . '.pdf';
+                            $mpdf->Output(SMP_FS_ROOT . SMP_LOC_TMPS . $pdf_fname, 'F');
+                            $pdf = file_get_contents($pdf_fname);
+                            //send_to_browser($pdf, TRUE);
+                            header('Content-Type: application/pdf');
+                            header('Content-disposition: attachment; filename="' . $pdf_fname . '"');
+                            Page::_e('<script type="text/javascript">window.open("data:application/pdf;base64, ' . base64_encode($pdf) . '");</script>');// . SMP_WEB_ROOT . SMP_LOC_TMPS . $pdf . '");</script>');
+                            unset($css, $html, $ficha);
+                            //ob_end_flush();
+                        }*/
+                        Session::remove(SMP_SESSINDEX_NOTIF_ERR); 
+                        exit();
+                    }
                 }
             }
         }
@@ -295,25 +301,48 @@ switch($display) {
         
         Page::_e("<tr>", 5);
         Page::_e("<td colspan='2'>", 6);
-        Page::_e("<h3>Seleccione el mes y a&ntilde;o deseado</h3>", 7);
+        Page::_e("<h3>Seleccione el per&iacute;odo deseado</h3>", 7);
         Page::_e("</td>", 6);
         Page::_e("</tr>", 5);
             
         Page::_e("<tr>", 5);
         Page::_e("<td>", 6);
-        Page::_e("<select name='frm_optMes'>", 7);
+        Page::_e("<select name='frm_optMes[0]'>", 7);
         for ($i = 1; $i < 13; $i ++) {  
-            $mes = ucfirst(strftime('%B', strtotime($i . '/01/2014')));
+            $mes = ucfirst(month_name_from_number($i));
             Page::_e("<option value='" . $i . "'" 
                     . (($i == date("m")) ? " selected" : '') . ">" 
                     . $mes . "</option>", 8);
         }
-        Page::_e("<option value='13'>Todo el a&ntilde;o</option>", 8);
         Page::_e("</select>", 7);
         Page::_e("</td>", 6);
         Page::_e("<td>", 6);
         Page::_e(Page::getInput('number', 
-                                'frm_txtYear', 
+                                'frm_txtYear[0]', 
+                                date("Y"), 
+                                NULL, 
+                                'txt_fixed', 
+                                NULL, 
+                                NULL, 
+                                "placeholder='A&ntilde;o'"), 
+                7);
+        Page::_e("</td>", 6);
+        Page::_e("</tr>", 5);
+        
+        Page::_e("<tr>", 5);
+        Page::_e("<td>", 6);
+        Page::_e("<select name='frm_optMes[1]'>", 7);
+        for ($i = 1; $i < 13; $i ++) {  
+            $mes = ucfirst(month_name_from_number($i));
+            Page::_e("<option value='" . $i . "'" 
+                    . (($i == date("m")) ? " selected" : '') . ">" 
+                    . $mes . "</option>", 8);
+        }
+        Page::_e("</select>", 7);
+        Page::_e("</td>", 6);
+        Page::_e("<td>", 6);
+        Page::_e(Page::getInput('number', 
+                                'frm_txtYear[1]', 
                                 date("Y"), 
                                 NULL, 
                                 'txt_fixed', 
@@ -358,47 +387,49 @@ switch($display) {
         Page::_e("<tr>", 5);
         Page::_e("<td colspan='2'>", 6);
         Page::_e("<table style='border-spacing: 0px; width: 100%'>", 7);
-        foreach ($ficha as $mes => $f) {
-            Page::_e("<tr>", 8);
-            Page::_e("<td colspan='6'>", 9);
-            Page::_e("<h4>Hora de inicio de tareas en " . $f->getMes() 
-                    . "</h4>", 10);
-            Page::_e("</td>", 9);
-            Page::_e("</tr>", 8);
-
-            Page::_e("<tr>", 8);
-            $dias = array('Lunes', 
-                            'Martes', 
-                            'Mi&eacute;rcoles', 
-                            'Jueves', 
-                            'Viernes');
-            foreach ($dias as $dia) {
-                Page::_e("<td><em>" . $dia . "</em></td>", 9);
-            }
-            Page::_e("<td></td>", 9);
-            Page::_e("</tr>", 8);
-
-            Page::_e("<tr>", 8);
-            for ($i = 0; $i < 5; $i++) {
-                Page::_e("<td>", 9);
-                Page::_e(Page::getInput('time', 
-                                        "frm_txtHoraIni[" . $mes . "][" . $i . "]", 
-                                        (isset($horaInicio[$mes][$i]) ? $horaInicio[$mes][$i] : "07:30"), 
-                                        NULL, 
-                                        NULL,
-                                        5), 
-                        10);
+        foreach ($ficha as $anio => $year) {
+            foreach ($year as $mes => $f) {
+                Page::_e("<tr>", 8);
+                Page::_e("<td colspan='6'>", 9);
+                Page::_e("<h4>Hora de inicio de tareas en " . $f->getMes() 
+                        . " del " . $f->getAnio() . "</h4>", 10);
                 Page::_e("</td>", 9);
+                Page::_e("</tr>", 8);
+
+                Page::_e("<tr>", 8);
+                $dias = array('Lunes', 
+                                'Martes', 
+                                'Mi&eacute;rcoles', 
+                                'Jueves', 
+                                'Viernes');
+                foreach ($dias as $dia) {
+                    Page::_e("<td><em>" . $dia . "</em></td>", 9);
+                }
+                Page::_e("<td></td>", 9);
+                Page::_e("</tr>", 8);
+
+                Page::_e("<tr>", 8);
+                for ($i = 0; $i < 5; $i++) {
+                    Page::_e("<td>", 9);
+                    Page::_e(Page::getInput('time', 
+                                            "frm_txtHoraIni[" . $anio . "][" . $mes . "][" . $i . "]", 
+                                            (isset($horaInicio[$anio][$mes][$i]) ? $horaInicio[$anio][$mes][$i] : "07:30"), 
+                                            NULL, 
+                                            NULL,
+                                            5), 
+                            10);
+                    Page::_e("</td>", 9);
+                }
+                Page::_e("<td>", 9);
+                Page::_e(Page::getInput('submit', 
+                                            'frm_btnDescargar[' . $anio . '][' . $mes . ']', 
+                                            'Descargar ficha en PDF', 
+                                            NULL, 
+                                            'btn_green'), 
+                                        10);
+                Page::_e("</td>", 9);
+                Page::_e("</tr>", 8);
             }
-            Page::_e("<td>", 9);
-            Page::_e(Page::getInput('submit', 
-                                        'frm_btnDescargar[' . $mes . ']', 
-                                        'Descargar ficha en PDF', 
-                                        NULL, 
-                                        'btn_green'), 
-                                    10);
-            Page::_e("</td>", 9);
-            Page::_e("</tr>", 8);
         }
         Page::_e("</table>", 7);
         Page::_e("</td>", 6);
@@ -425,14 +456,31 @@ switch($display) {
         Page::_e("</tr>", 5);
             
         $tardes_total = 0;
-        foreach ($ficha as $f) {
-            Page::_e("<tr>", 5);
-            Page::_e("<td colspan='2'>", 6);
-            $f->imprimir(7, 'ficha');
-            Page::_e("</td>", 6);
-            Page::_e("</tr>", 5);
-            
-            $tardes_total += $f->getTardesTotal();
+        foreach ($ficha as $year) {
+            $tardes_total_anio = 0;
+            foreach ($year as $f) {
+                Page::_e("<tr>", 5);
+                Page::_e("<td colspan='2'>", 6);
+                $f->imprimir(7, 'ficha');
+                Page::_e("</td>", 6);
+                Page::_e("</tr>", 5);
+
+                $tardes_total_anio += $f->getTardesTotal();
+            }
+            if (count($year) > 1) {
+                Page::_e("<tr>", 5);
+                Page::_e("<td colspan='2'>", 6);
+                Page::_e("<h3 style='font-size: medium; font-weight: bold; "
+                        . "color: #EF9D09; border: 2px solid black; margin: 0px; "
+                        . "padding: 10px 0px;'>El total de llegadas tarde, "
+                        . "sumando los meses mostrados para el a&ntilde;o " 
+                        . $year[0]->getAnio() . " es: " 
+                        . $tardes_total_anio, 7);
+                Page::_e("</h3>", 7);
+                Page::_e("</td>", 6);
+                Page::_e("</tr>", 5);
+            }
+            $tardes_total += $tardes_total_anio;
         }
         
         if (count($ficha) > 1) {
@@ -441,7 +489,8 @@ switch($display) {
             Page::_e("<h3 style='font-size: medium; font-weight: bold; "
                     . "color: #EF9D09; border: 2px solid black; margin: 0px; "
                     . "padding: 10px 0px;'>El total de llegadas tarde, "
-                    . "sumando todos los meses, es: " . $tardes_total, 7);
+                    . "sumando todos los meses de todos los a&ntilde;os "
+                    . "mostrados, es: " . $tardes_total, 7);
             Page::_e("</h3>", 7);
             Page::_e("</td>", 6);
             Page::_e("</tr>", 5);

@@ -94,7 +94,7 @@ class Page
     /**
      * Tiempo de vida de un token de página, en segundos.
      */
-    const TOKEN_LIFETIME = 3600;
+    const TOKEN_LIFETIME = 28800;
     
     /**
      * Extensiones permitidas, separadas por coma.

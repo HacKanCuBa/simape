@@ -28,7 +28,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.2
+ * @version 0.21
  */
 class IP
 {
@@ -55,7 +55,6 @@ class IP
     {
         // https://stackoverflow.com/questions/15699101/get-the-client-ip-address-using-php
         $possible_ip = [    
-                            Sanitizar::value(getenv('HTTP_CLIENT_IP')),
                             Sanitizar::value(getenv('HTTP_X_FORWARDED_FOR')),
                             Sanitizar::value(getenv('HTTP_X_FORWARDED')),
                             Sanitizar::value(getenv('HTTP_FORWARDED_FOR')),
@@ -67,7 +66,7 @@ class IP
                             Sanitizar::glSERVER('HTTP_FORWARDED_FOR'),
                             Sanitizar::glSERVER('HTTP_FORWARDED'),
                             Sanitizar::glSERVER('REMOTE_ADDR'),
-                            Sanitizar::value(getenv('REMOTE_ADDR')),
+                            Sanitizar::value(getenv('REMOTE_ADDR'))
                         ];
         $client_ip = '';
 

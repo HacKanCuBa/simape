@@ -41,7 +41,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.70
+ * @version 0.71
  */
 class Fingerprint
 {
@@ -81,23 +81,16 @@ class Fingerprint
      */
     private static function tokenMake($mode = self::MODE_USEIP)
     {    
-        if ($mode) {
-            $tokenContent = Sanitizar::glSERVER('HTTP_USER_AGENT')
-                                . Sanitizar::glSERVER('REMOTE_ADDR')
-                                . Sanitizar::glSERVER('HTTP_HOST')
-                                . Sanitizar::glSERVER('HTTP_X_HTTP_PROTO')
-                                . Sanitizar::glSERVER('HTTP_X_REAL_IP')
-                                . Sanitizar::glSERVER('SERVER_PROTOCOL')
-                                . SMP_TKN_FINGERPRINT
-                                ;
-        } else {
-            $tokenContent = Sanitizar::glSERVER('HTTP_USER_AGENT')
-                                . Sanitizar::glSERVER('HTTP_HOST')
-                                . Sanitizar::glSERVER('HTTP_X_HTTP_PROTO')
-                                . Sanitizar::glSERVER('SERVER_PROTOCOL')
-                                . SMP_TKN_FINGERPRINT
-                                ;
-        }
+        $tokenContent = Sanitizar::glSERVER('HTTP_USER_AGENT')
+                            . Sanitizar::glSERVER('HTTP_HOST')
+                            . Sanitizar::glSERVER('HTTP_X_HTTP_PROTO')
+                            . Sanitizar::glSERVER('SERVER_PROTOCOL')
+                            . is_connection_ssl()
+                            . SMP_TKN_FINGERPRINT
+                            ;
+        
+        $tokenContent .= ($mode == self::MODE_USEIP) ? IP::getClientIP() : ''; 
+
         return Crypto::getHash($tokenContent, 1);
     }
 
