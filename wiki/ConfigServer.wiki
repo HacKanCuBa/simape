@@ -5,8 +5,16 @@
 Esta guía indica paso a paso cómo debe configurarse un servidor, con opciones por defecto, para instalar y desarrollar este sistema.  Sirve para cualquier distro *Debian*/derivados.
 Todas las opciones pueden modificarse a gusto.
 
+31/10/2014: actualizado para PHP 5.6
+
 = Script =
 El siguiente script se encarga de configurar el servidor en un solo paso, instalando dependencias y demás.  Si colocan todos los archivos necesarios dentro del directorio _svr`_`conf_ en el mismo lugar donde se encuentra este script, el mismo copiará toda la configuración pertinente.  La distribución de este directorio debe ser igual a la de _/etc_.
+
+Los únicos requisitos son:
+ * sudo
+ * distro Debian-like
+
+Si no se cuenta con `sudo`, simplemente borrar sus aparciciones en el script y ejecutarlo como root.
 
 Pueden encontrar un ejemplo [http://www.simape.cf/usr/content/upload/server_config.tar.gz aquí] de toda la configuración por defecto del proyecto.  Pero atento, ¡podría estar desactualizada!  Es preferible leer esta página detenidamente.
 
@@ -38,7 +46,7 @@ echo "PHP 5.5"
 echo "ssmtp"
 echo "Configuraciones...."
 echo
-sudo bash -c 'echo -e "deb http://packages.dotdeb.org wheezy-php55 all\n#deb-src http://packages.dotdeb.org wheezy-php55 all" > /etc/apt/sources.list.d/dotdeb-php5.list'
+sudo bash -c 'echo -e "deb http://packages.dotdeb.org wheezy-php56 all\n#deb-src http://packages.dotdeb.org wheezy-php56 all" > /etc/apt/sources.list.d/dotdeb-php5.list'
 wget http://www.dotdeb.org/dotdeb.gpg
 sudo apt-key add dotdeb.gpg
 rm dotdeb.gpg
