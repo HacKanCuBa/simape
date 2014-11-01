@@ -27,10 +27,10 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.11
+ * @version 0.12
  */
 
-require_once 'autoload.php';
+require_once 'load.php';
 
 $session = new Session;
 // -- VARS & CONST
@@ -67,10 +67,11 @@ if ($page->authenticateToken()
 } else {
     // Acceso denegado
     $usuario->sesionFinalizar();
-    $nav = '403.php';
+    $nav = SMP_HTTP_ERROR;
+    $params = 403;
 }
 
-isset($nav) ? $page->nav($nav) : NULL;
+isset($nav) ? $page->nav($nav, isset($params) ? $params : NULL) : NULL;
 
 // Token de pagina
 $page->setLocation(SMP_LOC_USR . 'index.php');

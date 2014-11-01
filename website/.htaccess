@@ -8,8 +8,12 @@ Options -Indexes
 DirectoryIndex index.php index.html /index.php
 
 # ERROR DOCUMENTS
-ErrorDocument 403 /403.php
-ErrorDocument 404 /404.php
+ErrorDocument 402 /errors.php?error=402
+ErrorDocument 403 /errors.php?error=403
+ErrorDocument 404 /errors.php?error=404
+ErrorDocument 500 /errors.php?error=500
+ErrorDocument 501 /errors.php?error=501
+ErrorDocument 503 /mantenimiento.html
 
 # DENY ACCESS TO PROTECTED SERVER FILES AND FOLDERS
 # Files and folders starting with a dot: .htaccess, .htpasswd, .errordocs, .logs
@@ -199,7 +203,7 @@ RewriteCond %{QUERY_STRING} _REQUEST(=|[|%[0-9A-Z]{0,2}) [NC,OR]
 # vuln.php?exec=uname -a;ls -al;whoami
 RewriteCond %{QUERY_STRING} ^.*(=|;)(uname%20-|ls%20-|whoami).*
 
-RewriteRule ^(.*)$ /404.php [F,L]
+RewriteRule ^(.*)$ /errors.php?error=403 [F,L]
 
 # XML-RPC DDoS PROTECTION
 # You can whitelist your IP address if you use A Weblog Client

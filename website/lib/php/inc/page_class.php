@@ -836,10 +836,12 @@ class Page
      * También acepta acciones o comandos predefinidos en lugar de rutas.
      * 
      * @param string $accion Acción a ejecutar o ruta de la página a cargar.
+     * @param mixed $params Parámetros adicionales.
      */
-    public static function nav($accion = NULL)
+    public static function nav($accion = NULL, $params = NULL)
     {
-        self::go_to('nav.php', [ SMP_NAV_ACTION => $accion ]);
+        self::go_to('nav.php', [ SMP_NAV_ACTION => $accion, 
+                                    SMP_NAV_PARAMS => $params]);
         exit();
 //        // Inicializo variables de redireccion
 //        $params = NULL;

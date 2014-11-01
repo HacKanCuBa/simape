@@ -22,22 +22,21 @@
  *****************************************************************************/
 
 /**
- * autoload.php
+ * load.php
  * Busca y carga load.php, que estará en la raíz.
  * Debe estar en todos los subdirectorios con páginas ejecutables (esto es, 
- * donde haya código a ejecutar, ¡NO en librerias o inclusiones!).  La idea
- * es que sea más fácil rediseñar el sitio y reacomodar los archivos.
+ * donde haya código a ejecutar, ¡NO en librerias o inclusiones!).
  * 
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.2
+ * @version 0.21
  */
 
 // Para forzar la ruta de config.php, borrar '//' de las siguientes 2 lineas:
 //require_once $location . '../load.php;
 ///* Buscar load.php
-$location = dirname(__FILE__);
+$location = dirname(__DIR__);
 do {
     if (file_exists($location . '/load.php')) {
         require_once $location . '/load.php';

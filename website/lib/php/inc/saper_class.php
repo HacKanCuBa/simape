@@ -33,7 +33,7 @@
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @uses PHPExcel Clase lectora de archivos XLS
- * @version 0.32
+ * @version 0.33
  */
 
 class Saper extends Curl
@@ -327,7 +327,7 @@ class Saper extends Curl
                     CURLOPT_COOKIESESSION => 0,
                     CURLOPT_FOLLOWLOCATION => 1,
                     CURLOPT_HEADER => 0,
-                    CURLOPT_TIMEOUT => 120,
+                    CURLOPT_TIMEOUT => 60,
         );
         
         $mes = is_array($month) 

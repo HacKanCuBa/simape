@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.37
+ * @version 1.38
  */
 
 /*
@@ -448,7 +448,8 @@ switch ($display) {
                                 NULL, 
                                 NULL, 
                                 "maxlength='" . SMP_USRNAME_MAXLEN 
-                                    . "' autofocus required"), 
+                                    . "' autofocus required "
+                                    . "title='Ingrese el nombre de usuario'"), 
                 7);
         Page::_e("</td>", 6);
         Page::_e("</tr>", 5);
@@ -519,7 +520,7 @@ switch ($display) {
                                     'txt_fixed', 
                                     NULL, 
                                     NULL, 
-                                    'autofocus title="Ingrese el resultado de la operaci&oacute;n"')
+                                    'title="Ingrese el resultado de la operaci&oacute;n"')
                     , 7);
             Page::_e("</td>", 6);
             Page::_e("</tr>", 5);

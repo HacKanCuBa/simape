@@ -27,14 +27,14 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.13
+ * @version 0.14
  */
 
-require_once '../../load.php';
+require_once 'load.php';
 Page::force_connect(Page::FORCE_CONNECT_PLAIN);
 
 // -- PAGE
-Page::printHead('SiMaPe - Certificado', ['main', 'input']);
+Page::printHead('SiMaPe | Certificado', ['main', 'input']);
 Page::printBody();
 Page::printHeader();
 Page::printHeaderClose();
