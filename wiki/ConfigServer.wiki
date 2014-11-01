@@ -178,11 +178,11 @@ _simape_
 	DocumentRoot /var/www/simape
 	<Directory />
 		Options FollowSymLinks -Indexes
-		AllowOverride None
+		AllowOverride All
 	</Directory>
 	<Directory /var/www/simape>
 		Options -Indexes FollowSymLinks
-		AllowOverride None
+		AllowOverride All
 		Order allow,deny
 		allow from all
 	</Directory>
