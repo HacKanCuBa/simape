@@ -65,7 +65,7 @@ $usuario->setSession($session);
 $page = new Page(SMP_LOC_USR . 'saper.php', 
                  Session::retrieve(SMP_SESSINDEX_PAGE_RANDOMTOKEN), 
                  Session::retrieve(SMP_SESSINDEX_PAGE_TIMESTAMP), 
-                 Sanitizar::glGET(SMP_SESSINDEX_PAGE_TOKEN));
+                 Sanitizar::glGET(SMP_GETINDEX_PAGE_TOKEN));
 
 if ($page->authenticateToken() 
         && $usuario->sesionAutenticar()
@@ -254,7 +254,7 @@ Page::_e(Page::getForm(Page::FORM_OPEN,
                         Page::FORM_METHOD_POST, 
                         Page::FORM_ENCTYPE_DEFAULT, 
                         NULL, 
-                        '?' . SMP_SESSINDEX_PAGE_TOKEN . '=' . 
+                        '?' . SMP_GETINDEX_PAGE_TOKEN . '=' . 
                         $page->getToken()), 
         2);
 

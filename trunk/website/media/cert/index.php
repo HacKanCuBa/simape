@@ -31,7 +31,7 @@
  */
 
 require_once 'load.php';
-Page::force_connect(Page::FORCE_CONNECT_PLAIN);
+Page::forceConnect(Page::FORCE_CONNECT_PLAIN);
 
 // -- PAGE
 Page::printHead('SiMaPe | Certificado', ['main', 'input']);

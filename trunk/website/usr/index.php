@@ -47,7 +47,7 @@ $usuario->setSession($session);
 $page = new Page(SMP_LOC_USR . 'index.php', 
                  Session::retrieve(SMP_SESSINDEX_PAGE_RANDOMTOKEN), 
                  Session::retrieve(SMP_SESSINDEX_PAGE_TIMESTAMP), 
-                 Sanitizar::glGET(SMP_SESSINDEX_PAGE_TOKEN));
+                 Sanitizar::glGET(SMP_GETINDEX_PAGE_TOKEN));
 
 if ($page->authenticateToken() 
         && $usuario->sesionAutenticar()

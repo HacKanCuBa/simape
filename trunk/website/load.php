@@ -3,7 +3,7 @@
 /*****************************************************************************
  *  Este archivo forma parte de SiMaPe
  *  Sistema Integrado de Manejo de Personal
- *  Copyright (C) <2013>  <Ivan Ariel Barrera Oro>
+ *  Copyright (C) <2013, 2014>  <Ivan Ariel Barrera Oro>
  *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *
  *  SiMaPe is free software: you can redistribute it and/or modify
@@ -23,57 +23,30 @@
 
 /**
  * load.php
- * Carga todo lo que la aplicación requiere.  Cada página debe 
- * "requiere_once load.php":
- * - Busca y carga el archivo de configuración (configload.php).
- * - Verifica la configuración (configverify.php).
- * - Carga las dependencias de clases automáticamente.
- * 
- * Este load.php debe estar siempre en la raíz.
+ * Busca y carga init.php, que estará en la raíz.
+ * Debe estar en todos los subdirectorios con páginas ejecutables (esto es, 
+ * donde haya código a ejecutar, ¡NO en librerias o inclusiones!).
  * 
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
- * @copyright (c) 2013, Iván A. Barrera Oro
+ * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.45
+ * @version 0.22
  */
 
-// Para asegurar que toda la aplicación está bien hecha
-error_reporting(E_ALL);
+// Para forzar la ruta de load.php, borrar '//' de las siguientes 2 lineas:
+//require_once $location . '../init.php;
+///* Buscar load.php
+$location = dirname(__FILE__);
+do {
+    if (file_exists($location . '/init.php')) {
+        require_once $location . '/init.php';
+        $location = '/';
+    } else {
+        $location = dirname($location);
+    }
+} while ($location != '/');
+// -- */
 
-// Raiz para inclusion de archivos
-define('SMP_FS_ROOT', dirname(__FILE__) .'/');
-
-// Inclusiones
-require_once 'configload.php';
-require_once SMP_FS_ROOT . SMP_LOC_INC . 'funciones.php';
-
-// Zona horaria
-setlocale(LC_TIME, SMP_LOCALE);
-date_default_timezone_set(SMP_TIMEZONE);
-
-// Autocarga de dependencias
-set_include_path(get_include_path() 
-                . PATH_SEPARATOR . SMP_FS_ROOT . SMP_LOC_INC);
-spl_autoload_extensions('_class.php,_trait.php,_interface.php');
-spl_autoload_register();
-
-// Carga de otras dependencias
-//Session::initiate();
-//Session::store('inc', [ 'dependencia1.php', 'dependencia2.php' ]);
-//Session::store('inc_o', [ 'dependencia1.php', 'dependencia2.php' ]);
-//Session::store('req', [ 'dependencia1.php', 'dependencia2.php' ]);
-//Session::store('req_o', [ 'dependencia1.php', 'dependencia2.php' ]);
-//require_once 'loadothers.php';
-// --
-
-// Modo mantenimiento?
-if (file_exists('.mantenimiento')
-        && !in_array_partial(IP::getClientIP(), 
-                                array_from_string_list(SMP_MAINTENANCE_IP))
-) { 
-    http_response_code(503);
-    header('Location: mantenimiento.html');
-    exit();
+if (!defined('SMP_CONFIG')) { 
+    die("No se puede encontrar el archivo init.php"); 
 }
-
-// --

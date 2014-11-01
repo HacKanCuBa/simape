@@ -56,7 +56,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.46
+ * @version 1.47
  */
 class Page
 {  
@@ -111,12 +111,12 @@ class Page
     const FORM_CLOSE = FALSE;
     
     /**
-     * Fuerza la conexion en texto plano para el método Page::force_connect
+     * Fuerza la conexion en texto plano para el método Page::forceConnect
      */
     const FORCE_CONNECT_PLAIN = 1;
     
     /**
-     * Fuerza la conexion en SSL para el método Page::force_connect
+     * Fuerza la conexion en SSL para el método Page::forceConnect
      */
     const FORCE_CONNECT_SSL = 2;
     
@@ -141,7 +141,7 @@ class Page
     protected $pageLoc = NULL;
     
     protected $indentLevel = 0;
-
+    
     // __ SPECIALS
     /**
      * Fija los valores de el Token aleatorio y el Token de Página.
@@ -843,70 +843,6 @@ class Page
         self::go_to('nav.php', [ SMP_NAV_ACTION => $accion, 
                                     SMP_NAV_PARAMS => $params]);
         exit();
-//        // Inicializo variables de redireccion
-//        $params = NULL;
-//        $intLink = NULL;
-//
-//        $session = new Session;
-//        $session->useSystemPassword();
-//        $usuario = new Usuario($session->retrieveEnc(SMP_SESSINDEX_USERNAME));
-//        
-//        switch($accion) {
-//            case SMP_LOGOUT:
-//                $usuario->sesionFinalizar();
-//                $this->setLocation('login.php');
-//                $params = [SMP_LOGOUT => 'TRUE'];
-//                break;
-//
-//            case NULL:
-//            case '':
-//            case SMP_WEB_ROOT:
-//                $this->setLocation(SMP_WEB_ROOT);
-//                // Ya se que da FALSE, es para que se entienda.
-//                // Location=NULL lleva a WEBROOT
-//                break;
-//
-//            case SMP_LOGIN:
-//                $this->setLocation('login.php');
-//                break;
-//
-//            case SMP_LOC_USR . 'mensajes.php':
-//                $intLink = "tabR"; 
-//                // omito break para que ejecute default
-//            default:
-//                // si la página no existe, 404...
-//                if (Page::pageExists($accion)) {
-//                    // Si el usuario está loggeado, dirigirse a la pag solicitada con un
-//                    // page token.
-//                    // Si no esta loggeado, darán error las comprobaciones
-//                    if ($usuario->sesionAutenticar()) {
-//                        // Login OK
-//                        // Page Token
-//                        $this->generateRandomToken();
-//                        $this->generateTimestamp();
-//                        $this->setLocation($accion);
-//                        $this->generateToken();
-//
-//                        // Guardo Page RandTkn y Timestamp en SESSION                
-//                        $session->store(SMP_SESSINDEX_PAGE_RANDOMTOKEN, 
-//                                                    $this->getRandomToken());
-//                        $session->store(SMP_SESSINDEX_PAGE_TIMESTAMP, 
-//                                                    $this->getTimestamp());
-//
-//                        // Paso por GET el Page Token
-//                        $params = SMP_SESSINDEX_PAGE_TOKEN . '=' . $this->getToken();
-//                    } else {
-//                        $this->setLocation('403.php');
-//                    }
-//                } else {
-//                    // No existe la pagina
-//                    $this->setLocation('404.php');
-//                }
-//                break;
-//        }
-//
-//        $this->go($params, $intLink);
-//        exit();
     }
 
     /**
@@ -1110,7 +1046,7 @@ class Page
      * permanecerá en modo actual.
      * @param int $mode Modo de conexión a forzar.
      */
-    public static function force_connect($mode = self::FORCE_CONNECT_PLAIN) 
+    public static function forceConnect($mode = self::FORCE_CONNECT_PLAIN) 
     {
         $exit = FALSE;
         $file = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[0]['file'];
@@ -1147,5 +1083,20 @@ class Page
                 break;
         }
         $exit ? exit() : NULL;
+    }
+    
+    /**
+     * Envía un error de estado HTTP (4xx).  En verdad, puede enviar cualquier
+     * código de estado HTTP.
+     * Navegará hasta la página de error automáticamente, saliendo del script
+     * en ejecución.
+     * @param int $err Código de estado HTTP.
+     */
+    public static function httpError($err)
+    {       
+        $e = intval($err);
+        //http_response_code($e);
+        static::go_to('errors.php', [ SMP_HTTP_ERROR => $e ]);
+        exit();
     }
 }

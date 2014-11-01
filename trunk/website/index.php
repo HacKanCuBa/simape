@@ -36,7 +36,7 @@ require_once 'load.php';
 Session::terminate();
 
 // Forzar siempre sin SSL
-Page::force_connect(Page::FORCE_CONNECT_PLAIN);
+Page::forceConnect(Page::FORCE_CONNECT_PLAIN);
 
 Page::printHead('SiMaPe', ['main' , 'input']);
 Page::printBody();

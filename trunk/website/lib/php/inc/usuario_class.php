@@ -32,7 +32,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.96
+ * @version 0.97
  */
 class Usuario extends Empleado
 {    
@@ -865,9 +865,9 @@ class Usuario extends Empleado
                 $passrestore_url = (SMP_SSL ? 'https://' : 'http://')
                                     . IP::getServerIP()
                                     . '/login.php' 
-                                    . '?' . SMP_NAV_ACTION . '=' . SMP_RESTOREPWD 
+                                    . '?' . SMP_GETINDEX_RESTOREPWD . '=1'
                                     . '&' . SMP_SESSINDEX_USERNAME . '=' . $this->UsuarioNombre 
-                                    . '&passRestoreToken=' . $this->getToken();
+                                    . '&' . SMP_GETINDEX_PASSRESTORETKN . '=' . $this->getToken();
 
                 // Enviar email
                 $email = new Email;

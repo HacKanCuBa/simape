@@ -34,7 +34,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.24
+ * @version 1.25
  */
 
 // << Config
@@ -257,12 +257,18 @@ const SMP_SESSINDEX_USERNAME = 'username';
 const SMP_SESSINDEX_SYSTEMPASSWORDSALT = 'systemPasswordSalt';
 const SMP_SESSINDEX_SESSIONPASSWORD = 'sessionPassword';
 // --
+//
+// -- Constantes internas de índice de $_GET
+const SMP_GETINDEX_PAGE_TOKEN = 'pageToken';
+const SMP_GETINDEX_RESTOREPWD = 'restorePwd';
+const SMP_GETINDEX_PASSRESTORETKN = 'passRestoreToken';
+// --
+// 
 // Otras constantes internas
 const SMP_NAV_ACTION = 'accion';
 const SMP_NAV_PARAMS = 'params';
 const SMP_LOGOUT = 'logout';
 const SMP_LOGIN = 'login';
-const SMP_RESTOREPWD = 'restorePwd';
 const SMP_HTTP_ERROR = 'error';
 // --
 // 
