@@ -9,8 +9,6 @@ require_once 'load.php';
 
 * Cada subdirectorio que contenga páginas ejecutables por el usuario debe contener una copia del archivo _load.php_. *
 
-Nota: El _load.php_ de la raíz es distinto a los demás.  Para los subdirectorios, copiar el que se encuentra dentro de _/usr_.
-
 Luego, la estructura debe ser similar a:
 {{{
 require_once 'load.php';
