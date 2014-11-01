@@ -10,11 +10,11 @@ La navegación externa se encuentra desabilitada por defecto, solo siendo permit
 
 Entre otras cosas, esta clase permite navegar entre páginas dentro de la app. Cuenta para ello con los siguientes métodos:
 
- * nav($accion = NULL, $params = NULL)
- * go`_`to($loc = NULL, $params = NULL, $intLink = NULL, $overrideSSL = FALSE)
- * go($params = NULL, $intLink = NULL, $overrideSSL = FALSE)
- * httpError($err)
- * forceConnect($mode)
+ * `nav($accion = NULL, $params = NULL)`
+ * `go_to($loc = NULL, $params = NULL, $intLink = NULL, $overrideSSL = FALSE)`
+ * `go($params = NULL, $intLink = NULL, $overrideSSL = FALSE)`
+ * `httpError($err)`
+ * `forceConnect($mode)`
 
 === nav ===
 Acepta en su argumento _$accion_ no solo el destino (que debe ser una página relativa a la raíz del sitio definida por SMP_WEB_ROOT) sino también acciones/comandos especiales:
