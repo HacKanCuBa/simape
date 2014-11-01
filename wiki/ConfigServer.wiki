@@ -258,7 +258,8 @@ Actualización: resulta que me adelanté al [https://en.wikipedia.org/wiki/POODL
 
 Luego de haber creado este archivo, es necesario activarlo como módulo: `sudo php5enmod simape`
 
-{{{; configuracion de opciones para SiMaPe
+{{{
+; configuracion de opciones para SiMaPe
 ; http://simape.cf
 ; https://code.google.com/p/simape
 ; priority=00
