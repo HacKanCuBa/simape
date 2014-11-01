@@ -1,0 +1,14 @@
+#summary Cómo navegar entre páginas dentro del sistema
+
+= Navegación =
+
+Existen varias formas de navegar dentro de la aplicación, que difieren según el objetivo deseado.
+
+La navegación externa se encuentra desabilitada por defecto, solo siendo permitida a través de Curl.
+
+== Page Class ==
+
+Entre otras cosas, esta clase permite navegar entre páginas dentro de la app. Cuenta para ello con los siguientes métodos:
+
+ * (static) nav
+ * (static)
