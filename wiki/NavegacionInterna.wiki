@@ -52,6 +52,8 @@ Ejecuta *exit()* al finalizar.
 === forceConnect ===
 Se emplea para forzar la conexión a la página invocante mediante un protocolo determinado, es decir HTTP o HTTPS, indicado por el parámetro _$mode_.
 
+De requerirlo, ejecutará *exit()* al terminar.
+
 Si HSTS se encuentra activado, no se forzará la conexión fuera de HTTPS debido a que hacerlo causa error en algunos navegadores.
 
 Se emplea fundamentalmente para asegurar que la conexión sea segura, p.e. en login.php.
