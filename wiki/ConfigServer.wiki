@@ -72,7 +72,7 @@ sudo mkdir /var/www/simape
 sudo chmod 0775 /var/www/simape
 sudo chown www-data:www-data /var/www/simape
 sudo rm /var/www/index.html
-sudo adduser hackan www-data    # para poder escribir sin sudo
+sudo adduser ${USER} www-data    # para poder escribir sin sudo
 echo
 echo "Habilitar PHP5 en apache"
 sudo a2enmod php5
@@ -105,6 +105,7 @@ cd /etc/apache2/sites-enabled
 sudo rm -f /etc/apache2/sites-enabled/*
 #sudo ln -s ../sites-available/simape ./001-simape
 #sudo ln -s ../sites-available/simape_ssl ./002-simape_ssl
+sudo a2dissite default
 sudo a2ensite simape
 sudo a2ensite simape_ssl
 sudo a2enmod headers
@@ -121,10 +122,11 @@ echo
 echo "Reiniciar Apache"
 sudo service apache2 restart
 echo
-echo "Cron sessions-cleaner"
-sudo cp -L ${CURDIR}/svr_conf/cond.d/php5 /etc/cron.d
-sudo chmod +x /etc/cron.d/php5
-echo
+# REMOVIDO PARA PHP > 5.6
+#echo "Cron sessions-cleaner"
+#sudo cp -L ${CURDIR}/svr_conf/cond.d/php5 /etc/cron.d
+#sudo chmod +x /etc/cron.d/php5
+#echo
 echo "Crear pagina web de prueba"
 sudo bash -c 'echo -e "<?php\nphpinfo();\n?>" > /var/www/simape/test.php'
 sudo chmod 0644 /var/www/simape/test.php
@@ -300,48 +302,9 @@ session.use_cookies = 1
 session.use_only_cookies = 1
 session.use_trans_sid = 0
 
-
 default_charset = "UTF-8"
 
 sendmail_path = /usr/sbin/ssmtp -t
-}}}
-
-*/etc/cron.d*/_php_
-
-Limpiar sesiones antiguas:
-
-{{{
-# /etc/cron.d/php5: crontab fragment for php5
-#  This purges session files older than X, where X is defined in seconds
-#  as the largest value of session.gc_maxlifetime from all your php.ini
-#  files, or 24 minutes if not defined.  See /usr/lib/php5/maxlifetime
-
-# Look for and purge old sessions every 30 minutes
-09,39 *     * * *     root   [ -x /usr/lib/php5/maxlifetime ] && [ -x /usr/lib/php5/sessionclean ] && [ -d /var/lib/php5 ] && /usr/lib/php5/sessionclean /var/lib/php5/sessions $(/usr/lib/php5/maxlifetime)
-}}}
-
-*/etc/cron.daily*/_php_sessions-cleaner_
-
-Limpiar sesiones antiguas adicional:
-
-{{{
-#!/bin/bash
-
-# Borra las sesiones antiguas
-
-declare -r SESSDIR="/var/lib/php5/sessions"
-declare -i TODAY=$( date +%s --date="`date +'%Y-%m-%d'`" )
-
-
-cd ${SESSDIR}
-for SESSFILE in $( ls ); do
-    FILEMODTIME=`stat -c "%Y" ${SESSFILE}`
-    if [ ${FILEMODTIME} -lt ${TODAY} ]
-    then
-        #echo "Borrando ${SESSFILE}..."
-        rm -f ${SESSFILE}
-    fi
-done
 }}}
 
 */etc/cron.daily*/_simape-cleaner_
