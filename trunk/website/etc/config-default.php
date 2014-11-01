@@ -34,7 +34,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.23
+ * @version 1.24
  */
 
 // << Config
@@ -259,9 +259,11 @@ const SMP_SESSINDEX_SESSIONPASSWORD = 'sessionPassword';
 // --
 // Otras constantes internas
 const SMP_NAV_ACTION = 'accion';
+const SMP_NAV_PARAMS = 'params';
 const SMP_LOGOUT = 'logout';
 const SMP_LOGIN = 'login';
 const SMP_RESTOREPWD = 'restorePwd';
+const SMP_HTTP_ERROR = 'error';
 // --
 // 
 // >>

@@ -31,7 +31,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.47
+ * @version 1.48
  */
 
 require_once 'load.php';
@@ -42,7 +42,7 @@ $session = new Session;
 $action = Sanitizar::glGET(SMP_NAV_ACTION);
 
 // Inicializo variables de redireccion
-$params = NULL;
+$params = Sanitizar::glGET(SMP_NAV_PARAMS);
 $intLink = NULL;
 
 $page = new Page;
@@ -55,18 +55,23 @@ $usuario->setFingerprint($fingp);
 $usuario->setSession($session);
 
 switch($action) {
-    case SMP_LOGOUT:
-        $usuario->sesionFinalizar();
-        $page->setLocation('login.php');
-        $params = [SMP_LOGOUT => 'TRUE'];
-        break;
-    
     case NULL:
     case '':
     case SMP_WEB_ROOT:
         $page->setLocation(SMP_WEB_ROOT);
         // Ya se que da FALSE, es para que se entienda.
         // Location=NULL lleva a WEBROOT
+        break;
+    
+    case SMP_HTTP_ERROR:
+        $page->setLocation('errors.php');
+        $params = [ SMP_HTTP_ERROR => $params ];
+        break;
+    
+    case SMP_LOGOUT:
+        $usuario->sesionFinalizar();
+        $page->setLocation('login.php');
+        $params = [ SMP_LOGOUT => '1' ];
         break;
     
     case SMP_RESTOREPWD:
@@ -109,13 +114,15 @@ switch($action) {
                                                 $page->getTimestamp());
                 
                 // Paso por GET el Page Token
-                $params = SMP_SESSINDEX_PAGE_TOKEN . '=' . $page->getToken();
+                $params = [ SMP_SESSINDEX_PAGE_TOKEN => $page->getToken() ];
             } else {
-                $page->setLocation('403.php');
+                $page->setLocation('errors.php');
+                $params = [ SMP_HTTP_ERROR => 403 ];
             }
         } else {
             // No existe la pagina
-            $page->setLocation('404.php');
+            $page->setLocation('errors.php');
+            $params = [ SMP_HTTP_ERROR => 404 ];
         }
         break;
 }
