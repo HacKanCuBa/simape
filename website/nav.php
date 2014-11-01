@@ -40,18 +40,14 @@ require_once 'load.php';
 $session = new Session;
 
 $action = Sanitizar::glGET(SMP_NAV_ACTION);
-
-// Inicializo variables de redireccion
 $params = Sanitizar::glGET(SMP_NAV_PARAMS);
-$intLink = NULL;
 
 $page = new Page;
-$session->useSystemPassword();
-$db = new DB(SMP_DB_CHARSET);
-$fingp = new Fingerprint();
 
-$usuario = new Usuario($db, $session->retrieveEnc(SMP_SESSINDEX_USERNAME));
-$usuario->setFingerprint($fingp);
+$session->useSystemPassword();
+$usuario = new Usuario(new DB(SMP_DB_CHARSET), 
+                        $session->retrieveEnc(SMP_SESSINDEX_USERNAME));
+$usuario->setFingerprint(new Fingerprint());
 $usuario->setSession($session);
 
 switch($action) {
@@ -59,13 +55,10 @@ switch($action) {
     case '':
     case SMP_WEB_ROOT:
         $page->setLocation(SMP_WEB_ROOT);
-        // Ya se que da FALSE, es para que se entienda.
-        // Location=NULL lleva a WEBROOT
         break;
     
     case SMP_HTTP_ERROR:
-        $page->setLocation('errors.php');
-        $params = [ SMP_HTTP_ERROR => $params ];
+        Page::httpError($params);
         break;
     
     case SMP_LOGOUT:
@@ -74,16 +67,9 @@ switch($action) {
         $params = [ SMP_LOGOUT => '1' ];
         break;
     
-    case SMP_RESTOREPWD:
-          $page->setLocation('login.php');
-//        $page->generateRandomToken();
-//        $page->generateTimestamp();
-//        $page->generateToken();
-//        $session->store(SMP_SESSINDEX_PAGE_RANDOMTOKEN, $page->getRandomToken());
-//        $session->store(SMP_SESSINDEX_PAGE_TIMESTAMP, $page->getTimestamp());
-        
+    case SMP_GETINDEX_RESTOREPWD:
+          $page->setLocation('login.php');        
           $params = Sanitizar::glGET(Sanitizar::ALL);
-//        $params[SMP_SESSINDEX_PAGE_TOKEN] = $page->getToken();
         break;
     
     case SMP_LOGIN:
@@ -98,7 +84,6 @@ switch($action) {
         if (Page::pageExists($action)) {
             // Si el usuario está loggeado, dirigirse a la pag solicitada con un
             // page token.
-            // Si no esta loggeado, darán error las comprobaciones
             if ($usuario->sesionAutenticar()) {
                 // Login OK
                 // Page Token
@@ -114,18 +99,15 @@ switch($action) {
                                                 $page->getTimestamp());
                 
                 // Paso por GET el Page Token
-                $params = [ SMP_SESSINDEX_PAGE_TOKEN => $page->getToken() ];
+                $params = [ SMP_GETINDEX_PAGE_TOKEN => $page->getToken() ];
             } else {
-                $page->setLocation('errors.php');
-                $params = [ SMP_HTTP_ERROR => 403 ];
+                $page->httpError(403);
             }
         } else {
-            // No existe la pagina
-            $page->setLocation('errors.php');
-            $params = [ SMP_HTTP_ERROR => 404 ];
+            $page->httpError(404);
         }
         break;
 }
 
-$page->go($params, $intLink);
+$page->go($params, isset($intLink) ? $intLink : NULL, FALSE);
 exit();

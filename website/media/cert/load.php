@@ -23,23 +23,23 @@
 
 /**
  * load.php
- * Busca y carga load.php, que estará en la raíz.
+ * Busca y carga init.php, que estará en la raíz.
  * Debe estar en todos los subdirectorios con páginas ejecutables (esto es, 
  * donde haya código a ejecutar, ¡NO en librerias o inclusiones!).
  * 
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.21
+ * @version 0.22
  */
 
-// Para forzar la ruta de config.php, borrar '//' de las siguientes 2 lineas:
-//require_once $location . '../load.php;
+// Para forzar la ruta de load.php, borrar '//' de las siguientes 2 lineas:
+//require_once $location . '../init.php;
 ///* Buscar load.php
-$location = dirname(__DIR__);
+$location = dirname(__FILE__);
 do {
-    if (file_exists($location . '/load.php')) {
-        require_once $location . '/load.php';
+    if (file_exists($location . '/init.php')) {
+        require_once $location . '/init.php';
         $location = '/';
     } else {
         $location = dirname($location);
@@ -48,5 +48,5 @@ do {
 // -- */
 
 if (!defined('SMP_CONFIG')) { 
-    die("No se puede encontrar el archivo load.php"); 
+    die("No se puede encontrar el archivo init.php"); 
 }

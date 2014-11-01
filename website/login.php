@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.38
+ * @version 1.39
  */
 
 /*
@@ -88,7 +88,7 @@ $display = LOGIN_DISPLAY_DEFAULT;
 
 // Si SSL está habilitado pero el usuario cargó la página de manera insegura,
 // recarga por SSL.
-Page::force_connect(Page::FORCE_CONNECT_SSL);
+Page::forceConnect(Page::FORCE_CONNECT_SSL);
 
 // Inicializaciones
 // Iniciar o continuar sesion
@@ -171,8 +171,8 @@ if (!empty(Sanitizar::glPOST('frm_btnLogin'))) {
             $display = LOGIN_DISPLAY_EMAIL_NOTSENT;
         }
     }   
-} elseif (Sanitizar::glGET(SMP_NAV_ACTION) == SMP_RESTOREPWD) {       
-    $usuario->setToken(Sanitizar::glGET('passRestoreToken'));
+} elseif (Sanitizar::glGET(SMP_GETINDEX_RESTOREPWD)) {       
+    $usuario->setToken(Sanitizar::glGET(SMP_GETINDEX_PASSRESTORETKN));
     if ($usuario->authenticatePasswordRestore()) {
         // Token válido
         // mostrar formulario

@@ -31,7 +31,7 @@
  */
 
 require_once 'load.php';
-Page::force_connect(Page::FORCE_CONNECT_PLAIN);
+Page::forceConnect(Page::FORCE_CONNECT_PLAIN);
 ?>
 <!doctype html>
 <html lang="es-AR">
