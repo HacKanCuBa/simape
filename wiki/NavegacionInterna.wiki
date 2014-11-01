@@ -10,5 +10,48 @@ La navegación externa se encuentra desabilitada por defecto, solo siendo permit
 
 Entre otras cosas, esta clase permite navegar entre páginas dentro de la app. Cuenta para ello con los siguientes métodos:
 
- * (static) nav
- * (static)
+ * nav($accion = NULL, $params = NULL)
+ * go`_`to($loc = NULL, $params = NULL, $intLink = NULL, $overrideSSL = FALSE)
+ * go($params = NULL, $intLink = NULL, $overrideSSL = FALSE)
+ * httpError($err)
+ * forceConnect($mode)
+
+=== nav ===
+Acepta en su argumento _$accion_ no solo el destino (que debe ser una página relativa a la raíz del sitio definida por SMP_WEB_ROOT) sino también acciones/comandos especiales:
+ * SMP_LOGOUT
+ * SMP_HTTP_ERROR
+ * SMP_LOGIN
+ * SMP_GETINDEX_RESTOREPWD
+
+El valor de _$params_ esta vinculado directamente a la acción que se desea realizar.  Si _$where_ es una página, el valor _$params_ será enviado a dicha página vía GET.
+
+En el caso de SMP_LOGOUT, _$params_ debe ser un objeto _Usuario_ autenticado, a fin de cerrar la sesión.  Si no
+
+Asimismo, _nav_ siempre navega sobre SSL/TLS si está habilitado.
+
+Este método aplica sobre la página destino el token de página.
+
+Al término de la ejecución, se realiza *exit()* si la navegación resulta posible, o bien se devuelve NULL y continúa la ejecución del script invocante (p.e.: si la página indicada no fuese válida).
+
+*_nav_ es el método que debe usarse siempre, salvo que se tenga una buena razón para no hacerlo. *
+
+=== go`_`to | go ===
+Ambos métodos son iguales (_go_ llama a _go`_`to_), salvo por el hecho que _go`_`to_ es estático mientras que _go_ requiere objeto.  Mientras que a go`_`to debe indicársele destino, _go_ emplea el destino fijado mediante _setLocation()_.
+
+Estos métodos realizan una navegación simple, y NO emplean token de página.  Asimismo, puede indicárseles navegar fuera de SSL/TLS.
+
+Nota: si HSTS se encuentra habilitado en Apache (lo está por defecto en la configuración del sitio), forzar la navegación fuera de SSL puede causar que el sitio no se muestre en absoluto, dependiendo del navegador (Chrome/Chromium darán error).
+
+Cabe destacar que estos métodos NO ejecutan exit(), sino que envían los encabezados correspondientes y devuelven TRUE/FALSE según si la navegación resulta posible o no.  Debe llamarse a _exit()_ luego de invocarlos o la navegación fallará.
+
+=== httpError ===
+Este método realiza la navegación correspondiente a la página de errores (errors.php), y recibe como parámetro el código de error.
+
+Ejecuta *exit()* al finalizar.
+
+=== forceConnect ===
+Se emplea para forzar la conexión a la página invocante mediante un protocolo determinado, es decir HTTP o HTTPS, indicado por el parámetro _$mode_.
+
+Si HSTS se encuentra activado, no se forzará la conexión fuera de HTTPS debido a que hacerlo causa error en algunos navegadores.
+
+Se emplea fundamentalmente para asegurar que la conexión sea segura, p.e. en login.php.
