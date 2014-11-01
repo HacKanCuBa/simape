@@ -14,7 +14,7 @@ Los únicos requisitos son:
  * sudo
  * distro Debian-like
 
-Si no se cuenta con `sudo`, simplemente borrar sus aparciciones en el script y ejecutarlo como root.
+Si no se cuenta con `sudo`, simplemente borrar sus apariciones en el script y ejecutarlo como root.
 
 Pueden encontrar un ejemplo [http://www.simape.cf/usr/content/upload/server_config.tar.gz aquí] de toda la configuración por defecto del proyecto.  Pero atento, ¡podría estar desactualizada!  Es preferible leer esta página detenidamente.
 
@@ -256,38 +256,37 @@ Actualización: resulta que me adelanté al [https://en.wikipedia.org/wiki/POODL
 
 Luego de haber creado este archivo, es necesario activarlo como módulo: `sudo php5enmod simape`
 
-{{{
-; configuracion de opciones para SiMaPe
+{{{; configuracion de opciones para SiMaPe
 ; http://simape.cf
 ; https://code.google.com/p/simape
 ; priority=00
 
-expose_php=Off
-display_errors=Off
-log_errors=On
+expose_php = 0
+display_errors = 0
+log_errors = 1
 error_log=/var/log/simape/php_scripts_error.log
-file_uploads=On
+file_uploads = 1
 upload_tmp_dir = "/var/lib/php5/upload_tmp"
 max_file_uploads = 2
 
 allow_url_fopen=Off
 
-# Limites de memoria
+; Limites de memoria
 memory_limit = 8M
 post_max_size = 6M
 upload_max_filesize = 5M
 
-# En segundos
+; En segundos
 max_execution_time =  30
 max_input_time = 30
 
-# Deshabilitar funciones peligrosas
+; Deshabilitar funciones peligrosas
 disable_functions = allow_url_fopen,exec,passthru,shell_exec,system,proc_open,popen,curl_multi_exec,parse_ini_file,show_source
 
-# Limitar acceso al sistema
+; Limitar acceso al sistema
 open_basedir="/var/www/simape/"
 
-# Configuracion de session
+; Configuracion de session
 session.use_strict_mode = 1
 session.save_path = "/var/lib/php5/sessions"
 session.cookie_httponly = 1
@@ -296,7 +295,11 @@ session.hash_function = sha256
 session.hash_bits_per_character = 5
 session.entropy_length = 256
 session.entropy_file = /dev/urandom
-session.gc_maxlifetime = 43200
+session.gc_maxlifetime = 1800
+session.use_cookies = 1
+session.use_only_cookies = 1
+session.use_trans_sid = 0
+
 
 default_charset = "UTF-8"
 
