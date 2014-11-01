@@ -2,14 +2,89 @@
 
 = Estructura =
 
-Para facilitar la escalabilidad, las páginas que se encuentren en el directorio raíz y sean ejecutables por el usuario, deben simplemente:
+Para facilitar la escalabilidad, todas las páginas deben requerir _load.php_:
 {{{
 require_once 'load.php';
 }}}
 
-Mientras que las que estén en algún subdirectorio (_/usr_ normalmente) deben:
-{{{
-require_once 'autoload.php';
-}}}
+* Cada subdirectorio que contenga páginas ejecutables por el usuario debe contener una copia del archivo _load.php_. *
 
-* Cada subdirectorio que contenga páginas ejecutables por el usuario debe contener una copia del archivo _autoload.php_. *
+Nota: El _load.php_ de la raíz es distinto a los demás.  Para los subdirectorios, copiar el que se encuentra dentro de _/usr_.
+
+Luego, la estructura debe ser similar a:
+{{{
+require_once 'load.php';
+
+$session = new Session;
+// -- VARS & CONST
+
+// -- --
+// -- CODE
+$session->useSystemPassword();
+$db = new DB(SMP_DB_CHARSET);
+$fingp = new Fingerprint();
+$usuario = new Usuario($db, $session->retrieveEnc(SMP_SESSINDEX_USERNAME));
+$usuario->setFingerprint($fingp);
+$usuario->setSession($session);
+
+$page = new Page(SMP_LOC_USR . 'index.php', 
+                 Session::retrieve(SMP_SESSINDEX_PAGE_RANDOMTOKEN), 
+                 Session::retrieve(SMP_SESSINDEX_PAGE_TIMESTAMP), 
+                 Sanitizar::glGET(SMP_SESSINDEX_PAGE_TOKEN));
+
+if ($page->authenticateToken() 
+        && $usuario->sesionAutenticar()
+) {
+    // Si no se requiere procesar formulario, puede borrarse lo siguiente o bien
+    // simplemente remover el '//' siguiente
+    ///*
+    $formToken = new FormToken;
+    $formToken->prepare_to_auth(
+                        Sanitizar::glPOST(SMP_SESSINDEX_FORM_TOKEN), 
+                        Session::retrieve(SMP_SESSINDEX_FORM_RANDOMTOKEN), 
+                        Session::retrieve(SMP_SESSINDEX_FORM_TIMESTAMP)
+    );
+    
+    if ($formToken->authenticateToken()) {
+        // Procesar POST
+        // ACA VA EL CODIGO QUE DEBE SER PROCESADO DEL FORMULARIO
+    }
+    //*/
+} else {
+    // Acceso denegado
+    $usuario->sesionFinalizar();
+    $nav = SMP_HTTP_ERROR;
+    $params = 403;
+}
+
+isset($nav) ? $page->nav($nav, isset($params) ? $params : NULL) : NULL;
+
+// Token de pagina
+$page->setLocation(SMP_LOC_USR . 'index.php');
+$page->generate();
+Session::store(SMP_SESSINDEX_PAGE_RANDOMTOKEN, 
+                    $page->getRandomToken());
+Session::store(SMP_SESSINDEX_PAGE_TIMESTAMP, 
+                    $page->getTimestamp());
+
+// Token de formulario
+$formToken->generateRandomToken();
+$formToken->generateTimestamp();
+$formToken->generateToken();
+Session::store(SMP_SESSINDEX_FORM_RANDOMTOKEN, $formToken->getRandomToken());
+Session::store(SMP_SESSINDEX_FORM_TIMESTAMP, $formToken->getTimestamp());
+// -- --
+// -- PAGE
+Page::printHead('SiMaPe - Inicio', ['main', 'input', 'navbar']);
+Page::printBody();
+Page::printHeader();
+Page::printHeaderClose();
+Page::printDefaultNavbarVertical('');
+Page::printMain();
+
+// CONTENIDO DE LA PAGINA
+
+Page::printMainClose();
+Page::printFooter();
+Page::printBodyClose();
+}}}
