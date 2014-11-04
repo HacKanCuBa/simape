@@ -47,7 +47,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.43
+ * @version 1.44
  */
 class DB extends mysqli
 {     
@@ -296,8 +296,8 @@ class DB extends mysqli
     public function setQueryParams($queryParams)
     {    
         if (!empty($queryParams)) {
-            $this->queryParams = is_array($queryParams) ? $queryParams : 
-                                                            array($queryParams);
+            $qp = $this->sanitizar($queryParams);
+            $this->queryParams = is_array($qp) ? $qp : array($qp);
             return TRUE;
         }
         
@@ -441,7 +441,7 @@ class DB extends mysqli
                             $this->real_escape_string(stripslashes($valor))
                             , '%_');
             }
-            return $result;
+            return Sanitizar::value($result);
         } else {
             return NULL;
         }

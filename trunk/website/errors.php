@@ -28,7 +28,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.21
+ * @version 0.30
  */
 
 require_once 'load.php';
@@ -36,7 +36,7 @@ require_once 'load.php';
 Session::initiate();
 
 // 418 no está asignado, por eso lo uso como custom
-$status = intval(Sanitizar::glGET(SMP_HTTP_ERROR)) ?: 418;
+$status = intval(Sanitizar::glGET(SMP_HTTP_ERROR));
 
 Page::printHead('SiMaPe | Error ' . $status, ['input', 'main', 'msg']);
 Page::printBody();
@@ -46,116 +46,99 @@ Page::printMain();
 
 switch ($status) {
     case 403:
-        Page::_e("<h2 style='text-align: center;font-weight: bold'>"
-                    . "Error 403: Acceso denegado</h2>", 2) ;
-        if (!empty(Session::retrieve(SMP_SESSINDEX_NOTIF_ERR))) {
-            Page::_e("<p class='fadeout' "
-                        . "style='color:red; text-align: center;' >" 
-                        . Session::retrieve(SMP_SESSINDEX_NOTIF_ERR) 
-                        . "</p>", 2);
-            Session::remove(SMP_SESSINDEX_NOTIF_ERR);
-        } else {
-            Page::_e("<br />", 2);
-        }
-        Page::_e("<p style='text-align: center;'>No tiene permiso "
-                    . "para acceder a la p&aacute;gina requerida.</p>", 2);
-        Page::_e("<p style='text-align: center;'>Si lleg&oacute; "
-                    . "aqu&iacute; por medio de un enlace, <i>es probable que su "
-                    . "sesi&oacute;n haya caducado por inactividad</i>.  "
-                    . "Si considera que &eacute;sto no es correcto, contacte "
-                    . "con un " . contactar_administrador() . " del sistema."
-                    . "</p>", 2);
-        Page::_e("<p style='text-align: center;'>", 2);
-        Page::_e(Page::getInput('button', 
-                                        '', 
-                                        'Ingresar al sistema - Iniciar sesi&oacute;n', 
-                                        '',
-                                        'btn_blue', 
-                                        '', 
-                                        '', 
-                                        "onClick='location.href=\"" 
-                                            . SMP_WEB_ROOT . "login.php\";'"), 
-                                    3);
-        Page::_e('</p>', 2);
+        $title = "Acceso denegado";
+        $desc = [ 
+                "No tiene permiso para acceder a la p&aacute;gina "
+                . "requerida.",
+                "Si lleg&oacute; aqu&iacute; por medio de un enlace, "
+                . "<i>es probable que su sesi&oacute;n haya caducado "
+                . "por inactividad</i>.  Si considera que &eacute;sto no "
+                . "es correcto, contacte con un " 
+                . contactar_administrador() . " del sistema."
+        ];
         break;
     
     case 404:
-        Page::_e("<h2 style='text-align: center;font-weight: bold'>Error 404: "
-                    . "P&aacute;gina no encontrada</h2>", 2);
-        Page::_e("<br />", 2);
-        Page::_e("<p style='text-align: center;'>"
-                . "La p&aacute;gina que est&aacute; "
-                . "buscando no se encuentra en esta direcci&oacute;n.</p>", 2);
-        Page::_e("<p style='text-align: center;'>"
-                . "Si lleg&oacute; aqu&iacute; por medio de un enlace, "
+        $title = "P&aacute;gina no encontrada";
+        $desc = [
+                "La p&aacute;gina que est&aacute; "
+                . "buscando no se encuentra en esta direcci&oacute;n.",
+                "Si lleg&oacute; aqu&iacute; por medio de un enlace, "
                 . "contacte a un " . contactar_administrador() 
-                . " del sistema.</p>", 2);
-
-        Page::_e("<p style='text-align: center;'>", 2);
-        Page::_e(Page::getInput('button', 
-                                        '', 
-                                        'Ir a la p&aacute;gina principal', 
-                                        '',
-                                        'btn_blue', 
-                                        '', 
-                                        '', 
-                                        "onClick='location.href=\"" 
-                                            . SMP_WEB_ROOT . "\";'"), 
-                                    3);
-        Page::_e('</p>', 2);
+                . " del sistema."
+        ];
         break;
     
     case 500:
-        Page::_e("<h2 style='text-align: center;font-weight: bold'>Error 500: "
-                    . "Error interno del servidor</h2>", 2);
-        Page::_e("<br />", 2);
-        Page::_e("<p style='text-align: center;'>"
-                . "El servidor no ha logrado procesar correctamente la "
-                . "petici&oacute;n y ha ocurrido un error interno.</p>", 2);
-        Page::_e("<p style='text-align: center;'>"
-                . "Repita la operaci&oacute;n y si el error persiste, "
+        $title = "Error interno del servidor";
+        $desc = [
+                "El servidor no ha logrado procesar correctamente la "
+                . "petici&oacute;n y ha ocurrido un error interno.",
+                "Repita la operaci&oacute;n y si el error persiste, "
                 . "contacte a un " . contactar_administrador() 
-                . " del sistema.</p>", 2);
-
-        Page::_e("<p style='text-align: center;'>", 2);
-        Page::_e(Page::getInput('button', 
-                                        '', 
-                                        'Ir a la p&aacute;gina principal', 
-                                        '',
-                                        'btn_blue', 
-                                        '', 
-                                        '', 
-                                        "onClick='location.href=\"" 
-                                            . SMP_WEB_ROOT . "\";'"), 
-                                    3);
-        Page::_e('</p>', 2);
+                . " del sistema."
+        ];
+        break;
+    
+    case 1337:
+        $title = "Intento de hacking detectado";
+        $desc = [
+                "Se ha detectado un intento de hacking, el cual ha sido "
+                . "interceptado y detenido.",
+                "Su IP, las acciones realizadas y otros datos han quedado "
+                . "registrados a fin de ser analizados por el equipo de "
+                . "seguridad, que ya fue notificado del hecho.",
+                "Es probable que no pueda volver a usar la aplicaci&oacute;n "
+                . "desde esta computadora y/o desde su cuenta "
+                . "de usuario momentaneamente."
+        ];
         break;
 
     default:
-        Page::_e("<h2 style='text-align: center;font-weight: bold'>Error " 
-                    . $status . "</h2>", 2);
-        Page::_e("<br />", 2);
-        Page::_e("<p style='text-align: center;'>Se ha producido un error "
-                . "desconocido.</p>", 2);
-        Page::_e("<p style='text-align: center;'>"
-                . "Repita la operaci&oacute;n y si el error persiste, "
+        $status = 418;
+        $title = "Desconocido";
+        $desc = [
+                "Se ha producido un error desconocido.",
+                "Repita la operaci&oacute;n y si el error persiste, "
                 . "contacte a un " . contactar_administrador() 
-                . " del sistema.</p>", 2);
-
-        Page::_e("<p style='text-align: center;'>", 2);
-        Page::_e(Page::getInput('button', 
-                                        '', 
-                                        'Ir a la p&aacute;gina principal', 
-                                        '',
-                                        'btn_blue', 
-                                        '', 
-                                        '', 
-                                        "onClick='location.href=\"" 
-                                            . SMP_WEB_ROOT . "\";'"), 
-                                    3);
-        Page::_e('</p>', 2);
+                . " del sistema e ind&iacute;quele los pasos seguidos a fin "
+                . "de reproducir el error."
+        ];
         break;
 }
+
+Page::_e("<h2 style='text-align: center;font-weight: bold'>"
+            . "Error " . $status . ": " . $title . "</h2>", 2);
+
+foreach ($desc as $d) {    
+    Page::_e("<p style='text-align: center;'>", 2);
+    Page::_e($d, 3);
+    Page::_e("</p>", 2);
+}
+
+Page::_e("<p style='text-align: center;'>", 2);
+Page::_e(Page::getInput('button', 
+                            '', 
+                            'Ir a la p&aacute;gina principal', 
+                            '',
+                            'btn_green', 
+                            '', 
+                            '', 
+                            "onClick='location.href=\"" 
+                                . SMP_WEB_ROOT . "\";'"), 
+                        3);
+
+Page::_e(Page::getInput('button', 
+                            '', 
+                            'Ingresar al sistema - Iniciar sesi&oacute;n', 
+                            '',
+                            'btn_blue', 
+                            '', 
+                            '', 
+                            "onClick='location.href=\"" 
+                                . SMP_WEB_ROOT . "login.php\";'"), 
+                        3);
+Page::_e('</p>', 2);
 
 Page::printMainClose();
 Page::printFooter();
