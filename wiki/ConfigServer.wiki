@@ -157,11 +157,17 @@ sudo apt-get install mysql-server mysql-client apache2 php5 php-pear php5-mysqln
 }}}
 Puede que no tenga éstas en los repositorios por defecto.  Yo lo he instalado en Debian 6 y 7 y para ello agregué los siguientes:
 {{{
-sudo bash -c 'echo -e "deb http://packages.dotdeb.org wheezy-php55 all\n#deb-src http://packages.dotdeb.org wheezy-php55 all" > /etc/apt/sources.list.d/dotdeb-php5.list'
+sudo bash -c 'echo -e "deb http://packages.dotdeb.org wheezy-php56 all\n#deb-src http://packages.dotdeb.org wheezy-php56 all" > /etc/apt/sources.list.d/dotdeb-php5.list'
 wget http://www.dotdeb.org/dotdeb.gpg
 sudo apt-key add dotdeb.gpg
 rm dotdeb.gpg
 sudo bash -c 'echo -e "# deb cdrom:[Debian GNU/Linux 7.2.0 _Wheezy_ - Official i386 NETINST Binary-1 20131012-12:55]/ wheezy main\n#deb cdrom:[Debian GNU/Linux 7.2.0 _Wheezy_ - Official i386 NETINST Binary-1 20131012-12:55]/ wheezy main\n\ndeb http://ftp.ccc.uba.ar/pub/linux/debian/debian/ wheezy main contrib\n#deb-src http://ftp.ccc.uba.ar/pub/linux/debian/debian/ wheezy main\n\ndeb http://security.debian.org/ wheezy/updates main contrib\n#deb-src http://security.debian.org/ wheezy/updates main\n\n# wheezy-updates, previously known as volatile\ndeb http://ftp.ccc.uba.ar/pub/linux/debian/debian/ wheezy-updates main contrib\n#deb-src http://ftp.ccc.uba.ar/pub/linux/debian/debian/ wheezy-updates main\n" > /etc/apt/sources.list'
+
+#get Oracle keys and set repo
+gpg --keyserver hkp://pgp.mit.edu --recv-keys 0x8c718d3b5072e1f5
+gpg --export --armor 0x8c718d3b5072e1f5 | sudo apt-key add -
+sudo bash -c 'echo -e "deb http://repo.mysql.com/apt/debian/ wheezy mysql-5.6\n#deb-src http://repo.mysql.com/apt/debian/ wheezy mysql-5.6" > /etc/apt/sources.list.d/mysql.list'
+
 sudo apt-get update && sudo apt-get upgrade
 }}}
 
