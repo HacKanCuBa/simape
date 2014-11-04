@@ -6,6 +6,7 @@ Esta guía indica paso a paso cómo debe configurarse un servidor, con opciones 
 Todas las opciones pueden modificarse a gusto.
 
 03/11/2014: actualizado para MySQL 5.6
+
 31/10/2014: actualizado para PHP 5.6
 
 = Script =
@@ -53,7 +54,12 @@ sudo apt-key add dotdeb.gpg
 rm dotdeb.gpg
 sudo bash -c 'echo -e "# deb cdrom:[Debian GNU/Linux 7.2.0 _Wheezy_ - Official i386 NETINST Binary-1 20131012-12:55]/ wheezy main\n#deb cdrom:[Debian GNU/Linux 7.2.0 _Wheezy_ - Official i386 NETINST Binary-1 20131012-12:55]/ wheezy main\n\ndeb http://ftp.ccc.uba.ar/pub/linux/debian/debian/ wheezy main contrib\n#deb-src http://ftp.ccc.uba.ar/pub/linux/debian/debian/ wheezy main\n\ndeb http://security.debian.org/ wheezy/updates main contrib\n#deb-src http://security.debian.org/ wheezy/updates main\n\n# wheezy-updates, previously known as volatile\ndeb http://ftp.ccc.uba.ar/pub/linux/debian/debian/ wheezy-updates main contrib\n#deb-src http://ftp.ccc.uba.ar/pub/linux/debian/debian/ wheezy-updates main\n" > /etc/apt/sources.list'
 sudo apt-get remove --purge mysql-server* mysql-client* mysql-server-core*
-sudo dkpg -i mysql-apt-config_*.deb
+
+#get Oracle keys and set repo
+gpg --keyserver hkp://pgp.mit.edu --recv-keys 0x8c718d3b5072e1f5
+gpg --export --armor 0x8c718d3b5072e1f5 | sudo apt-key add -
+sudo bash -c 'echo -e "deb http://repo.mysql.com/apt/debian/ wheezy mysql-5.6\n#deb-src http://repo.mysql.com/apt/debian/ wheezy mysql-5.6" > /etc/apt/sources.list.d/mysql.list'
+
 sudo apt-get update && sudo apt-get upgrade
 sudo apt-get install mysql-server mysql-client apache2 php5 php-pear php5-mysqlnd php5-mcrypt php5-curl php5-mhash libapache2-mod-php5 php5-cli php5-common apache2-mpm-prefork ssmtp php5-gd
 echo
