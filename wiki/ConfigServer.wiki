@@ -48,7 +48,7 @@ echo "PHP 5.6"
 echo "ssmtp"
 echo "Configuraciones...."
 echo
-sudo bash -c 'echo -e "deb http://packages.dotdeb.org wheezy-php55 all\n#deb-src http://packages.dotdeb.org wheezy-php55 all" > /etc/apt/sources.list.d/dotdeb-php5.list'
+sudo bash -c 'echo -e "deb http://packages.dotdeb.org wheezy-php56 all\n#deb-src http://packages.dotdeb.org wheezy-php56 all" > /etc/apt/sources.list.d/dotdeb-php5.list'
 wget http://www.dotdeb.org/dotdeb.gpg
 sudo apt-key add dotdeb.gpg
 rm dotdeb.gpg
