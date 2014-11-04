@@ -33,7 +33,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.45
+ * @version 1.46
  */
 
 // Para asegurar que toda la aplicación está bien hecha
@@ -66,12 +66,12 @@ spl_autoload_register();
 // --
 
 // Modo mantenimiento?
-if (file_exists('.mantenimiento')
+if (file_exists(SMP_FS_ROOT . '.mantenimiento')
         && !in_array_partial(IP::getClientIP(), 
                                 array_from_string_list(SMP_MAINTENANCE_IP))
 ) { 
     http_response_code(503);
-    header('Location: mantenimiento.html');
+    header('Location: ' . SMP_WEB_ROOT . 'mantenimiento.html');
     exit();
 }
 
