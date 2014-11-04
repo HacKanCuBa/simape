@@ -27,10 +27,17 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.89
+ * @version 1.00
  */
 
 require_once 'load.php';
+
+function saper_cleanStored() 
+{
+    Session::remove(SAPER_SESSINDEX_FICHA);
+    Session::remove(SAPER_SESSINDEX_AGENTES);
+    Session::remove(SAPER_SESSINDEX_HINI);
+}
 
 $session = new Session;
 
@@ -45,6 +52,7 @@ const SAPER_DISPLAY_CALC_RESULT = 4;
 
 const SAPER_SESSINDEX_FICHA = 'saper_ficha';
 const SAPER_SESSINDEX_HINI = 'hora_inicio';
+const SAPER_SESSINDEX_AGENTES = 'agentes';
 
 /**
  * Indica qué se mostrará al usuario en la página.
@@ -87,12 +95,13 @@ if ($page->authenticateToken()
                 ) {
                     $display = SAPER_DISPLAY_SELECT;
                     $agentes = $saper->getAgentes();
-                    Session::remove(SAPER_SESSINDEX_FICHA);
+                    Session::store(SAPER_SESSINDEX_AGENTES, $agentes);
                 } else {
                     $display = SAPER_DISPLAY_NORESULT;
                 }
             } else {
                 Session::store(SMP_SESSINDEX_NOTIF_ERR, 'Error grave en SAPER login: ' . $saper->getError() . '. Contacte a un ' . contactar_administrador() . '.');
+                saper_cleanStored();
             }
         } elseif (!empty(Sanitizar::glPOST ('frm_btnVerFicha'))) {
             Session::store(SMP_SESSINDEX_NOTIF_ERR, 
@@ -110,10 +119,19 @@ if ($page->authenticateToken()
                     if (is_array($ficha)) {
                         // debo guardarla sin procesar
                         Session::store(SAPER_SESSINDEX_FICHA, $ficha);
+                        $hini = Session::retrieve(SAPER_SESSINDEX_HINI);
+                        $entrada = array();
                         foreach ($ficha as $anio => $year) {
                             foreach ($year as $mes => $f) {
                                 // cálculo incial con hora de entrada 7:30
-                                $entrada[$anio][$mes] = ["07:30", "07:30", "07:30", "07:30", "07:30"];
+                                $entrada[$anio][$mes] = isset($hini[$anio][$mes]) 
+                                                            ? $hini[$anio][$mes] 
+                                                            : ["07:30", 
+                                                                "07:30", 
+                                                                "07:30", 
+                                                                "07:30", 
+                                                                "07:30"]
+                                                        ;
                                 $f->procesarFicha($entrada[$anio][$mes]);
                                 $f->add_column_tardes();
                                 $f->add_column_faltantes();
@@ -125,6 +143,8 @@ if ($page->authenticateToken()
                         Session::remove(SMP_SESSINDEX_NOTIF_ERR);
                         $display = SAPER_DISPLAY_CALC;
                     }
+                } else {
+                    $display = SAPER_DISPLAY_SELECT;
                 }
             }
         } elseif (!empty(Sanitizar::glPOST('frm_btnCalcular'))) {
@@ -275,6 +295,7 @@ switch($display) {
         Page::_e("</td>", 6);
         Page::_e("</tr>", 5);
         
+        $agentes = Session::retrieve(SAPER_SESSINDEX_AGENTES);
         foreach ($agentes as $ord => $agente) {
             Page::_e("<tr>", 5);
             Page::_e("<td colspan='2'>", 6);
@@ -475,7 +496,7 @@ switch($display) {
                         . "color: #EF9D09; border: 2px solid black; margin: 0px; "
                         . "padding: 10px 0px;'>El total de llegadas tarde, "
                         . "sumando los meses mostrados para el a&ntilde;o " 
-                        . $year[0]->getAnio() . " es: " 
+                        . current($year)->getAnio() . " es: " 
                         . $tardes_total_anio, 7);
                 Page::_e("</h3>", 7);
                 Page::_e("</td>", 6);
