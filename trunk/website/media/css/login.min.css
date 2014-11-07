@@ -1,0 +1,2 @@
+/**Parte de SiMaPe (C) 2013 Ivan A. Barrera Oro v0.11**/
+#warn{width:auto;text-align:right;height:auto;margin-right:0;position:relative;right:1px;margin-right:1%;bottom:0;margin-bottom:0;font-size:smaller;z-index:-10;overflow:hidden;display:block}#warn .warn_visible{opacity:.5;position:relative;visibility:visible}#warn .warn_hidden{position:relative;visibility:hidden}#warn:hover .warn_hidden{visibility:visible;opacity:.9}#warn:hover .warn_visible{visibility:hidden}

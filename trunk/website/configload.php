@@ -31,7 +31,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.61
+ * @version 0.62
  */
 
 // Para forzar la ruta de config.php, borrar '//' de las siguientes 2 lineas:
@@ -55,3 +55,4 @@ if (file_exists('etc/config.php')) {
 }// -- */
 
 require_once SMP_LOC_ETC . 'config.php';
+require_once SMP_LOC_ETC . 'config_interna.php';

@@ -577,8 +577,8 @@ switch($display) {
         break;
 }
 
-Page::_e(Page::getInput('hidden', 'formToken', $formToken->getToken()), 7);
-Page::_e(Page::getForm(Page::FORM_CLOSE));
+Page::_e(Page::getInput('hidden', 'formToken', $formToken->getToken()), 3);
+Page::_e(Page::getForm(Page::FORM_CLOSE), 2);
 
 Page::printMainClose();
 Page::printFooter();
