@@ -72,8 +72,8 @@ body {
     height: auto;
     margin-right: 0px;
     position: fixed;
-    right: 1px;
-    margin-right: 1%;
+    left: 1px;
+    margin-left: 1%;
     bottom: 0px;
     margin-bottom: 0px;
 }

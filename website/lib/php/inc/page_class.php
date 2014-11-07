@@ -56,7 +56,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.47
+ * @version 1.48
  */
 class Page
 {  
@@ -370,21 +370,23 @@ class Page
                 . "\n\t<link rel='icon' type='image/ico' href='" 
                 . SMP_WEB_ROOT . self::FAVICON . ".ico' />";
           
-        $stylesheets = is_array($stylesheet) ? $stylesheet : 
-                        (is_string($stylesheet) ? explode(',', $stylesheet) : 
-                            [ self::STYLESHEET_DEFAULT ]);
+        $stylesheets = array_from_string_list($stylesheet) 
+                        ?: [ self::STYLESHEET_DEFAULT ];
                 
-        // si no es un array, es pq el argumento recibido es invalido.
-        if (is_array($stylesheets)) {
-            foreach ($stylesheets as $css) {
-                if (self::isValid_cssFName($css)) {
-                    $cssFullName = SMP_LOC_CSS . $css . '.css';
-                    if (file_exists(SMP_FS_ROOT . $cssFullName)) {
-                        $code .= "\n\t<link rel='stylesheet' type='text/css' ";
-                        $code .= "href='" . SMP_WEB_ROOT . $cssFullName . "' />";
-                    } else {
-                        throw new Exception('No se encuentra el archivo de hoja de estilos indicado: ' . SMP_FS_ROOT . $cssFullName, E_USER_NOTICE);
-                    }
+        foreach ($stylesheets as $css) {
+            if (self::isValid_cssFName($css)) {
+                if (file_exists(SMP_FS_ROOT . SMP_LOC_CSS . $css . '.min.css')) {
+                    $code .= "\n\t<link rel='stylesheet' type='text/css' ";
+                    $code .= "href='" . SMP_WEB_ROOT . SMP_LOC_CSS . $css;
+                    $code .= ".min.css' />";
+                } elseif (file_exists(SMP_FS_ROOT . SMP_LOC_CSS . $css . '.css')) {
+                    $code .= "\n\t<link rel='stylesheet' type='text/css' ";
+                    $code .= "href='" . SMP_WEB_ROOT . SMP_LOC_CSS . $css;
+                    $code .= ".css' />";
+                } else {
+                    throw new Exception('No se encuentra el archivo de hoja de '
+                            . 'estilos indicado: ' . SMP_FS_ROOT . SMP_LOC_CSS 
+                            . $css . '{.min.css, .css}', E_USER_NOTICE);
                 }
             }
         }
@@ -669,9 +671,10 @@ class Page
     public static function getFooter() 
     {
         return "\n\t<p id='pi'>"
-                . "\n\t\t<span class='pi_hidden'>"
+                . "\n\t\t<span class='pi_visible'>π</span>"
+                . "<span class='pi_hidden'>"
                 . "SiMaPe: GNU GPL v3.0 (C) 2013 Iv&aacute;n Ariel Barrera Oro"
-                . "</span><span class='pi_visible'>π</span>"
+                . "</span>"
                 . "\n\t</p>";
     }
     
