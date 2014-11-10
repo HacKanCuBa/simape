@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS `frei_chat` (
     `to` int(11) NOT NULL,
     `to_name` varchar(30) NOT NULL,
     `message` text NOT NULL,
-    `sent` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+    `sent` datetime NOT NULL DEFAULT '2014-01-01 00:00:00',
     `recd` int(10) unsigned NOT NULL DEFAULT '0',
     `time` double(15,4) NOT NULL,
     `GMT_time` bigint(20) NOT NULL,
