@@ -1,0 +1,9 @@
+#summary Mensajería instantánea empleada
+
+= Freichat =
+
+Como solución de mensajería instantánea, implementamos [http://codologic.com/page/freichat-free-php-chat-script-software Freichat], la versión gratuita en principio.
+
+Si bien la calidad del código me decepcionó bastante, lo cierto es que implementarlo resultó bastante sencillo.
+
+El punto de esta entrada es indicar que, por motivos de la licencia de Freichat (CC BY-NC v3.0), no nos es posible redistribuir una versión modificada.
