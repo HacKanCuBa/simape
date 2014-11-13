@@ -35,7 +35,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 2.00
+ * @version 2.01
  */
 
 // << Config
@@ -87,7 +87,7 @@ const SMP_DB_USER_CHAT = 'chat';
 /**
  * Contraseña para el usuario de chat
  */
-const SMP_DB_USER_CHAT = 'SECURE_PASS';
+const SMP_DB_PASS_CHAT = 'SECURE_PASS';
 // --
 // 
 // -- Email
