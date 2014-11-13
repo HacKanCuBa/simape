@@ -33,14 +33,15 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.46
+ * @version 1.47
  */
 
 // Para asegurar que toda la aplicación está bien hecha
 error_reporting(E_ALL);
 
 // Raiz para inclusion de archivos
-define('SMP_FS_ROOT', dirname(__FILE__) .'/');
+$loc = dirname(__FILE__);
+define('SMP_FS_ROOT', (substr($loc, -1) == '/') ? $loc : $loc .'/');
 
 // Inclusiones
 require_once 'configload.php';
