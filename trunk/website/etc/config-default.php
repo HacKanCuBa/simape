@@ -90,6 +90,12 @@ const SMP_DB_USER_CHAT = 'chat';
 const SMP_DB_PASS_CHAT = 'SECURE_PASS';
 // --
 // 
+// -- Chat
+/**
+ * Contraseña de la página de administración del chat.
+ */
+const SMP_CHAT_ADMINPASS = 'admin';
+// 
 // -- Email
 /**
  * Dirección del servidor SMTP empleado.
