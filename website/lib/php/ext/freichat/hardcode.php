@@ -3,12 +3,12 @@
  * ¡¡NO MODIFICAR!!
  */
 require_once 'load.php';
-$dsn = 'mysql:host=' . SMP_DB_HOST . ';dbname=' . SMP_DB_NAME; //DSN
-$db_user = SMP_DB_USER_CHAT; //DB username
-$db_pass = SMP_DB_PASS_CHAT; //DB password
-$driver = 'Custom'; //Integration driver
-$db_prefix = ''; //prefix used for tables in database
-$uid = Chat::generateUid(); //Any random unique number
+$dsn = 'mysql:host=' . SMP_DB_HOST . ';dbname=' . SMP_DB_NAME;
+$db_user = SMP_DB_USER_CHAT;
+$db_pass = SMP_DB_PASS_CHAT;
+$driver = 'Custom';
+$db_prefix = '';
+$uid = Chat::generateUid();
 $connected='YES';
 $PATH = 'freichat/'; 
 $installed = TRUE; 
