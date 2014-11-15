@@ -78,6 +78,8 @@ $page = new Page(SMP_LOC_USR . 'saper.php',
 if ($page->authenticateToken() 
         && $usuario->sesionAutenticar()
 ) {
+    $chat = new Chat($usuario->getUsuarioId());
+    
     $formToken = new FormToken;
     $formToken->prepare_to_auth(
                         Sanitizar::glPOST(SMP_SESSINDEX_FORM_TOKEN), 
@@ -261,6 +263,7 @@ Session::store(SMP_SESSINDEX_FORM_TIMESTAMP, $formToken->getTimestamp());
 // Mostrar página
 Page::printHead('SiMaPe | Fichas de los empleados', 
                     ['main', 'msg', 'navbar', 'tabla', 'input']);
+isset($chat) ? $chat->start() : '';
 Page::printBody();
 Page::printHeader();
 Page::printHeaderClose();
