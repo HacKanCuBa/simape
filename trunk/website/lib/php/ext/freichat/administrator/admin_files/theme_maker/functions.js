@@ -2064,7 +2064,7 @@ FreiChat.add_users = function() {
         str += "<div id='freichat_user_" + i + "' title='I am available' class='freichat_userlist'>\n\
                         <span>\n\
                             <span style='display:block' class='freichat_userscontentavatar'>\n\
-                        <img src='http://www.gravatar.com/avatar/" + md5(names[i]) + "?s=24&amp;d=wavatar' class='freichat_userscontentavatarimage' alt='avatar'></span>\n\
+                        <img src='https://www.gravatar.com/avatar/" + md5(names[i]) + "?s=24&amp;d=wavatar' class='freichat_userscontentavatarimage' alt='avatar'></span>\n\
                         </span>\n\
                         <span class='freichat_userscontentname'>" + names[i] + "</span>\n\
                         <span>&nbsp;<img class='freichat_userscontentstatus'  src='" + FreiChat.make_url("images/onlineimg.png") + "' height='12' width='12' alt='status'></span>\n\
