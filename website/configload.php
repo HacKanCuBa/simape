@@ -31,28 +31,28 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.62
+ * @version 0.70
  */
 
 // Para forzar la ruta de config.php, borrar '//' de las siguientes 2 lineas:
-//const SMP_LOC_ETC = 'etc/';
+//const SMP_FS_ETC = '/var/www/simape/etc/';
 ///* Buscar config.php
 // Primero probar el valor por defecto, para mayor velocidad
 if (file_exists('etc/config.php')) {
-    define('SMP_LOC_ETC', 'etc/');
+    define('SMP_FS_ETC', SMP_FS_ROOT . 'etc/');
 } else {
     $location = dirname(__FILE__);
     do {
         $dirs = scandir($location);
         foreach ($dirs as $dir) {
             if ($dir == 'etc' && file_exists($location . '/etc/config.php')) {
-                define('SMP_LOC_ETC', $location . '/etc/');
+                define('SMP_FS_ETC', $location . '/etc/');
                 break;
             }
         }
         $location = dirname($location);    
-    } while (!defined('SMP_LOC_ETC') && $location != '/');  
+    } while (!defined('SMP_FS_ETC') && $location != '/');  
 }// -- */
 
-require_once SMP_LOC_ETC . 'config.php';
-require_once SMP_LOC_ETC . 'config_interna.php';
+require_once SMP_FS_ETC . 'config.php';
+require_once SMP_FS_ETC . 'config_interna.php';

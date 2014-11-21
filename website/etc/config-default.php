@@ -35,7 +35,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 2.01
+ * @version 2.02
  */
 
 // << Config
@@ -182,6 +182,8 @@ const SMP_SERVER_ADDR = '';
  * Raiz del sitio (default '/').
  * Debe corresponder a la configuración de apache, y siempre comenzar 
  * y terminar con con '/'.
+ * ATENCION: si difiere de '/', deben cambiarse las líneas que contienen url()
+ * en navbar.css pertinentemente (y minificarlo luego).
  */
 const SMP_WEB_ROOT = '/';
 // --

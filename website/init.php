@@ -41,7 +41,7 @@ error_reporting(E_ALL);
 
 // Raiz para inclusion de archivos
 $loc = dirname(__FILE__);
-define('SMP_FS_ROOT', (substr($loc, -1) == '/') ? $loc : $loc .'/');
+define('SMP_FS_ROOT', (substr($loc, -1) == '/') ? $loc : $loc . '/');
 
 // Inclusiones
 require_once 'configload.php';

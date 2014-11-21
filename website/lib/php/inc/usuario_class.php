@@ -821,8 +821,8 @@ class Usuario extends Empleado
             $this->isLoggedIn = FALSE;
 
             if ($this->setToken(Session::retrieve(SMP_SESSINDEX_SESSIONKEY_TOKEN))) {
-                if(!empty($this->uid) ?: $this->retrieve_fromDB()
-                    && !empty($this->TokenId) ?: $this->retrieve_fromDB_TokenId($this->UsuarioNombre)
+                if((!empty($this->uid) ?: $this->retrieve_fromDB())
+                    && (!empty($this->TokenId) ?: $this->retrieve_fromDB_TokenId($this->UsuarioNombre))
                 ) {
                     if (isset($this->fingerprint)) {
                         $this->fingerprint->setTokenId($this->TokenId);
@@ -837,7 +837,10 @@ class Usuario extends Empleado
             }
         }
         
-        $this->isLoggedIn ?: $this->sesionFinalizar();
+        if (!$this->isLoggedIn) {
+            $this->sesionFinalizar();
+        }
+        
         return $this->isLoggedIn;
     }
     

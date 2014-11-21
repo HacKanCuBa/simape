@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.39
+ * @version 1.40
  */
 
 /*
@@ -589,7 +589,7 @@ switch ($display) {
 Page::_e("<div id='warn' style='position: fixed; bottom: 0px; left: 0px; width: 100%;'>", 3);
 Page::_e("<div class='warn_hidden' style='text-align: center;'>", 4);
 Page::_e("<p>Siempre <strong>verificar</strong> que aparezca el "
-        . "<strong>candado</strong> arriba a la derecha, que al darle click "
+        . "<strong>candado</strong> arriba a la izquierda, que al darle click "
         . "la leyenda sea similar a <strong>Verificado por: SiMaPe</strong> "
         . "y además que la dirección sea " . IP::getServerIP() . " como se aprecia "
         . "en la imagen:</p>", 5);
@@ -602,7 +602,7 @@ Page::_e("<p>De no ser as&iacute;, informar de lo sucedido inmediatamente a un "
 Page::_e("</div>", 4);
 Page::_e("<div class='warn_visible' style='text-align: center;'>", 4);
 Page::_e("<p>Siempre <strong>verificar</strong> que aparezca el "
-        . "<strong>candado</strong> arriba a la derecha, que al darle click "
+        . "<strong>candado</strong> arriba a la izquierda, que al darle click "
         . "la leyenda sea similar a <strong>Verificado por: SiMaPe</strong> "
         . "y además que la dirección sea " . IP::getServerIP() . " como se aprecia "
         . "en la imagen:</p>", 5);

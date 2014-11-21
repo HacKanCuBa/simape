@@ -56,7 +56,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.48
+ * @version 1.49
  */
 class Page
 {  
@@ -79,27 +79,11 @@ class Page
      * (debe residir en el subdirectorio SMP_LOC_CSS).
      */
     const STYLESHEET_DEFAULT = 'main';
-    /**
-     * Determina la logitud máxima que puede tener una ruta relativa desde '/' 
-     * a una página.
-     */
-    const LOC_MAXLEN = 100;
     
-    /**
-     * Determina la longitud máxima que puede tener el nombre de una página 
-     * (sin extensión, y sin ruta).
-     */
-    const NAME_MAXLEN = 25;
-
     /**
      * Tiempo de vida de un token de página, en segundos.
      */
     const TOKEN_LIFETIME = 28800;
-    
-    /**
-     * Extensiones permitidas, separadas por coma.
-     */
-    const EXTENSIONS = 'php,html';
 
     const FORM_ENCTYPE_DEFAULT = "application/x-www-form-urlencoded";
     const FORM_ENCTYPE_FILE = "multipart/form-data";
@@ -163,49 +147,7 @@ class Page
     }
     // __ PRIV
     
-    // __ PROT
-    /**
-     * Determina si una extensión de página dada es válida.
-     * 
-     * @param string $extension Extensión
-     * @return boolean TRUE si es válida, FALSE si no.
-     */
-    protected static function isValid_extension($extension)
-    {
-        return boolval(strstr(self::EXTENSIONS, $extension));
-    }
-
-    /**
-     * Determina si una ruta es válida.<br />
-     * Solo puede contener letras mayúsculas y minúsculas del alfabeto inglés,
-     * números y los símbolos '/', '-' y '_'.<br />
-     * Solo puede contener un único '.' para la extensión.<br />
-     * El primer caracter debe ser una letra o un número (ruta relativa).<br />
-     * La longitud máxima la determina LOC_MAXLEN.<br />
-     * P. e.: incs/page_class.php
-     * 
-     * @param string $loc Ruta a validar
-     * @return boolean TRUE si la ruta es válida, FALSE si no.
-     */
-    protected static function isValid_loc($loc)
-    {
-        if (!empty($loc)
-            && is_string($loc)
-            && preg_match("/\./", $loc)
-        ) {
-            //$ext = pathinfo($loc, PATHINFO_EXTENSION);
-            list($url, $ext) = explode('.', $loc, 2);
-            if (self::isValid_extension($ext)
-                && preg_match('/^[a-zA-Z0-9]{1}[a-zA-Z0-9\_\-\/\.]{0,'
-                                    . (self::LOC_MAXLEN - 1) . '}$/', $url)
-            ){
-                return TRUE;
-            }
-        }
-        
-        return FALSE;
-    }
-    
+    // __ PROT    
     /**
      * Valida un string y determina si es un título de página válido.
      * @param string $title Título a validar.
@@ -214,20 +156,6 @@ class Page
     protected static function isValid_title($title)
     {
         if (isset($title) && is_string($title)) {
-            return TRUE;
-        }
-        
-        return FALSE;
-    }
-    
-    protected static function isValid_cssFName($stylesheet)
-    {
-        if (!empty($stylesheet)
-            && is_string($stylesheet)
-            && preg_match('/^[a-zA-Z0-9]{1}[a-z0-9A-Z\_\-]{0,' 
-                      . (self::NAME_MAXLEN - 1)
-                      . '}$/', $stylesheet)
-        ) {
             return TRUE;
         }
         
@@ -273,7 +201,7 @@ class Page
         }
         
         return SMP_WEB_ROOT . 
-                (self::isValid_loc($loc) ? $loc : '') . 
+                (File::isValid_loc($loc) ? $loc : '') . 
                 $strParams . 
                 ($intLink ? '#' . $intLink : '');
     }
@@ -374,20 +302,18 @@ class Page
                         ?: [ self::STYLESHEET_DEFAULT ];
                 
         foreach ($stylesheets as $css) {
-            if (self::isValid_cssFName($css)) {
-                if (file_exists(SMP_FS_ROOT . SMP_LOC_CSS . $css . '.min.css')) {
-                    $code .= "\n\t<link rel='stylesheet' type='text/css' ";
-                    $code .= "href='" . SMP_WEB_ROOT . SMP_LOC_CSS . $css;
-                    $code .= ".min.css' />";
-                } elseif (file_exists(SMP_FS_ROOT . SMP_LOC_CSS . $css . '.css')) {
-                    $code .= "\n\t<link rel='stylesheet' type='text/css' ";
-                    $code .= "href='" . SMP_WEB_ROOT . SMP_LOC_CSS . $css;
-                    $code .= ".css' />";
-                } else {
-                    throw new Exception('No se encuentra el archivo de hoja de '
-                            . 'estilos indicado: ' . SMP_FS_ROOT . SMP_LOC_CSS 
-                            . $css . '{.min.css, .css}', E_USER_NOTICE);
-                }
+            if (File::isValid_loc(SMP_FS_ROOT . SMP_LOC_CSS . $css . '.min.css', TRUE)) {
+                $code .= "\n\t<link rel='stylesheet' type='text/css' ";
+                $code .= "href='" . SMP_WEB_ROOT . SMP_LOC_CSS . $css;
+                $code .= ".min.css' />";
+            } elseif (File::isValid_loc(SMP_FS_ROOT . SMP_LOC_CSS . $css . '.css', TRUE)) {
+                $code .= "\n\t<link rel='stylesheet' type='text/css' ";
+                $code .= "href='" . SMP_WEB_ROOT . SMP_LOC_CSS . $css;
+                $code .= ".css' />";
+            } else {
+                throw new Exception('No se encuentra el archivo de hoja de '
+                        . 'estilos indicado: ' . SMP_FS_ROOT . SMP_LOC_CSS 
+                        . $css . '{.min.css, .css}', E_USER_WARNING);
             }
         }
               
@@ -755,7 +681,7 @@ class Page
      */
     public function setLocation($loc)
     {
-        if (self::isValid_loc($loc)) {
+        if (File::isValid_loc($loc)) {
             $this->pageLoc = $loc;
             return TRUE;
         }
@@ -868,12 +794,8 @@ class Page
      */
     public static function pageExists($relativeURL)
     {
-        if (self::isValid_loc($relativeURL)
-            && file_exists(SMP_FS_ROOT . $relativeURL)) {
-            return TRUE;
-        }
-        
-        return FALSE;
+        return File::isValid_loc($relativeURL) 
+                && file_exists(SMP_FS_ROOT . $relativeURL);
     }
     
     /**

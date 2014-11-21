@@ -30,7 +30,7 @@
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @uses PHPExcel Clase lectora de archivos XLS
- * @version 0.90
+ * @version 0.91
  */
 class SaperFicha
 {
@@ -64,6 +64,12 @@ class SaperFicha
      * Diferencia tolerada para la llegada tarde (15')
      */
     const DIFF_TARDE = 900;
+    
+    /**
+     * Lista separada por comas de los meses en los que no se considera la 
+     * llegada tarde
+     */
+    const TARDE_NO_CONSIDERAR_MES = "Enero,";
 
     public function __construct($fname = NULL) 
     {
@@ -182,11 +188,18 @@ class SaperFicha
      * Determina si un fichaje corresponde a una llegada tarde o no.
      * @param int $fichaje Fichaje de entrada.
      * @param int $entrada Hora de entrada correspondiente.
+     * @param string $mes [opcional]<br />
+     * Mes del fichaje, para determinar si se considerará 
+     * la llegada tarde o no.
      * @return boolean TRUE si es tarde, FALSE si no.
      */
-    protected static function es_tarde($fichaje, $entrada)
+    protected static function es_tarde($fichaje, $entrada, $mes = NULL)
     {
-        return ($fichaje > ($entrada + self::DIFF_TARDE));
+        $no_tarde = in_array_partial($mes,
+                                        array_from_string_list(
+                                            self::TARDE_NO_CONSIDERAR_MES)
+                                    );
+        return ($no_tarde) ? FALSE : ($fichaje > ($entrada + self::DIFF_TARDE));
     }
     // __PUB
     /**
@@ -493,6 +506,7 @@ class SaperFicha
 
         foreach ($this->get_asArray() as $dia) {
             $fecha = DateTime::createFromFormat("d#m#Y", $dia[0]);
+            $mes = $this->getMes();
             $tiempo = array(0, 0, 0, FALSE);
             // No leer fichaje si tiene una inasistencia
             if (end($dia) == '-' ||
@@ -526,7 +540,7 @@ class SaperFicha
                     
                     $entro = (($descargo[0] < $entra) ? $entra : $descargo[0]);
                     $tiempo = static::calcExtra($entro, $descargo[1]);
-                    $tiempo[] = static::es_tarde($descargo[0], $entra);
+                    $tiempo[] = static::es_tarde($descargo[0], $entra, $mes);
                 } else {
                     // genero un array con todos los fichajes, incluido el descargo.
                     $fichajes = array_merge(
@@ -550,7 +564,7 @@ class SaperFicha
                             $entro = (($fichajes[0] < $entra) ? $entra : $fichajes[0]);
                             $salio = end($fichajes);
                             $tiempo = static::calcExtra($entro, $salio);
-                            $tiempo[] = static::es_tarde($fichajes[0], $entra);
+                            $tiempo[] = static::es_tarde($fichajes[0], $entra, $mes);
                         } else {
                             // par
                             // hago diferencias de a dos y voy sumando
@@ -589,7 +603,7 @@ class SaperFicha
                                 }
                                 next($fichajes);
                             }
-                            $tiempo = array($extra, $comp, $falta, static::es_tarde($fichajes[0], $entra));
+                            $tiempo = array($extra, $comp, $falta, static::es_tarde($fichajes[0], $entra, $mes));
                         }
                     }
                 }
@@ -803,6 +817,7 @@ class SaperFicha
         "\n\t<li>La operación matemática realizada para las horas extras reales es: Horas Extra - (Horas Adeudadas - Horas Compensadas), si (Horas Adeudadas - Horas Compensadas) resulta mayor que 0 (esto es, el agente adeuda horas que no compensa y se descuentan de las extras).</li>" .
         "\n\t<li>El Tiempo Compensado nunca se suma a las Horas Extra.</li>" .
         "\n\t<li>Cuando ocurra una llegada tarde (ingreso luego de 15' de la hora de entrada), ser&aacute; indicada en la columna apropiada con un *.  Al final de la misma se indica el total.</li>" .
+        "\n\t<li>En Enero no se contabilizan las llegadas tardes.</li>" .
         "\n</ul>";
     }
 }

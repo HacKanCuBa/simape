@@ -47,14 +47,14 @@ class chatroom extends Conn {
             }
 
 
-            $avatar_url = "http://www.gravatar.com/avatar/" . md5($guest) . "?s=24&d=wavatar"; //$this->url . "/client/jquery/user.jpeg";
+            $avatar_url = "https://www.gravatar.com/avatar/" . md5($guest) . "?s=24&d=wavatar"; //$this->url . "/client/jquery/user.jpeg";
 
             if (isset($res[$this->avatar_field_name])) {
 
                 if ($res[$this->avatar_field_name] != "") {
                     $avatar_url = $ob->avatar_url($res[$this->avatar_field_name]);
                 } else {
-                    $avatar_url = "http://www.gravatar.com/avatar/" . md5($guest) . "?s=24&d=wavatar";
+                    $avatar_url = "https://www.gravatar.com/avatar/" . md5($guest) . "?s=24&d=wavatar";
                 }
             }
 
