@@ -27,7 +27,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 1.00
+ * @version 1.02
  */
 
 require_once 'load.php';
@@ -37,6 +37,7 @@ function saper_cleanStored()
     Session::remove(SAPER_SESSINDEX_FICHA);
     Session::remove(SAPER_SESSINDEX_AGENTES);
     Session::remove(SAPER_SESSINDEX_HINI);
+    Session::remove(SAPER_SESSINDEX_HFIN);
 }
 
 $session = new Session;
@@ -52,6 +53,8 @@ const SAPER_DISPLAY_CALC_RESULT = 4;
 
 const SAPER_SESSINDEX_FICHA = 'saper_ficha';
 const SAPER_SESSINDEX_HINI = 'hora_inicio';
+const SAPER_SESSINDEX_HFIN = 'hora_fin';
+const SAPER_SESSINDEX_CHKSALIDA = 'usar_salida';
 const SAPER_SESSINDEX_AGENTES = 'agentes';
 
 /**
@@ -122,7 +125,9 @@ if ($page->authenticateToken()
                         // debo guardarla sin procesar
                         Session::store(SAPER_SESSINDEX_FICHA, $ficha);
                         $hini = Session::retrieve(SAPER_SESSINDEX_HINI);
+                        $hfin = Session::retrieve(SAPER_SESSINDEX_HFIN);
                         $entrada = array();
+                        $salida = array();
                         foreach ($ficha as $anio => $year) {
                             foreach ($year as $mes => $f) {
                                 // cálculo incial con hora de entrada 7:30
@@ -134,6 +139,16 @@ if ($page->authenticateToken()
                                                                 "07:30", 
                                                                 "07:30"]
                                                         ;
+                                // simplemente para ir rellenando
+                                $salida[$anio][$mes] = isset($hfin[$anio][$mes]) 
+                                                            ? $hfin[$anio][$mes] 
+                                                            : ["19:30", 
+                                                                "19:30", 
+                                                                "19:30", 
+                                                                "19:30", 
+                                                                "19:30"]
+                                                        ;
+                                // para el primer cálculo no considerar hsalida
                                 $f->procesarFicha($entrada[$anio][$mes]);
                                 $f->add_column_tardes();
                                 $f->add_column_faltantes();
@@ -142,6 +157,7 @@ if ($page->authenticateToken()
                             }
                         }
                         Session::store(SAPER_SESSINDEX_HINI, $entrada);
+                        Session::store(SAPER_SESSINDEX_HFIN, $salida);
                         Session::remove(SMP_SESSINDEX_NOTIF_ERR);
                         $display = SAPER_DISPLAY_CALC;
                     }
@@ -159,10 +175,25 @@ if ($page->authenticateToken()
                 $entrada = Sanitizar::glPOST('frm_txtHoraIni');
                 Session::store(SAPER_SESSINDEX_HINI, $entrada);
                 
+                $salida = Sanitizar::glPOST('frm_txtHoraFin');
+                Session::store(SAPER_SESSINDEX_HFIN, $salida);
+                
+                $usarSalida = Sanitizar::glPOST('frm_chkHoraFin');
+                
+                $tardeExtra = Sanitizar::glPOST('frm_chkTardeExtra');
+                
                 foreach ($ficha as $anio => $year) {
                     foreach ($year as $mes => $f) {
                         if (is_a($f, 'SaperFicha')) {
-                            $f->procesarFicha(isset($entrada[$anio][$mes]) ? $entrada[$anio][$mes] : NULL);
+                            $f->procesarFicha(isset($entrada[$anio][$mes]) 
+                                                ? $entrada[$anio][$mes] 
+                                                : NULL
+                                                , isset($usarSalida[$anio][$mes]) 
+                                                    ? (isset($salida[$anio][$mes]) 
+                                                            ? $salida[$anio][$mes] 
+                                                            : NULL) 
+                                                    : NULL
+                                                , $tardeExtra);
                             $f->add_column_tardes();
                             $f->add_column_faltantes();
                             $f->add_column_compensadas();
@@ -188,11 +219,16 @@ if ($page->authenticateToken()
                             . 'b&uacute;squeda.');
             $ficha = Session::retrieve(SAPER_SESSINDEX_FICHA);
             $entrada = Sanitizar::glPOST('frm_txtHoraIni');
+            $salida = Sanitizar::glPOST('frm_txtHoraFin');
             $btn = Sanitizar::glPOST('frm_btnDescargar');
             foreach ($btn as $anio => $year) {
                 foreach ($year as $mes => $value) {
                     if ($value && is_a($ficha[$anio][$mes], 'SaperFicha')) {
-                        $ficha[$anio][$mes]->procesarFicha(isset($entrada[$anio][$mes]) ? $entrada[$anio][$mes] : NULL);
+                        $ficha[$anio][$mes]->procesarFicha(isset($entrada[$anio][$mes]) ? $entrada[$anio][$mes] : NULL,
+                                                            isset(Sanitizar::glPOST('frm_chkHoraFin')[$anio][$mes]) 
+                                                                ? (isset($salida[$anio][$mes]) ? $salida[$anio][$mes] : NULL) 
+                                                                : NULL,
+                                                            Sanitizar::glPOST('frm_chkTardeExtra'));
                         $ficha[$anio][$mes]->add_column_tardes();
                         $ficha[$anio][$mes]->add_column_faltantes();
                         $ficha[$anio][$mes]->add_column_compensadas();
@@ -408,6 +444,7 @@ switch($display) {
         Page::_e("</tr>", 5);
         
         $horaInicio = Session::retrieve(SAPER_SESSINDEX_HINI);
+        $horaFin = Session::retrieve(SAPER_SESSINDEX_HFIN);
         
         Page::_e("<tr>", 5);
         Page::_e("<td colspan='2'>", 6);
@@ -441,8 +478,10 @@ switch($display) {
                                             (isset($horaInicio[$anio][$mes][$i]) ? $horaInicio[$anio][$mes][$i] : "07:30"), 
                                             NULL, 
                                             NULL,
-                                            5), 
-                            10);
+                                            5,
+                                            NULL,
+                                            'title="Hora de entrada"')
+                            , 10);
                     Page::_e("</td>", 9);
                 }
                 Page::_e("<td>", 9);
@@ -450,13 +489,58 @@ switch($display) {
                                             'frm_btnDescargar[' . $anio . '][' . $mes . ']', 
                                             'Descargar ficha en PDF', 
                                             NULL, 
-                                            'btn_green'), 
-                                        10);
+                                            'btn_green')
+                        , 10);
+                Page::_e("</td>", 9);
+                Page::_e("</tr>", 8);
+                
+                Page::_e("<tr>", 8);
+                for ($i = 0; $i < 5; $i++) {
+                    Page::_e("<td>", 9);
+                    Page::_e(Page::getInput('time', 
+                                            "frm_txtHoraFin[" . $anio . "][" . $mes . "][" . $i . "]", 
+                                            (isset($horaFin[$anio][$mes][$i]) ? $horaFin[$anio][$mes][$i] : "19:30"), 
+                                            NULL, 
+                                            NULL,
+                                            5,
+                                            NULL, 
+                                            'title="Hora de salida"') 
+                            , 10);
+                    Page::_e("</td>", 9);
+                }
+                Page::_e("<td>", 9);
+                Page::_e(Page::getInput('checkbox', 
+                                            'frm_chkHoraFin[' . $anio . '][' . $mes . ']', 
+                                            'true',
+                                            NULL,
+                                            NULL,
+                                            NULL,
+                                            NULL,
+                                            isset(Sanitizar::glPOST('frm_chkHoraFin')[$anio][$mes]) ? 'checked' : ''
+                                        ) 
+                            . 'C&aacute;lculo con hora de salida'
+                        , 10);
                 Page::_e("</td>", 9);
                 Page::_e("</tr>", 8);
             }
         }
         Page::_e("</table>", 7);
+        Page::_e("</td>", 6);
+        Page::_e("</tr>", 5);
+        
+        Page::_e("<tr>", 5);
+        Page::_e("<td colspan='2'>", 6);
+        Page::_e(Page::getInput('checkbox', 
+                                    'frm_chkTardeExtra', 
+                                    'true',
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    Sanitizar::glPOST('frm_chkTardeExtra') ? 'checked' : ''
+                                ) 
+                    . 'No contar horas extra si el agente lleg&oacute; tarde (' . ((SaperFicha::DIFF_TARDE + SaperFicha::DIFF_TARDE_EXTRA) / 60) . ' minutos m&aacute;s de la hora de entrada)'
+                , 7);
         Page::_e("</td>", 6);
         Page::_e("</tr>", 5);
             

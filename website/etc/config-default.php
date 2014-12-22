@@ -35,7 +35,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 2.02
+ * @version 2.03
  */
 
 // << Config
@@ -186,6 +186,13 @@ const SMP_SERVER_ADDR = '';
  * en navbar.css pertinentemente (y minificarlo luego).
  */
 const SMP_WEB_ROOT = '/';
+// --
+// 
+// -- DEBUG
+/**
+ * Habilita los mensajes de debug
+ */
+const SMP_DEBUG = FALSE;
 // --
 // 
 // >>

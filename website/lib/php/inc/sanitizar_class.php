@@ -37,7 +37,7 @@
  * @author Iván A. Barrera Oro <ivan.barrera.oro@gmail.com>
  * @copyright (c) 2013, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.9
+ * @version 0.91
  */
 class Sanitizar
 {
@@ -141,7 +141,7 @@ class Sanitizar
      * Si se emplea ALL como parámetro, devuelve un array con todos ellos.
      * 
      * @param mixed $POSTkey Nombre del índice de $_POST, string o int.
-     * @return string Devuelve un string sanitizado.
+     * @return mixed Devuelve un valor sanitizado.
      * En caso de error, realiza una llamada del sistema para 
      * notificarlo.  Usar error_get_last() u otra para determinarlo.
      */
@@ -166,7 +166,7 @@ class Sanitizar
      * Si se emplea ALL como parámetro, devuelve un array con todos ellos.
      * 
      * @param mixed $GETkey Nombre del índice de $_GET, string o int.
-     * @return string Devuelve un string sanitizado.
+     * @return mixed Devuelve un valor sanitizado.
      * En caso de error, realiza una llamada del sistema para 
      * notificarlo.  Usar error_get_last() u otra para determinarlo.
      */
@@ -192,7 +192,7 @@ class Sanitizar
      * Si se emplea ALL como parámetro, devuelve un array con todos ellos.
      * 
      * @param string $SERVERkey Nombre del índice de $_SERVER
-     * @return string Devuelve un string sanitizado.
+     * @return mixed Devuelve un valor sanitizado.
      * En caso de error, realiza una llamada del sistema para 
      * notificarlo.  Usar error_get_last() u otra para determinarlo.
      */
