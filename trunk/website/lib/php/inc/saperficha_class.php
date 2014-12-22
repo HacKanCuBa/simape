@@ -30,7 +30,7 @@
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @uses PHPExcel Clase lectora de archivos XLS
- * @version 0.91
+ * @version 1.20
  */
 class SaperFicha
 {
@@ -51,7 +51,7 @@ class SaperFicha
     protected $apellido, $nombre, $dni, $cargo, $dependencia;
     protected $hs_extras, $hs_extras_total, $hs_compensadas, $hs_compensadas_total;
     protected $hs_faltantes_total, $hs_extras_real_total, $hs_faltantes;
-    protected $tardes, $mes, $anio, $horario_entrada;
+    protected $tardes, $mes, $anio, $horario_entrada, $horario_salida;
 
 
     /**
@@ -64,6 +64,12 @@ class SaperFicha
      * Diferencia tolerada para la llegada tarde (15')
      */
     const DIFF_TARDE = 900;
+    
+    /**
+     * Diferencia tolerada para la llegada tarde a la hora extra 
+     * (adicional a DIFF_TARDE) (15')
+     */
+    const DIFF_TARDE_EXTRA = 900;
     
     /**
      * Lista separada por comas de los meses en los que no se considera la 
@@ -81,42 +87,47 @@ class SaperFicha
     
     // __PROT
     /**
-    * 
-    * @param string $string String conteniendo la hora en la forma de "HH#MM#SS" 
-    * o "HH#MM" donde # es un simbolo separador cualquiera.
-    * @param boolean $getAsObject [opcional]<br />
-    * TRUE para devolver resultado como objeto, 
-    * FALSE para hacerlo como Unix Timestamp (por defecto).
-    * @param boolean $removeSeconds [opcional]<br />
-    * Si es TRUE, elimina los segundos del tiempo recibido (por defecto).
-    * @return mixed Hora como objeto DateTime si $getAsObject = TRUE, 
-    * si no como int Unix Timestamp (por defecto).  En caso de error, FALSE.
-    */
+     * Lee un string conteniendo la hora en la forma de "HH#MM#SS" 
+     * o "HH#MM" donde # es un simbolo separador cualquiera y lo devuelve como 
+     * objeto o como entero.
+     * 
+     * @param string $string String conteniendo la hora en la forma de "HH#MM#SS" 
+     * o "HH#MM" donde # es un simbolo separador cualquiera.
+     * @param boolean $getAsObject [opcional]<br />
+     * TRUE para devolver resultado como objeto, 
+     * FALSE para hacerlo como Unix Timestamp (por defecto).
+     * @param boolean $removeSeconds [opcional]<br />
+     * Si es TRUE, elimina los segundos del tiempo recibido (por defecto).
+     * @return mixed Hora como objeto DateTime si $getAsObject = TRUE, 
+     * si no como int Unix Timestamp (por defecto).  En caso de error, FALSE.
+     */
     protected static function readHour($string, 
                                         $getAsObject = FALSE, 
                                         $removeSeconds = TRUE
     ) {
-       try {
-           $str = preg_replace('[\s]', ':', trim(preg_replace("/[^0-9]/", 
-                                                                ' ', 
-                                                                $string)));
-           $time = (DateTime::createFromFormat("Y-m-d e H#i#s", 
-                                               "1970-01-01 -0000 " . $str) ?: 
-                   DateTime::createFromFormat("Y-m-d e H#i", 
-                                               "1970-01-01 -0000 " . $str));
-   
-           ($time && $removeSeconds) ? $time->setTime($time->format('H'), 
-                                                        $time->format('i'), 
-                                                        0) : 
-                                        NULL;
-           if ($getAsObject) {
-               return $time;
-           } else {
-               return ($time ? $time->getTimestamp() : FALSE);
-           }
-       } catch (Exception $e) {
+        if (!empty($string)) {
+            try {
+                $str = preg_replace('[\s]', ':', trim(preg_replace("/[^0-9]/", 
+                                                                     ' ', 
+                                                                     $string)));
+                $time = (DateTime::createFromFormat("Y-m-d e H#i#s", 
+                                                    "1970-01-01 -0000 " . $str) ?: 
+                        DateTime::createFromFormat("Y-m-d e H#i", 
+                                                    "1970-01-01 -0000 " . $str));
 
-       }
+                ($time && $removeSeconds) ? $time->setTime($time->format('H'), 
+                                                             $time->format('i'), 
+                                                             0) : 
+                                             NULL;
+                if ($getAsObject) {
+                    return $time;
+                } else {
+                    return ($time ? $time->getTimestamp() : FALSE);
+                }
+            } catch (Exception $e) {
+
+            }
+        }
 
        return FALSE;
     }
@@ -157,7 +168,7 @@ class SaperFicha
      */
     protected static function removeSimilar(array &$nums)
     {
-        if (!empty($nums)) {
+        if (count($nums) > 1) {
             sort($nums, SORT_NUMERIC);
             reset($nums);
 //            do {
@@ -200,6 +211,27 @@ class SaperFicha
                                             self::TARDE_NO_CONSIDERAR_MES)
                                     );
         return ($no_tarde) ? FALSE : ($fichaje > ($entrada + self::DIFF_TARDE));
+    }
+    
+    /**
+     * Determina si un fichaje corresponde a un tarde o no respecto de horas 
+     * extra.
+     * @param int $fichaje Fichaje de entrada.
+     * @param int $entrada Hora de entrada correspondiente.
+     * @param string $mes [opcional]<br />
+     * Mes del fichaje, para determinar si se considerará 
+     * la llegada tarde o no.
+     * @return boolean TRUE si es tarde, FALSE si no.
+     */
+    protected static function es_tarde_extra($fichaje, $entrada, $mes = NULL)
+    {
+        $no_tarde = in_array_partial($mes,
+                                        array_from_string_list(
+                                            self::TARDE_NO_CONSIDERAR_MES)
+                                    );
+        return ($no_tarde) 
+                ? FALSE 
+                : ($fichaje > ($entrada + self::DIFF_TARDE + self::DIFF_TARDE_EXTRA));
     }
     // __PUB
     /**
@@ -367,6 +399,29 @@ class SaperFicha
             $str .= Page::_e("</tr>", $indent + 2, TRUE, FALSE);
         }
         // --
+        // 
+        // Horario salida
+        if (!empty($this->horario_salida)) {
+            $str .= Page::_e("<tr>", $indent + 2, TRUE, FALSE);
+            $str .= Page::_e("<td>", $indent + 3, TRUE, FALSE);
+            $str .= Page::_e("<b>Horario de salida</b>", $indent + 4, TRUE, FALSE);
+            $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
+            $str .= Page::_e("<td colspan='" . (count($this->titulos) - 1) 
+                    . "' style='text-align: center;'>", $indent + 3, TRUE, FALSE);
+            $dias = array('Lunes', 
+                            'Martes', 
+                            'Mi&eacute;rcoles', 
+                            'Jueves', 
+                            'Viernes');
+            foreach ($this->horario_salida as $d => $h) {
+                $str .= Page::_e($dias[$d] . ": " . $h 
+                        . (($d < (count($this->horario_salida) - 1)) 
+                                                ? " | " : ''), 0, FALSE, FALSE);
+            }
+            $str .= Page::_e("</td>", $indent + 3, TRUE, FALSE);
+            $str .= Page::_e("</tr>", $indent + 2, TRUE, FALSE);
+        }
+        // --
         //
         // Titulos
         if (isset($this->titulos)) {
@@ -476,16 +531,23 @@ class SaperFicha
     }
     
     /**
-    * Procesa la ficha del agente y calcula: horas extras, tiempo compensado, 
-    * tiempo adeudado.
-    * 
-    * @param array $entrada_diaria array con la hora de entrada por dia 
-    * (formato HH:MM:SS/HH:MM/HH), donde lunes es 0 y viernes, 4.
-    * 
-    * @return boolean TRUE si se ejecutó con éxito, FALSE si no.
-    */
+     * Procesa la ficha del agente y calcula: horas extras, tiempo compensado, 
+     * tiempo adeudado.
+     * 
+     * @param array $entrada_diaria array con la hora de entrada por dia 
+     * (formato HH:MM:SS/HH:MM/HH), donde lunes es 0 y viernes, 4.
+     * @param array $salida_diaria [opcional]<br />
+     * array con la hora de salida por dia 
+     * (formato HH:MM:SS/HH:MM/HH), donde lunes es 0 y viernes, 4.
+     * @param boolean $tardeExtra TRUE para considerar el tarde para la hora 
+     * extra, FALSE por defecto.
+     * 
+     * @return boolean TRUE si se ejecutó con éxito, FALSE si no.
+     */
     public function procesarFicha(array $entrada_diaria = 
-                                ["07:30", "07:30", "07:30", "07:30", "07:30"])
+                                ["07:30", "07:30", "07:30", "07:30", "07:30"],
+                                  $salida_diaria = NULL,
+                                  $tardeExtra = FALSE)
     {
         // si existe algún gap, poner la hr de entrada x defecto
         foreach ($entrada_diaria as $key => $value) {
@@ -495,7 +557,7 @@ class SaperFicha
                                                 : $value) 
                                         : '07:30';
         }
-        
+                
         $extras = array();
         $extras_total = 0;
         $compensa = array();
@@ -504,24 +566,36 @@ class SaperFicha
         $faltan_total = 0;
         $tarde = array();
 
+        Debug::_e($this->get_asArray());
         foreach ($this->get_asArray() as $dia) {
+            Debug::_e($dia[0]);
             $fecha = DateTime::createFromFormat("d#m#Y", $dia[0]);
             $mes = $this->getMes();
-            $tiempo = array(0, 0, 0, FALSE);
+            $tiempo = array(0, 0, 0, FALSE, FALSE);
             // No leer fichaje si tiene una inasistencia
-            if (end($dia) == '-' ||
-                    stristr(end($dia), 'descargo') || 
-                    stristr(end($dia), 'fichaje incompleto') ||
-                    empty(end($dia))
+            if (    (
+                        end($dia) == '-' ||
+                        stristr(end($dia), 'descargo') || 
+                        stristr(end($dia), 'fichaje incompleto') ||
+                        empty(end($dia))
+                    )
+                    && is_a($fecha, 'DateTime')
             ) {
+                Debug::_e($fecha);
                 // si x algun motivo no figura la hra de entrada, fijo a 7:30
-                $entra = is_a($fecha, 'DateTime') 
-                            ? ((intval(date("N", $fecha->getTimestamp())) < 6) 
-                                ? (static::readHour($entrada_diaria[intval(date("N", $fecha->getTimestamp())) - 1]) 
+                $ndia = intval(date("N", $fecha->getTimestamp())) - 1;
+                $entra = ($ndia < 5) 
+                                ? (static::readHour($entrada_diaria[$ndia]) 
                                     ?: 27000) 
-                                : 27000) 
-                            : 27000;
-                
+                                : 27000;
+                $sale = ($ndia < 5) 
+                                ? (static::readHour(
+                                                    isset($salida_diaria[$ndia]) 
+                                                        ? $salida_diaria[$ndia] 
+                                                        : '') 
+                                    ?: NULL) 
+                                : NULL;
+                Debug::_e("entra " . $entra . ' sale: ' . $sale);
                 // leo los fichajes validos y elimino el resto.
                 // convierto todos a enteros.
                 $descargo = array_filter(
@@ -533,14 +607,26 @@ class SaperFicha
                                                             end($dia))))));
                 // ordeno de menor a mayor y elimino valores parecidos
                 static::removeSimilar($descargo);
-
+                Debug::_e($descargo);
                 if (count($descargo) == 2) {
                     // Prioridad al descargo: si hay un par de fichajes validos,
                     // leerlos unicamente
                     
                     $entro = (($descargo[0] < $entra) ? $entra : $descargo[0]);
-                    $tiempo = static::calcExtra($entro, $descargo[1]);
+                    $salio = $sale 
+                                ? (($descargo[1] > $sale) 
+                                        ? $sale 
+                                        : $descargo[1]) 
+                                : $descargo[1];
+                    $tiempo = static::calcExtra($entro, $salio);
                     $tiempo[] = static::es_tarde($descargo[0], $entra, $mes);
+                    $tiempo[] = $tardeExtra 
+                                    ? static::es_tarde_extra($descargo[0], 
+                                                            $entra, 
+                                                            $mes) 
+                                    : FALSE;
+                    
+                    Debug::_e('descargo');
                 } else {
                     // genero un array con todos los fichajes, incluido el descargo.
                     $fichajes = array_merge(
@@ -552,19 +638,47 @@ class SaperFicha
                                                                 $dia[1]), 
                                                     preg_split('/[\s,\x0B,\x0D,\x0A,.]+/i', 
                                                                 $dia[2]))))),
-                                $descargo);
+                                    $descargo
+                                );
+                    //$fichajes[] = $sale ?: 0;
+                    Debug::_e($fichajes);
                     static::removeSimilar($fichajes);
+                    Debug::_e('fichajes');
+                    // si debo considerar hora de salida, descarto valores 
+                    // superiores a ésta.
+//                    if ($sale) {
+//                        array_filter($fichajes, 
+//                                        function ($f) use ($sale) 
+//                                        { return $f <= $sale; }
+//                                    );
+//                    }
+                    
                     if (count($fichajes) > 1) {
-                        if (count($fichajes) % 2) {
-                            // impar
-                            // hago la diferencia entre el primero y el último
-                            // debo descartar el ultimo, si la diff con el 
-                            // anteultimo es menor a 5 minutos (o definido por 
-                            // DIFF_SALIDA).
-                            $entro = (($fichajes[0] < $entra) ? $entra : $fichajes[0]);
-                            $salio = end($fichajes);
+                        if ((count($fichajes) % 2)
+                                || (count($fichajes) == 2)
+                        ) {
+                            // impar o bien exactamente 2 fichajes.
+                            // hago la diferencia entre el primero y el último.
+                            $entro = ($fichajes[0] < $entra) 
+                                        ? $entra 
+                                        : $fichajes[0];
+                            
+                            $salio = $sale 
+                                        ?(end($fichajes) > $sale)
+                                            ? $sale
+                                            : end($fichajes)
+                                        : end($fichajes);
+                            
+                            // calcExtra devuelve array
                             $tiempo = static::calcExtra($entro, $salio);
-                            $tiempo[] = static::es_tarde($fichajes[0], $entra, $mes);
+                            $tiempo[] = static::es_tarde($fichajes[0], 
+                                                            $entra, 
+                                                            $mes);
+                            $tiempo[] = $tardeExtra 
+                                            ? static::es_tarde_extra($fichajes[0], 
+                                                                    $entra, 
+                                                                    $mes) 
+                                            : FALSE;
                         } else {
                             // par
                             // hago diferencias de a dos y voy sumando
@@ -575,7 +689,18 @@ class SaperFicha
                             while (current($fichajes)) {
                                 if (key($fichajes)) {
                                     $entro = current($fichajes);
-                                    $salio = next($fichajes);
+                                    if (key($fichajes) == (count($fichajes) - 2)) {
+                                        
+                                        $salio = $sale 
+                                                    ? (
+                                                        (next($fichajes) > $sale) 
+                                                            ? $sale 
+                                                            : current($fichajes)
+                                                      )
+                                                    : next($fichajes);
+                                    } else {
+                                        $salio = next($fichajes) ?: 0;
+                                    }
                                     if ($diff >= 21600) {
                                         // si el 1° periodo era de 6hs o más, 
                                         // todo periodo posterior se suma en las 
@@ -594,7 +719,9 @@ class SaperFicha
                                     $falta += $tiempo[2];
                                 } else {
                                     // 1° periodo
-                                    $entro = (current($fichajes) < $entra) ? $entra : current($fichajes);
+                                    $entro = (current($fichajes) < $entra) 
+                                                ? $entra 
+                                                : current($fichajes);
                                     $salio = next($fichajes);
                                     // si hay menos de 6hs, tiempo = 0 y 
                                     // diff el valor correspondiente.
@@ -603,18 +730,32 @@ class SaperFicha
                                 }
                                 next($fichajes);
                             }
-                            $tiempo = array($extra, $comp, $falta, static::es_tarde($fichajes[0], $entra, $mes));
+                            $tiempo = array($extra
+                                            , $comp
+                                            , $falta
+                                            , static::es_tarde($fichajes[0]
+                                                                , $entra
+                                                                , $mes)
+                                            , $tardeExtra 
+                                                ? static::es_tarde_extra($fichajes[0], 
+                                                                        $entra, 
+                                                                        $mes) 
+                                                : FALSE
+                                        );
                         }
                     }
                 }
             }
             $compensa[] = $tiempo[1] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[1])->format('H:i:s') : '';
             $compensa_total += $tiempo[1];
-            $extras[] = $tiempo[0] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[0])->format('H:i:s') : ($tiempo[1] ? '&lt; 1h' :  '');
-            $extras_total += $tiempo[0];
+            // si hay tarde para extras, no contarlas
+            $extras[] = $tiempo[4] ? 'tarde' : ($tiempo[0] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[0])->format('H:i:s') : ($tiempo[1] ? '&lt; 1h' :  ''));
+            $extras_total += $tiempo[4] ? 0 : $tiempo[0];
+            
             $faltan[] = $tiempo[2] ? DateTime::createFromFormat("Y-m-d e U", "1970-01-01 -0000 " . $tiempo[2])->format('H:i:s') : '';
             $faltan_total += $tiempo[2];
-            $tarde[] = $tiempo[3] ? '•' : '';
+            
+            $tarde[] = $tiempo[3] ? ($tiempo[4] ? '••' : '•') : '';
         }       
         // el ultimo valor es 0, lo reemplazo por el total de extras
         end($extras);
@@ -652,6 +793,7 @@ class SaperFicha
         $this->tardes = $tarde;
         
         $this->horario_entrada = $entrada_diaria;
+        $this->horario_salida = $salida_diaria;
         return TRUE;
     }
     
@@ -809,6 +951,7 @@ class SaperFicha
         "\n<ul style='text-align: left;'>" .
         "\n\t<li>No se consideran los segundos en los fichajes (se truncan a 0).</li>" .
         "\n\t<li>Si la hora a la que el agente ingres&oacute; es anterior a la hora a la que debe ingresar, se emplear&aacute; esta &uacute;ltima para el c&aacute;lculo.  Esto es, no se toma en cuenta el tiempo anterior a la hora de ingreso.</li>" .
+        "\n\t<li>Si la hora a la que el agente egres&oacute; es posterior a la hora a la que debe egresar, se emplear&aacute; esta &uacute;ltima para el c&aacute;lculo.  Esto es, no se toma en cuenta el tiempo posterior a la hora de egreso.</li>" .
         "\n\t<li>Se considera Hora Extra a todo tiempo trabajado superior a 1 hora respecto de las horas laborales ordinarias.</li>" .
         "\n\t<li>Se considera Tiempo Compensado a todo tiempo adicional a las horas laborales ordinarias inferior a 1h.</li>" .
         "\n\t<li>Se considera Tiempo Faltante o Adeudado cuando no se hayan cumplido las horas laborales ordinarias.</li>" .
@@ -816,7 +959,8 @@ class SaperFicha
         "\n\t<li>Cuando se presente m&aacute;s de un par de fichajes, a cada período se le aplicarán las reglas anteriores.</li>" .
         "\n\t<li>La operación matemática realizada para las horas extras reales es: Horas Extra - (Horas Adeudadas - Horas Compensadas), si (Horas Adeudadas - Horas Compensadas) resulta mayor que 0 (esto es, el agente adeuda horas que no compensa y se descuentan de las extras).</li>" .
         "\n\t<li>El Tiempo Compensado nunca se suma a las Horas Extra.</li>" .
-        "\n\t<li>Cuando ocurra una llegada tarde (ingreso luego de 15' de la hora de entrada), ser&aacute; indicada en la columna apropiada con un *.  Al final de la misma se indica el total.</li>" .
+        "\n\t<li>Cuando ocurra una llegada tarde (ingreso luego de " . (self::DIFF_TARDE / 60) . "' de la hora de entrada), ser&aacute; indicada en la columna apropiada con un •.  Al final de la misma se indica el total.</li>" .
+        "\n\t<li>Se indica en dicha columna con •• cuando la llegada tarde anula el c&aacute;lculo de horas extra (ingreso luego de " . ((self::DIFF_TARDE + self::DIFF_TARDE_EXTRA) / 60) . "' de la hora de entrada)</li>" .
         "\n\t<li>En Enero no se contabilizan las llegadas tardes.</li>" .
         "\n</ul>";
     }
