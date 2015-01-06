@@ -81,6 +81,10 @@ class Saper extends Curl
     const ESTADO_BAJA = 'B';
     
     const DNI_SEARCH_STR = "onchange='eleccionOpcion(this,";
+    
+    // Hacer un descargo (no tiene chequeo de nada, siempre lo acepta)
+    // http://10.1.0.7:7778/saper/DiasSinFicharAction.do?method=descargoFichajeIncorrecto&legajo=1<DNI>&interno=1&fecha=<DD/MM/AAAA>
+    // http://10.1.0.7:7778/saper/DiasSinFicharAction.do?method=descargoFichajeIncorrecto&legajo=134145658&interno=1&fecha=23/12/2014
         
     /**
      * Array de agentes encontrados por la búsqueda.
