@@ -30,7 +30,7 @@
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @uses PHPExcel Clase lectora de archivos XLS
- * @version 1.21
+ * @version 1.22
  */
 class SaperFicha
 {
@@ -621,6 +621,7 @@ class SaperFicha
                                     ?: NULL) 
                                 : NULL;
                 Debug::_e("entra " . $entra . ' sale: ' . $sale);
+                
                 // leo los fichajes validos y elimino el resto.
                 // convierto todos a enteros.
                 $descargo = array_filter(
@@ -633,10 +634,12 @@ class SaperFicha
                 // ordeno de menor a mayor y elimino valores parecidos
                 static::removeSimilar($descargo);
                 Debug::_e($descargo);
-                if (count($descargo) == 2) {
+                if ((count($descargo) == 2)
+                    && !stristr($buscarEn, 'EE') /* EE: extras excepcionales*/
+                ){
                     // Prioridad al descargo: si hay un par de fichajes validos,
                     // leerlos unicamente
-                    
+                    Debug::_e('descargo');         
                     $entro = (($descargo[0] < $entra) ? $entra : $descargo[0]);
                     $salio = $sale 
                                 ? (($descargo[1] > $sale) 
@@ -649,9 +652,7 @@ class SaperFicha
                                     ? static::es_tarde_extra($descargo[0], 
                                                             $entra, 
                                                             $mes) 
-                                    : FALSE;
-                    
-                    Debug::_e('descargo');
+                                    : FALSE;                   
                 } else {
                     // genero un array con todos los fichajes, incluido el descargo.
                     $fichajes = array_merge(
@@ -677,8 +678,19 @@ class SaperFicha
 //                                        { return $f <= $sale; }
 //                                    );
 //                    }
-                    
-                    if (count($fichajes) > 1) {
+                    if (stristr($buscarEn, 'EE')) {
+                        // Extras Excepcionales
+                        // Ej: Descargo: EE 12:00 - 14:42.
+                        $tiempo = static::calcExtra($descargo[1] - $descargo[0]);
+                        $tiempo[] = static::es_tarde($fichajes[0], 
+                                                            $entra, 
+                                                            $mes);
+                        $tiempo[] = $tardeExtra 
+                                        ? static::es_tarde_extra($fichajes[0], 
+                                                                $entra, 
+                                                                $mes) 
+                                        : FALSE;  
+                    } elseif (count($fichajes) > 1) {
                         if ((count($fichajes) % 2)
                                 || (count($fichajes) == 2)
                         ) {
