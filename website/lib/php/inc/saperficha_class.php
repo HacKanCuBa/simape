@@ -30,7 +30,7 @@
  * @copyright (c) 2014, Iván A. Barrera Oro
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
  * @uses PHPExcel Clase lectora de archivos XLS
- * @version 1.20
+ * @version 1.21
  */
 class SaperFicha
 {
@@ -73,9 +73,24 @@ class SaperFicha
     
     /**
      * Lista separada por comas de los meses en los que no se considera la 
-     * llegada tarde
+     * llegada tarde.
      */
-    const TARDE_NO_CONSIDERAR_MES = "Enero,";
+    const TARDE_NO_CONSIDERAR_MES = 'Enero,';
+    
+    /**
+     * Parámetros que determinan leer el fichaje.
+     * Lista separada por comas, los espacios son considerados como parte 
+     * del parámetro.  Debe estar en minúsculas.
+     */
+    const FICHAJE_OK = 'descargo,fichaje incompleto';
+    
+    /**
+     * Parámetros que determinan NO leer el fichaje.  
+     * Tiene prioridad sobre el anterior.
+     * Lista separada por comas, los espacios son considerados como parte 
+     * del parámetro.  Debe estar en minúsculas.
+     */
+    const FICHAJE_KO = 'asueto,paro judicial,no contabilizar extras,no extras';
 
     public function __construct($fname = NULL) 
     {
@@ -566,20 +581,30 @@ class SaperFicha
         $faltan_total = 0;
         $tarde = array();
 
-        Debug::_e($this->get_asArray());
+        //Debug::_e($this->get_asArray());
         foreach ($this->get_asArray() as $dia) {
             Debug::_e($dia[0]);
             $fecha = DateTime::createFromFormat("d#m#Y", $dia[0]);
             $mes = $this->getMes();
             $tiempo = array(0, 0, 0, FALSE, FALSE);
-            // No leer fichaje si tiene una inasistencia
-            if (    (
-                        end($dia) == '-' ||
-                        stristr(end($dia), 'descargo') || 
-                        stristr(end($dia), 'fichaje incompleto') ||
-                        empty(end($dia))
-                    )
-                    && is_a($fecha, 'DateTime')
+            
+            // No leer fichaje si algun parametro dentro de buscado_ko existe 
+            // en buscarEn.
+            // Luego, leer solo si algun parametro de buscado_ok existe dentro
+            // de buscarEn.
+            $buscarEn = end($dia);
+            $buscado_ok = array_from_string_list(self::FICHAJE_OK);
+            $buscado_ko = array_from_string_list(self::FICHAJE_KO);
+            $ok = array_filter($buscado_ok, function ($q) use ($buscarEn) {
+                    return (empty($buscarEn) ?: (empty($q) ?: stristr($buscarEn, $q)));
+            });
+            $ko = array_filter($buscado_ko, function ($q) use ($buscarEn) {
+                    return (empty($buscarEn) ? FALSE : (empty($q) ? FALSE : stristr($buscarEn, $q)));
+            });
+            //var_dump($buscarEn, $ok, $ko);
+            if (is_a($fecha, 'DateTime')
+                    && empty($ko)
+                    && $ok
             ) {
                 Debug::_e($fecha);
                 // si x algun motivo no figura la hra de entrada, fijo a 7:30

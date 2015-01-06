@@ -317,6 +317,10 @@ class Page
             }
         }
               
+        // navidad
+        //$code .= '<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>';
+        //$code .= '<script src=' . SMP_WEB_ROOT . SMP_LOC_LIBS . 'js/snowflakes.js></script>';
+        // --
         return $code;
     }
     
@@ -352,8 +356,8 @@ class Page
      * @return string Código HTML de cierre del Head y apertura de Body.
      */
     public static function getBody() 
-    {   
-        return "\n</head>\n<body>";
+    {         
+        return "\n</head>\n<body>";/* navidad*/// . "\n<script> $(document).ready( function(){ $.fn.snow(); }); </script>";
     }
     
     /**
@@ -712,7 +716,7 @@ class Page
             && ($now >= $this->timestamp) 
             && ($now < ($this->timestamp + self::TOKEN_LIFETIME))
         ) {
-            // Verifico que getToken no sea FALSE.
+            // Verifico que tokenMake no sea FALSE.
             $pageToken = self::tokenMake($this->randToken,
                                             SMP_TKN_PAGE,
                                             $this->timestamp,
