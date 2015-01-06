@@ -29,7 +29,7 @@
  * @author Pedro Facundo Tamborindeguy <pftambo@gmail.com>
  * @copyright (c) 2014, Pedro Facundo Tamborindeguy
  * @license http://spdx.org/licenses/GPL-3.0+ GNU GPL v3.0
- * @version 0.11
+ * @version 0.12
  */
 class Chat
 {
@@ -38,7 +38,7 @@ class Chat
     public function __construct($userId)
     {        
         $this->userId = $userId;   
-        setcookie("freichat_user", "LOGGED_IN", time()+3600, "/");
+        //setcookie("freichat_user", "LOGGED_IN", time()+3600, "/");
         //setcookie("freichat_user", "LOGGED_IN", time()+3600, SMP_WEB_ROOT, IP::getServerIP(), is_connection_ssl(), TRUE); // *do not change -> freichat code
     }
     
