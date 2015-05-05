@@ -26,7 +26,7 @@ _Por problemas de compatibilidad, el sistema NO funcionará en versiones antigua
 Este proyecto emplea para el código la licencia [GNU GPL v3](http://www.spanish-translator-services.com/espanol/t/gnu/gpl-ar.html) y para el contenido [CC BY-SA v3.0](https://creativecommons.org/licenses/by-sa/3.0/).
 
 ### Documentación ###
-Además de la wiki aquí presente, la [documentación del código](http://man.simape.cf) se encuentra en la [página oficial](http://www.simape.cf).
+Además de la [wiki](https://github.com/HacKanCuBa/simape/wiki) aquí presente, la [documentación del código](http://man.simape.cf) se encuentra en la [página oficial](http://www.simape.cf).
 
 ### Contribuidores ###
-Quienes han trabajado/trabajan en este proyecto se encuentran [aquí listados](Contribuidores).
+Quienes han trabajado/trabajan en este proyecto se encuentran [aquí listados](https://github.com/HacKanCuBa/simape/wiki/Contribuidores).
