@@ -29,4 +29,4 @@ Este proyecto emplea para el código la licencia [GNU GPL v3](http://www.spanish
 Además de la wiki aquí presente, la [documentación del código](http://man.simape.cf) se encuentra en la [página oficial](http://www.simape.cf).
 
 ### Contribuidores ###
-Quienes han trabajado/trabajan en este proyecto se encuentran [aquí listados](https://code.google.com/p/simape/wiki/Contribuidores).
+Quienes han trabajado/trabajan en este proyecto se encuentran [aquí listados](Contribuidores).
